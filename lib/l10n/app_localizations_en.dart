@@ -9,13 +9,13 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get loginTitle => 'Welcome back, Sentinel';
+  String get loginTitle => 'Welcome back';
 
   @override
   String get loginSubTitle => 'Access your tactical medical dashboard.';
 
   @override
-  String get emailLabel => 'SENTINEL EMAIL';
+  String get emailLabel => 'EMAIL';
 
   @override
   String get passwordLabel => 'ACCESS PASSWORD';
@@ -30,7 +30,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get registerLink => 'Register for a new account';
 
   @override
-  String get copyright => '© 2026 SAFE - Sentinel Archive for Emergencies';
+  String get copyright => '© 2026 SAFE - Emergency Archive';
 
   @override
   String get security => 'Security';
@@ -60,7 +60,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emailAddress => 'EMAIL ADDRESS';
 
   @override
-  String get mobileId => 'SENTINEL MOBILE ID';
+  String get mobileId => 'MOBILE ID';
 
   @override
   String get medicalProfile => 'INITIAL MEDICAL PROFILE';
@@ -82,7 +82,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get legalFooter =>
-      'BY CREATING AN ACCOUNT, YOU AGREE TO OUR TERMS OF SERVICE AND PRIVACY PROTOCOLS. YOUR DATA IS ENCRYPTED AND STORED WITHIN THE SECURE SENTINEL ARCHIVE.';
+      'BY CREATING AN ACCOUNT, YOU AGREE TO OUR TERMS OF SERVICE AND PRIVACY PROTOCOLS. YOUR DATA IS ENCRYPTED AND STORED WITHIN THE SECURE ARCHIVE.';
 
   @override
   String get homeTitle => 'COMMAND CENTER';
@@ -109,7 +109,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commandInterface => 'COMMAND INTERFACE';
 
   @override
-  String get appTitle => 'SAFE SENTINEL';
+  String get appTitle => 'SAFE APP';
 
   @override
   String get monitoringActive => 'Monitoring: Active';

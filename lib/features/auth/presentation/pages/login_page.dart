@@ -20,6 +20,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  bool _isPasswordVisible = false;
 
   @override
   void dispose() {
@@ -41,7 +42,9 @@ class _LoginPageState extends State<LoginPage> {
             if (state is AuthSuccess) {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(builder: (context) => const HomePage()),
+                MaterialPageRoute(
+                  builder: (context) => HomePage(user: state.user),
+                ),
               );
             } else if (state is AuthError) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -138,8 +141,14 @@ class _LoginPageState extends State<LoginPage> {
                         _buildInputField(
                           controller: passwordController,
                           hint: '••••••••••••••',
-                          icon: Icons.lock_outline,
+                          icon: _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                           isPassword: true,
+                          obscureText: !_isPasswordVisible,
+                          onToggleVisibility: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
                         ),
                         const SizedBox(height: 40),
 
@@ -275,6 +284,8 @@ class _LoginPageState extends State<LoginPage> {
     required String hint,
     required IconData icon,
     bool isPassword = false,
+    bool obscureText = false,
+    VoidCallback? onToggleVisibility,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -283,14 +294,19 @@ class _LoginPageState extends State<LoginPage> {
       ),
       child: TextField(
         controller: controller,
-        obscureText: isPassword,
+        obscureText: obscureText,
         style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey.withOpacity(0.6)),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          suffixIcon: Icon(icon, color: AppColors.inputIconGrey, size: 22),
+          suffixIcon: isPassword
+              ? IconButton(
+                  icon: Icon(icon, color: AppColors.inputIconGrey, size: 22),
+                  onPressed: onToggleVisibility,
+                )
+              : Icon(icon, color: AppColors.inputIconGrey, size: 22),
         ),
       ),
     );

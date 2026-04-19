@@ -8,8 +8,11 @@ import 'package:safe/features/emergency/presentation/pages/emergency_countdown_p
 import '../widgets/sos_button.dart';
 import '../widgets/sentinel_bottom_nav.dart';
 
+import 'package:safe/features/auth/domain/entities/user_entity.dart';
+
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final UserEntity user;
+  const HomePage({super.key, required this.user});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -118,21 +121,32 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
               ),
 
-              // SUBTITLE
+              // GREETING
               _buildAnimated(
                 index: 2,
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 40),
-                  child: Center(
-                    child: Text(
-                      l10n.systemOperational,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.subHeading.copyWith(
-                        color: const Color(0xFF455A64),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Halo, ${widget.user.nama}',
+                        style: AppTextStyles.heading.copyWith(
+                          color: Colors.black,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.systemOperational,
+                        style: AppTextStyles.subHeading.copyWith(
+                          color: const Color(0xFF455A64),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -221,7 +235,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '122 Sentinel Heights, West District',
+                                'Jalan Raya Menteng No. 12, Jakarta',
                                 style: AppTextStyles.subHeading.copyWith(
                                   color: Colors.black,
                                   fontWeight: FontWeight.w800,

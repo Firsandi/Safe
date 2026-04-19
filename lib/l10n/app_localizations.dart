@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @loginTitle.
   ///
   /// In en, this message translates to:
-  /// **'Welcome back, Sentinel'**
+  /// **'Welcome back'**
   String get loginTitle;
 
   /// No description provided for @loginSubTitle.
@@ -113,7 +113,7 @@ abstract class AppLocalizations {
   /// No description provided for @emailLabel.
   ///
   /// In en, this message translates to:
-  /// **'SENTINEL EMAIL'**
+  /// **'EMAIL'**
   String get emailLabel;
 
   /// No description provided for @passwordLabel.
@@ -143,7 +143,7 @@ abstract class AppLocalizations {
   /// No description provided for @copyright.
   ///
   /// In en, this message translates to:
-  /// **'© 2026 SAFE - Sentinel Archive for Emergencies'**
+  /// **'© 2026 SAFE - Emergency Archive'**
   String get copyright;
 
   /// No description provided for @security.
@@ -203,7 +203,7 @@ abstract class AppLocalizations {
   /// No description provided for @mobileId.
   ///
   /// In en, this message translates to:
-  /// **'SENTINEL MOBILE ID'**
+  /// **'MOBILE ID'**
   String get mobileId;
 
   /// No description provided for @medicalProfile.
@@ -245,7 +245,7 @@ abstract class AppLocalizations {
   /// No description provided for @legalFooter.
   ///
   /// In en, this message translates to:
-  /// **'BY CREATING AN ACCOUNT, YOU AGREE TO OUR TERMS OF SERVICE AND PRIVACY PROTOCOLS. YOUR DATA IS ENCRYPTED AND STORED WITHIN THE SECURE SENTINEL ARCHIVE.'**
+  /// **'BY CREATING AN ACCOUNT, YOU AGREE TO OUR TERMS OF SERVICE AND PRIVACY PROTOCOLS. YOUR DATA IS ENCRYPTED AND STORED WITHIN THE SECURE ARCHIVE.'**
   String get legalFooter;
 
   /// No description provided for @homeTitle.
@@ -299,7 +299,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'SAFE SENTINEL'**
+  /// **'SAFE APP'**
   String get appTitle;
 
   /// No description provided for @monitoringActive.

@@ -7,6 +7,7 @@ import 'package:safe/features/auth/presentation/bloc/auth_state.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/core/localization/language_cubit.dart';
 import 'package:safe/l10n/app_localizations.dart';
+import 'package:safe/features/home/presentation/pages/home_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -26,6 +27,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final List<String> _bloodTypes = ['A', 'B', 'AB', 'O', 'O+', 'O-', 'A+', 'A-', 'B+', 'B-'];
 
   final _formKey = GlobalKey<FormState>();
+  bool _isPasswordVisible = false;
 
   @override
   void dispose() {
@@ -49,7 +51,7 @@ class _RegisterPageState extends State<RegisterPage> {
           listener: (context, state) {
             if (state is AuthSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Registration Successful! Redirecting to Login.')),
+                const SnackBar(content: Text('Registrasi Berhasil! Silakan Login.'), backgroundColor: Colors.green),
               );
               Navigator.pop(context);
             } else if (state is AuthError) {
@@ -171,6 +173,17 @@ class _RegisterPageState extends State<RegisterPage> {
                                     controller: _passwordController,
                                     hint: "••••••••",
                                     isPassword: true,
+                                    obscureText: !_isPasswordVisible,
+                                    onToggleVisibility: () {
+                                      setState(() {
+                                        _isPasswordVisible = !_isPasswordVisible;
+                                      });
+                                    },
+                                    validator: (v) {
+                                      if (v == null || v.isEmpty) return 'Wajib diisi';
+                                      if (v.length < 6) return 'Minimal 6 karakter';
+                                      return null;
+                                    },
                                   ),
                                   const SizedBox(height: 32),
 
@@ -342,7 +355,14 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildInputField({required TextEditingController controller, required String hint, bool isPassword = false}) {
+  Widget _buildInputField({
+    required TextEditingController controller,
+    required String hint,
+    bool isPassword = false,
+    bool obscureText = false,
+    VoidCallback? onToggleVisibility,
+    String? Function(String?)? validator,
+  }) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.inputBackground,
@@ -350,15 +370,25 @@ class _RegisterPageState extends State<RegisterPage> {
       ),
       child: TextFormField(
         controller: controller,
-        obscureText: isPassword,
+        obscureText: obscureText,
         style: AppTextStyles.subHeading.copyWith(fontSize: 14, color: AppColors.textDark),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: AppColors.inputIconGrey.withOpacity(0.5)),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          suffixIcon: isPassword
+              ? IconButton(
+                  icon: Icon(
+                    obscureText ? Icons.visibility_off : Icons.visibility,
+                    color: AppColors.inputIconGrey,
+                    size: 20,
+                  ),
+                  onPressed: onToggleVisibility,
+                )
+              : null,
         ),
-        validator: (v) => v!.isEmpty ? 'Required' : null,
+        validator: validator ?? (v) => v!.isEmpty ? 'Required' : null,
       ),
     );
   }

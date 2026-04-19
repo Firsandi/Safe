@@ -24,20 +24,19 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<UserModel> login(String email, String password) async {
     try {
       final response = await dio.post(
-        'https://api.kamu.com/login',
+        '/api/login',
         data: {
           'email': email,
           'password': password,
         },
       );
 
-      if (response.statusCode == 200) {
-        return UserModel.fromJson(response.data);
-      } else {
-        throw ServerException('Ditolak backend: Gagal login dari server');
-      }
+      return UserModel.fromJson(response.data['user']);
+    } on DioException catch (e) {
+      final message = e.response?.data['error'] ?? 'Terjadi kesalahan pada server (Login)';
+      throw ServerException(message);
     } catch (e) {
-      throw ServerException(e.toString());
+      throw ServerException('Gagal Login: $e');
     }
   }
 
@@ -52,24 +51,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }) async {
     try {
       final response = await dio.post(
-        'https://api.kamu.com/register',
+        '/api/register',
         data: {
           'nama': nama,
           'nomor_hp': nomorHp,
           'email': email,
           'password': password,
-          'blood_type': golDarah,
-          'medical_notes': catatanMedis,
+          'gol_darah': golDarah,
+          'catatan_medis': catatanMedis,
         },
       );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return UserModel.fromJson(response.data);
-      } else {
-        throw ServerException('Gagal mendaftarkan akun dari server');
-      }
+      return UserModel.fromJson(response.data['user']);
+    } on DioException catch (e) {
+      final message = e.response?.data['error'] ?? 'Terjadi kesalahan pada server (Register)';
+      throw ServerException(message);
     } catch (e) {
-      throw ServerException(e.toString());
+      throw ServerException('Gagal Registrasi: $e');
     }
   }
 }

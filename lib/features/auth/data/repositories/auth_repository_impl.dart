@@ -45,7 +45,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure('Gagal daftar karena: $e'));
+      return Left(ServerFailure('Gagal pendaftaran: Terjadi kendala koneksi atau server.'));
     }
   }
 }

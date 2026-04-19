@@ -9,13 +9,13 @@ class AppLocalizationsId extends AppLocalizations {
   AppLocalizationsId([String locale = 'id']) : super(locale);
 
   @override
-  String get loginTitle => 'Selamat datang kembali, Sentinel';
+  String get loginTitle => 'Selamat datang kembali';
 
   @override
   String get loginSubTitle => 'Akses dasbor medis taktis Anda.';
 
   @override
-  String get emailLabel => 'EMAIL SENTINEL';
+  String get emailLabel => 'EMAIL';
 
   @override
   String get passwordLabel => 'KATA SANDI AKSES';
@@ -30,7 +30,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get registerLink => 'Daftar akun baru';
 
   @override
-  String get copyright => '© 2026 SAFE - Sentinel Archive for Emergencies';
+  String get copyright => '© 2026 SAFE - Emergency Archive';
 
   @override
   String get security => 'Keamanan';
@@ -60,7 +60,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get emailAddress => 'ALAMAT EMAIL';
 
   @override
-  String get mobileId => 'ID MOBIL SENTINEL';
+  String get mobileId => 'NOMOR HP';
 
   @override
   String get medicalProfile => 'PROFIL MEDIS AWAL';
@@ -82,7 +82,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get legalFooter =>
-      'DENGAN MEMBUAT AKUN, ANDA MENYETUJUI SYARAT LAYANAN DAN PROTOKOL PRIVASI KAMI. DATA ANDA DIENKRIPSI DAN DISIMPAN DALAM ARSIP SENTINEL YANG AMAN.';
+      'DENGAN MEMBUAT AKUN, ANDA MENYETUJUI SYARAT LAYANAN DAN PROTOKOL PRIVASI KAMI. DATA ANDA DIENKRIPSI DAN DISIMPAN DALAM ARSIP YANG AMAN.';
 
   @override
   String get homeTitle => 'PUSAT KOMANDO';
@@ -109,7 +109,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get commandInterface => 'ANTARMUKA KOMANDO';
 
   @override
-  String get appTitle => 'SAFE SENTINEL';
+  String get appTitle => 'SAFE APP';
 
   @override
   String get monitoringActive => 'Pemantauan: Aktif';
