@@ -26,23 +26,23 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> register({
-    required String nama,
-    required String nomorHp,
+    required String name,
+    required String phoneNumber,
     required String email,
     required String password,
-    String? golDarah,
-    String? catatanMedis,
+    String? bloodType,
+    String? medicalNotes,
   }) async {
     emit(AuthLoading());
 
     final result = await registerUseCase.call(
       RegisterParams(
-        nama: nama,
-        nomorHp: nomorHp,
+        name: name,
+        phoneNumber: phoneNumber,
         email: email,
         password: password,
-        golDarah: golDarah,
-        catatanMedis: catatanMedis,
+        bloodType: bloodType,
+        medicalNotes: medicalNotes,
       ),
     );
 

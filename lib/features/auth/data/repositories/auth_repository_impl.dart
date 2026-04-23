@@ -18,34 +18,34 @@ class AuthRepositoryImpl implements AuthRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure('Terjadi kesalahan yang tidak diketahui: $e'));
+      return Left(ServerFailure('Unknown error occurred: $e'));
     }
   }
 
   @override
   Future<Either<Failure, UserEntity>> register({
-    required String nama,
-    required String nomorHp,
+    required String name,
+    required String phoneNumber,
     required String email,
     required String password,
-    String? golDarah,
-    String? catatanMedis,
+    String? bloodType,
+    String? medicalNotes,
   }) async {
     try {
       final remoteUser = await remoteDataSource.register(
-        nama: nama,
-        nomorHp: nomorHp,
+        name: name,
+        phoneNumber: phoneNumber,
         email: email,
         password: password,
-        golDarah: golDarah,
-        catatanMedis: catatanMedis,
+        bloodType: bloodType,
+        medicalNotes: medicalNotes,
       );
 
       return Right(remoteUser);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure('Gagal pendaftaran: Terjadi kendala koneksi atau server.'));
+      return Left(ServerFailure('Registration failed: Connection or server issue.'));
     }
   }
 }

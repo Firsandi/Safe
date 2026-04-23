@@ -6,11 +6,11 @@ abstract class AuthRepository {
   Future<Either<Failure, UserEntity>> login(String email, String password);
 
   Future<Either<Failure, UserEntity>> register({
-    required String nama,
-    required String nomorHp,
+    required String name,
+    required String phoneNumber,
     required String email,
     required String password,
-    String? golDarah,
-    String? catatanMedis,
+    String? bloodType,
+    String? medicalNotes,
   });
 }

@@ -12,30 +12,30 @@ class RegisterUseCase implements UseCase<UserEntity, RegisterParams> {
   @override
   Future<Either<Failure, UserEntity>> call(RegisterParams params) async {
     return await repository.register(
-      nama: params.nama,
-      nomorHp: params.nomorHp,
+      name: params.name,
+      phoneNumber: params.phoneNumber,
       email: params.email,
       password: params.password,
-      golDarah: params.golDarah,
-      catatanMedis: params.catatanMedis,
+      bloodType: params.bloodType,
+      medicalNotes: params.medicalNotes,
     );
   }
 }
 
 class RegisterParams {
-  final String nama;
-  final String nomorHp;
+  final String name;
+  final String phoneNumber;
   final String email;
   final String password;
-  final String? golDarah;
-  final String? catatanMedis;
+  final String? bloodType;
+  final String? medicalNotes;
 
   RegisterParams({
-    required this.nama,
-    required this.nomorHp,
+    required this.name,
+    required this.phoneNumber,
     required this.email,
     required this.password,
-    this.golDarah,
-    this.catatanMedis,
+    this.bloodType,
+    this.medicalNotes,
   });
 }

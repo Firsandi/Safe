@@ -130,7 +130,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Halo, ${widget.user.nama}',
+                        'Halo, ${widget.user.name}',
                         style: AppTextStyles.heading.copyWith(
                           color: Colors.black,
                           fontSize: 28,

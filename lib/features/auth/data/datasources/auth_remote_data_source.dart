@@ -6,12 +6,12 @@ abstract class AuthRemoteDataSource {
   Future<UserModel> login(String email, String password);
 
   Future<UserModel> register({
-    required String nama,
-    required String nomorHp,
+    required String name,
+    required String phoneNumber,
     required String email,
     required String password,
-    String? golDarah,
-    String? catatanMedis,
+    String? bloodType,
+    String? medicalNotes,
   });
 }
 
@@ -33,41 +33,41 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
       return UserModel.fromJson(response.data['user']);
     } on DioException catch (e) {
-      final message = e.response?.data['error'] ?? 'Terjadi kesalahan pada server (Login)';
+      final message = e.response?.data['error'] ?? 'Server error (Login)';
       throw ServerException(message);
     } catch (e) {
-      throw ServerException('Gagal Login: $e');
+      throw ServerException('Login failed: $e');
     }
   }
 
   @override
   Future<UserModel> register({
-    required String nama,
-    required String nomorHp,
+    required String name,
+    required String phoneNumber,
     required String email,
     required String password,
-    String? golDarah,
-    String? catatanMedis,
+    String? bloodType,
+    String? medicalNotes,
   }) async {
     try {
       final response = await dio.post(
         '/api/register',
         data: {
-          'nama': nama,
-          'nomor_hp': nomorHp,
+          'name': name,
+          'phone_number': phoneNumber,
           'email': email,
           'password': password,
-          'gol_darah': golDarah,
-          'catatan_medis': catatanMedis,
+          'blood_type': bloodType,
+          'medical_notes': medicalNotes,
         },
       );
 
       return UserModel.fromJson(response.data['user']);
     } on DioException catch (e) {
-      final message = e.response?.data['error'] ?? 'Terjadi kesalahan pada server (Register)';
+      final message = e.response?.data['error'] ?? 'Server error (Register)';
       throw ServerException(message);
     } catch (e) {
-      throw ServerException('Gagal Registrasi: $e');
+      throw ServerException('Registration failed: $e');
     }
   }
 }

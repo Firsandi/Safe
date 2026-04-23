@@ -249,12 +249,12 @@ class _RegisterPageState extends State<RegisterPage> {
                                           : () {
                                               if (_formKey.currentState!.validate()) {
                                                 context.read<AuthCubit>().register(
-                                                      nama: _nameController.text,
-                                                      nomorHp: _phoneController.text,
+                                                      name: _nameController.text,
+                                                      phoneNumber: _phoneController.text,
                                                       email: _emailController.text,
                                                       password: _passwordController.text,
-                                                      golDarah: _selectedBloodType,
-                                                      catatanMedis: _medicalNotesController.text,
+                                                      bloodType: _selectedBloodType,
+                                                      medicalNotes: _medicalNotesController.text,
                                                     );
                                               }
                                             },
