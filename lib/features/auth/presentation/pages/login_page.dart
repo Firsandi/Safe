@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/core/utils/injection.dart';
+import 'package:safe/core/utils/session_manager.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_state.dart';
-import 'package:safe/core/localization/language_cubit.dart';
-import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/features/home/presentation/pages/home_page.dart';
 import 'register_page.dart';
+import 'forgot_password_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -31,8 +32,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: BlocProvider(
@@ -40,11 +39,24 @@ class _LoginPageState extends State<LoginPage> {
         child: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
             if (state is AuthSuccess) {
-              Navigator.pushReplacement(
+              // Simpan session
+              SessionManager.saveSession(
+                token: 'logged_in',
+                userData: {
+                  'user_id': state.user.userId,
+                  'name': state.user.name,
+                  'email': state.user.email,
+                  'phone_number': state.user.phoneNumber,
+                  'blood_type': state.user.bloodType,
+                  'medical_notes': state.user.medicalNotes,
+                },
+              );
+              Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
                   builder: (context) => HomePage(user: state.user),
                 ),
+                (route) => false, // Hapus semua route sebelumnya
               );
             } else if (state is AuthError) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -57,220 +69,196 @@ class _LoginPageState extends State<LoginPage> {
           },
           builder: (context, state) {
             return SafeArea(
-              child: Stack(
-                children: [
-                  // CONTENT (At the bottom of stack)
-                  SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // LOGO SECTION
-                        Center(
-                          child: Column(
-                            children: [
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.shield, color: AppColors.primaryRed, size: 42),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    'SAFE',
-                                    style: AppTextStyles.heading.copyWith(
-                                      color: AppColors.primaryRed,
-                                      fontSize: 32,
-                                      letterSpacing: 2.0,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                height: 4,
-                                width: 60,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primaryRed,
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                            ],
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                      // LOGO
+                      Image.asset(
+                        'assets/images/logo.png',
+                        height: 56,
+                        errorBuilder: (context, error, stackTrace) => 
+                            const Icon(Icons.shield, color: AppColors.primaryRed, size: 56),
+                      ),
+                    const SizedBox(height: 32),
+
+                    // TITLES
+                    Text('Masuk Akun', style: AppTextStyles.heading),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Masukkan email dan kata sandi yang terdaftar',
+                      style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // EMAIL FIELD
+                    Text('EMAIL', style: AppTextStyles.inputLabel),
+                    const SizedBox(height: 8),
+                    _buildInputField(
+                      controller: emailController,
+                      hint: 'nama@email.com',
+                      prefixIcon: Icons.mail_outline,
+                    ),
+                    const SizedBox(height: 20),
+
+                    // PASSWORD FIELD
+                    Text('KATA SANDI', style: AppTextStyles.inputLabel),
+                    const SizedBox(height: 8),
+                    _buildInputField(
+                      controller: passwordController,
+                      hint: 'Kata sandi',
+                      prefixIcon: Icons.lock_outline,
+                      isPassword: true,
+                      obscureText: !_isPasswordVisible,
+                      onToggleVisibility: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+
+                    // FORGOT PASSWORD
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+                          );
+                        },
+                        child: Text(
+                          'Lupa kata sandi?',
+                          style: AppTextStyles.subHeading.copyWith(
+                            color: const Color(0xFF193855),
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
-                        const SizedBox(height: 60),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
 
-                        // HERO TEXT
-                        Text(l10n.loginTitle, style: AppTextStyles.heading),
-                        const SizedBox(height: 16),
-                        Text(
-                          l10n.loginSubTitle,
-                          style: AppTextStyles.subHeading,
+                    // LOGIN BUTTON
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryRed,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(27),
+                          ),
+                          elevation: 4,
+                          shadowColor: AppColors.primaryRed.withOpacity(0.3),
                         ),
-                        const SizedBox(height: 50),
+                        onPressed: state is AuthLoading
+                            ? null
+                            : () {
+                                if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Silahkan isi email dan kata sandi'),
+                                      backgroundColor: AppColors.primaryRed,
+                                    ),
+                                  );
+                                  return;
+                                }
+                                if (!emailController.text.contains('@')) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Format email harus mengandung @'),
+                                      backgroundColor: AppColors.primaryRed,
+                                    ),
+                                  );
+                                  return;
+                                }
+                                context.read<AuthCubit>().login(
+                                      emailController.text,
+                                      passwordController.text,
+                                    );
+                              },
+                        child: state is AuthLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : Text('MASUK', style: AppTextStyles.buttonPrimary),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
 
-                        // INPUT EMAIL
-                        Text(
-                          l10n.emailLabel,
-                          style: AppTextStyles.inputLabel,
+                    // OR DIVIDER
+                    Row(
+                      children: [
+                        Expanded(child: Divider(color: AppColors.inputBorder)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            'ATAU',
+                            style: AppTextStyles.inputLabel.copyWith(color: AppColors.inputIconGrey),
+                          ),
                         ),
-                        const SizedBox(height: 8),
-                        _buildInputField(
-                          controller: emailController,
-                          hint: 'email@sentinel-arch.org',
-                          icon: Icons.alternate_email,
-                        ),
-                        const SizedBox(height: 24),
+                        Expanded(child: Divider(color: AppColors.inputBorder)),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
 
-                        // INPUT PASSWORD
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    // GOOGLE LOGIN BUTTON
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          side: BorderSide(color: AppColors.inputBorder),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(27),
+                          ),
+                        ),
+                        onPressed: () {
+                          // TODO: Implement Google Sign In
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              l10n.passwordLabel,
-                              style: AppTextStyles.inputLabel,
-                            ),
-                            Text(
-                              l10n.forgotPassword.toUpperCase(),
-                              style: AppTextStyles.inputLabel.copyWith(
-                                color: Colors.blue[800],
-                                fontSize: 10,
-                              ),
-                            ),
+                            const FaIcon(FontAwesomeIcons.google, color: Colors.blue, size: 20), // Placeholder color, usually custom icon or package
+                            const SizedBox(width: 12),
+                            Text('Masuk dengan Google', style: AppTextStyles.buttonSecondary),
                           ],
                         ),
-                        const SizedBox(height: 8),
-                        _buildInputField(
-                          controller: passwordController,
-                          hint: '••••••••••••••',
-                          icon: _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                          isPassword: true,
-                          obscureText: !_isPasswordVisible,
-                          onToggleVisibility: () {
-                            setState(() {
-                              _isPasswordVisible = !_isPasswordVisible;
-                            });
+                      ),
+                    ),
+                    const SizedBox(height: 48),
+
+                    // REGISTER LINK
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'Belum punya akun? ',
+                          style: AppTextStyles.subHeading.copyWith(fontSize: 14, color: AppColors.textGrey),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const RegisterPage()),
+                            );
                           },
-                        ),
-                        const SizedBox(height: 40),
-
-                        // LOGIN BUTTON
-                        SizedBox(
-                          width: double.infinity,
-                          height: 58,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.primaryRed,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              elevation: 8,
-                              shadowColor: AppColors.primaryRed.withOpacity(0.4),
+                          child: Text(
+                            'Daftar sekarang',
+                            style: AppTextStyles.subHeading.copyWith(
+                              fontSize: 14,
+                              color: const Color(0xFF193855),
+                              fontWeight: FontWeight.bold,
                             ),
-                            onPressed: state is AuthLoading
-                                ? null
-                                : () {
-                                    context.read<AuthCubit>().login(
-                                          emailController.text,
-                                          passwordController.text,
-                                        );
-                                  },
-                            child: state is AuthLoading
-                                ? const CircularProgressIndicator(color: Colors.white)
-                                : Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(l10n.loginButton, style: AppTextStyles.buttonPrimary),
-                                      const SizedBox(width: 10),
-                                      const Icon(Icons.arrow_forward, size: 20),
-                                    ],
-                                  ),
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-
-                        // REGISTER SECTION
-                        Center(
-                          child: Column(
-                            children: [
-                              Text(
-                                l10n.registerLink,
-                                style: AppTextStyles.subHeading.copyWith(fontSize: 14),
-                              ),
-                              const SizedBox(height: 16),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton(
-                                  style: OutlinedButton.styleFrom(
-                                    side: const BorderSide(color: AppColors.outlineButtonBorder),
-                                    padding: const EdgeInsets.symmetric(vertical: 18),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                  ),
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (context) => const RegisterPage()),
-                                    );
-                                  },
-                                  child: Text(
-                                    l10n.registerLink.toUpperCase(),
-                                    style: AppTextStyles.buttonSecondary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 60),
-
-                        // FOOTER
-                        SizedBox(
-                          width: double.infinity,
-                          child: Column(
-                            children: [
-                              Text(
-                                l10n.copyright.toUpperCase(),
-                                style: AppTextStyles.footer,
-                                textAlign: TextAlign.center,
-                                softWrap: true,
-                              ),
-                              const SizedBox(height: 12),
-                              Wrap(
-                                alignment: WrapAlignment.center,
-                                spacing: 20,
-                                runSpacing: 10,
-                                children: [
-                                  Text(l10n.security.toUpperCase(), style: AppTextStyles.footer),
-                                  Text(l10n.privacy.toUpperCase(), style: AppTextStyles.footer),
-                                ],
-                              ),
-                            ],
                           ),
                         ),
                       ],
                     ),
-                  ),
-
-                  // LANGUAGE TOGGLE (At the top of stack)
-                  Positioned(
-                    top: 10,
-                    right: 20,
-                    child: TextButton(
-                      onPressed: () => context.read<LanguageCubit>().toggleLanguage(),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.language, size: 18, color: AppColors.primaryRed),
-                          const SizedBox(width: 6),
-                          Text(
-                            Localizations.localeOf(context).languageCode.toUpperCase(),
-                            style: AppTextStyles.inputLabel.copyWith(color: AppColors.primaryRed),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
@@ -282,7 +270,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget _buildInputField({
     required TextEditingController controller,
     required String hint,
-    required IconData icon,
+    required IconData prefixIcon,
     bool isPassword = false,
     bool obscureText = false,
     VoidCallback? onToggleVisibility,
@@ -290,7 +278,8 @@ class _LoginPageState extends State<LoginPage> {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.inputBackground,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.inputBorder),
       ),
       child: TextField(
         controller: controller,
@@ -298,15 +287,20 @@ class _LoginPageState extends State<LoginPage> {
         style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey.withOpacity(0.6)),
+          hintStyle: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          prefixIcon: Icon(prefixIcon, color: AppColors.inputIconGrey, size: 22),
           suffixIcon: isPassword
               ? IconButton(
-                  icon: Icon(icon, color: AppColors.inputIconGrey, size: 22),
+                  icon: Icon(
+                    obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    color: AppColors.inputIconGrey,
+                    size: 22,
+                  ),
                   onPressed: onToggleVisibility,
                 )
-              : Icon(icon, color: AppColors.inputIconGrey, size: 22),
+              : null,
         ),
       ),
     );

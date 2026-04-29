@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_state.dart';
 import 'package:safe/core/utils/injection.dart';
-import 'package:safe/core/localization/language_cubit.dart';
-import 'package:safe/l10n/app_localizations.dart';
-import 'package:safe/features/home/presentation/pages/home_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -19,12 +17,13 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final _phoneController = TextEditingController(); // Ditambahkan untuk sinkronisasi dengan ERD
   final _medicalNotesController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   String? _selectedBloodType;
-  final List<String> _bloodTypes = ['A', 'B', 'AB', 'O', 'O+', 'O-', 'A+', 'A-', 'B+', 'B-'];
+  final List<String> _bloodTypes = ['A', 'B', 'AB', 'O'];
 
   final _formKey = GlobalKey<FormState>();
   bool _isPasswordVisible = false;
@@ -34,17 +33,16 @@ class _RegisterPageState extends State<RegisterPage> {
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
-    _passwordController.dispose();
     _medicalNotesController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F5F8),
+      backgroundColor: AppColors.backgroundLight,
       body: BlocProvider(
         create: (context) => sl<AuthCubit>(),
         child: BlocConsumer<AuthCubit, AuthState>(
@@ -62,272 +60,284 @@ class _RegisterPageState extends State<RegisterPage> {
           },
           builder: (context, state) {
             return SafeArea(
-              child: Stack(
-                children: [
-                  // CONTENT (At the bottom of stack)
-                  SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
-                    child: Column(
-                      children: [
-                        // HEADER SECTION
-                        Center(
-                          child: Column(
-                            children: [
-                              const Icon(Icons.shield, color: AppColors.primaryRed, size: 48),
-                              const SizedBox(height: 8),
-                              Text(
-                                'SAFE',
-                                style: AppTextStyles.heading.copyWith(
-                                  color: AppColors.primaryRed,
-                                  fontSize: 32,
-                                  letterSpacing: 2.0,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                l10n.loginSubTitle, 
-                                style: AppTextStyles.subHeading.copyWith(fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 40),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // LOGO Asset
+                      Image.asset(
+                        'assets/images/logo.png',
+                        height: 56,
+                        errorBuilder: (context, error, stackTrace) => 
+                            const Icon(Icons.shield, color: AppColors.primaryRed, size: 56),
+                      ),
+                      const SizedBox(height: 32),
 
-                        // ACCOUNT SETUP CARD
-                        Container(
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 15,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(28.0),
-                            child: Form(
-                              key: _formKey,
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      // TITLES
+                      Text('Daftar Akun', style: AppTextStyles.heading),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Bergabunglah dengan SAFE untuk perlindungan dan ketenangan pikiran Anda.',
+                        style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // NAMA LENGKAP FIELD
+                      Text('NAMA LENGKAP', style: AppTextStyles.inputLabel),
+                      const SizedBox(height: 8),
+                      _buildInputField(
+                        controller: _nameController,
+                        hint: 'Masukkan nama lengkap Anda',
+                        prefixIcon: Icons.person_outline,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // EMAIL FIELD
+                      Text('EMAIL', style: AppTextStyles.inputLabel),
+                      const SizedBox(height: 8),
+                      _buildInputField(
+                        controller: _emailController,
+                        hint: 'nama@email.com',
+                        prefixIcon: Icons.mail_outline,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Wajib diisi';
+                          if (!value.contains('@')) return 'Format email harus mengandung @';
+                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                            return 'Format email tidak valid';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // NOMOR HP FIELD (Not in design but required in ERD)
+                      Text('NOMOR HANDPHONE', style: AppTextStyles.inputLabel),
+                      const SizedBox(height: 8),
+                      _buildInputField(
+                        controller: _phoneController,
+                        hint: '081234567890',
+                        prefixIcon: Icons.phone_outlined,
+                        keyboardType: TextInputType.phone,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return 'Wajib diisi';
+                          if (!value.startsWith('08')) return 'Nomor harus diawali 08';
+                          if (value.length < 10) return 'Nomor minimal 10 digit';
+                          if (value.length > 15) return 'Nomor terlalu panjang';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // GOLONGAN DARAH & RIWAYAT PENYAKIT
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('GOLONGAN DARAH', style: AppTextStyles.inputLabel),
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.inputBackground,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: AppColors.inputBorder),
+                                  ),
+                                  child: Row(
                                     children: [
+                                      const Icon(Icons.water_drop_outlined, color: AppColors.inputIconGrey, size: 22),
+                                      const SizedBox(width: 12),
                                       Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(l10n.stepIndicator,
-                                                textAlign: TextAlign.start,
-                                                style: AppTextStyles.inputLabel.copyWith(color: AppColors.primaryRed)),
-                                            const SizedBox(height: 4),
-                                            Text(l10n.registerTitle,
-                                                textAlign: TextAlign.start,
-                                                style: AppTextStyles.heading.copyWith(fontSize: 24)),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.end,
-                                          children: [
-                                            Text(l10n.profileStatus,
-                                                textAlign: TextAlign.end,
-                                                style: AppTextStyles.inputLabel.copyWith(fontSize: 10)),
-                                            const SizedBox(height: 4),
-                                            Text(l10n.initialEntry,
-                                                textAlign: TextAlign.end,
-                                                style: AppTextStyles.subHeading.copyWith(
-                                                  color: Colors.blue[800],
-                                                  fontWeight: FontWeight.bold,
-                                                )),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 32),
-
-                                  _buildSectionHeader(l10n.basicCredentials),
-                                  const SizedBox(height: 20),
-
-                                  _buildLabel(l10n.fullName),
-                                  _buildInputField(controller: _nameController, hint: "Johnathan Doe"),
-                                  const SizedBox(height: 16),
-
-                                  _buildLabel(l10n.emailAddress),
-                                  _buildInputField(controller: _emailController, hint: "john@guardian.com"),
-                                  const SizedBox(height: 16),
-
-                                  _buildLabel(l10n.mobileId),
-                                  _buildInputField(controller: _phoneController, hint: "+62 8xx xxxx xxxx"),
-                                  const SizedBox(height: 16),
-
-                                  _buildLabel(l10n.passwordLabel),
-                                  _buildInputField(
-                                    controller: _passwordController,
-                                    hint: "••••••••",
-                                    isPassword: true,
-                                    obscureText: !_isPasswordVisible,
-                                    onToggleVisibility: () {
-                                      setState(() {
-                                        _isPasswordVisible = !_isPasswordVisible;
-                                      });
-                                    },
-                                    validator: (v) {
-                                      if (v == null || v.isEmpty) return 'Wajib diisi';
-                                      if (v.length < 6) return 'Minimal 6 karakter';
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 32),
-
-                                  _buildSectionHeader(l10n.medicalProfile, icon: Icons.medical_services),
-                                  const SizedBox(height: 20),
-
-                                  Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        flex: 2,
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            _buildLabel(l10n.bloodType),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 12),
-                                              decoration: BoxDecoration(
-                                                color: AppColors.inputBackground,
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: DropdownButtonHideUnderline(
-                                                child: DropdownButtonFormField<String>(
-                                                  value: _selectedBloodType,
-                                                  decoration: const InputDecoration(border: InputBorder.none),
-                                                  items: _bloodTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
-                                                  onChanged: (v) => setState(() => _selectedBloodType = v),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        flex: 3,
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            _buildLabel(l10n.criticalAllergies),
-                                            _buildInputField(
-                                              controller: _medicalNotesController,
-                                              hint: "e.g. Penicillin, Latex",
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 40),
-
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 56,
-                                    child: ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.primaryRed,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                                      ),
-                                      onPressed: state is AuthLoading
-                                          ? null
-                                          : () {
-                                              if (_formKey.currentState!.validate()) {
-                                                context.read<AuthCubit>().register(
-                                                      name: _nameController.text,
-                                                      phoneNumber: _phoneController.text,
-                                                      email: _emailController.text,
-                                                      password: _passwordController.text,
-                                                      bloodType: _selectedBloodType,
-                                                      medicalNotes: _medicalNotesController.text,
-                                                    );
-                                              }
+                                        child: DropdownButtonHideUnderline(
+                                          child: DropdownButton<String>(
+                                            value: _selectedBloodType,
+                                            hint: Text('Pilih', style: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey)),
+                                            icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.inputIconGrey),
+                                            isExpanded: true,
+                                            style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
+                                            items: _bloodTypes.map((String value) {
+                                              return DropdownMenuItem<String>(
+                                                value: value,
+                                                child: Text(value),
+                                              );
+                                            }).toList(),
+                                            onChanged: (newValue) {
+                                              setState(() {
+                                                _selectedBloodType = newValue;
+                                              });
                                             },
-                                      child: state is AuthLoading
-                                          ? const CircularProgressIndicator(color: Colors.white)
-                                          : Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                Text(l10n.createAccount, style: AppTextStyles.buttonPrimary),
-                                                const SizedBox(width: 10),
-                                                const Icon(Icons.arrow_forward, size: 20),
-                                              ],
-                                            ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 24),
-
-                                  Center(
-                                    child: GestureDetector(
-                                      onTap: () => Navigator.pop(context),
-                                      child: RichText(
-                                        text: TextSpan(
-                                          style: AppTextStyles.subHeading.copyWith(fontSize: 14, color: AppColors.textDark),
-                                          children: [
-                                            TextSpan(text: l10n.alreadyHaveAccount + " "),
-                                            TextSpan(
-                                              text: l10n.loginLink,
-                                              style: TextStyle(color: Colors.blue[800], fontWeight: FontWeight.bold),
-                                            ),
-                                          ],
+                                          ),
                                         ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 40),
-
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Text(
-                            l10n.legalFooter,
-                            textAlign: TextAlign.center,
-                            style: AppTextStyles.footer.copyWith(fontSize: 10, height: 1.5),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
-                    ),
-                  ),
-
-                  // LANGUAGE TOGGLE (At the top of stack)
-                  Positioned(
-                    top: 10,
-                    right: 20,
-                    child: TextButton(
-                      onPressed: () => context.read<LanguageCubit>().toggleLanguage(),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.language, size: 18, color: AppColors.primaryRed),
-                          const SizedBox(width: 6),
-                          Text(
-                            Localizations.localeOf(context).languageCode.toUpperCase(),
-                            style: AppTextStyles.inputLabel.copyWith(color: AppColors.primaryRed),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 3,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('RIWAYAT PENYAKIT', style: AppTextStyles.inputLabel),
+                                const SizedBox(height: 8),
+                                _buildInputField(
+                                  controller: _medicalNotesController,
+                                  hint: 'Cth: Asma',
+                                  prefixIcon: Icons.medical_services_outlined,
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
+                      const SizedBox(height: 16),
+
+                      // KATA SANDI FIELD
+                      Text('KATA SANDI', style: AppTextStyles.inputLabel),
+                      const SizedBox(height: 8),
+                      _buildInputField(
+                        controller: _passwordController,
+                        hint: 'Minimal 8 karakter',
+                        prefixIcon: Icons.lock_outline,
+                        isPassword: true,
+                        obscureText: !_isPasswordVisible,
+                        onToggleVisibility: () {
+                          setState(() {
+                            _isPasswordVisible = !_isPasswordVisible;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      // KONFIRMASI KATA SANDI
+                      Text('KONFIRMASI KATA SANDI', style: AppTextStyles.inputLabel),
+                      const SizedBox(height: 8),
+                      _buildInputField(
+                        controller: _confirmPasswordController,
+                        hint: 'Ulangi kata sandi Anda',
+                        prefixIcon: Icons.lock_outline,
+                        isPassword: true,
+                        obscureText: !_isPasswordVisible,
+                      ),
+                      const SizedBox(height: 32),
+
+                      // REGISTER BUTTON
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryRed,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(27),
+                            ),
+                            elevation: 4,
+                            shadowColor: AppColors.primaryRed.withOpacity(0.3),
+                          ),
+                          onPressed: state is AuthLoading
+                              ? null
+                              : () {
+                                  if (_formKey.currentState!.validate()) {
+                                    if (_passwordController.text != _confirmPasswordController.text) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Kata sandi tidak cocok'), backgroundColor: AppColors.primaryRed),
+                                      );
+                                      return;
+                                    }
+                                    context.read<AuthCubit>().register(
+                                          name: _nameController.text,
+                                          phoneNumber: _phoneController.text, // Tetap menggunakan phoneNumber dari ERD
+                                          email: _emailController.text,
+                                          password: _passwordController.text,
+                                          bloodType: _selectedBloodType,
+                                          medicalNotes: _medicalNotesController.text,
+                                        );
+                                  }
+                                },
+                          child: state is AuthLoading
+                              ? const CircularProgressIndicator(color: Colors.white)
+                              : Text('Daftar Sekarang', style: AppTextStyles.buttonPrimary),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // OR DIVIDER
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: AppColors.inputBorder)),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'ATAU',
+                              style: AppTextStyles.inputLabel.copyWith(color: AppColors.inputIconGrey),
+                            ),
+                          ),
+                          Expanded(child: Divider(color: AppColors.inputBorder)),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+
+                      // GOOGLE REGISTER BUTTON
+                      SizedBox(
+                        width: double.infinity,
+                        height: 54,
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            side: BorderSide(color: AppColors.inputBorder),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(27),
+                            ),
+                          ),
+                          onPressed: () {
+                            // TODO: Implement Google Sign Up
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const FaIcon(FontAwesomeIcons.google, color: Colors.blue, size: 20),
+                              const SizedBox(width: 12),
+                              Text('Daftar dengan Google', style: AppTextStyles.buttonSecondary),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 48),
+
+                      // LOGIN LINK
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Sudah punya akun? ',
+                            style: AppTextStyles.subHeading.copyWith(fontSize: 14, color: AppColors.textGrey),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Text(
+                              'Masuk',
+                              style: AppTextStyles.subHeading.copyWith(
+                                fontSize: 14,
+                                color: const Color(0xFF193855),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             );
           },
@@ -336,59 +346,45 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildSectionHeader(String title, {IconData? icon}) {
-    return Row(
-      children: [
-        Container(height: 1, width: 20, color: Colors.grey[300]),
-        const SizedBox(width: 8),
-        Text(title, style: AppTextStyles.inputLabel),
-        const Spacer(),
-        if (icon != null) Icon(icon, color: Colors.blue[800], size: 20),
-      ],
-    );
-  }
-
-  Widget _buildLabel(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(label, style: AppTextStyles.inputLabel.copyWith(fontSize: 10)),
-    );
-  }
-
   Widget _buildInputField({
     required TextEditingController controller,
     required String hint,
+    required IconData prefixIcon,
     bool isPassword = false,
     bool obscureText = false,
     VoidCallback? onToggleVisibility,
     String? Function(String?)? validator,
+    TextInputType? keyboardType,
   }) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.inputBackground,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.inputBorder),
       ),
       child: TextFormField(
         controller: controller,
         obscureText: obscureText,
-        style: AppTextStyles.subHeading.copyWith(fontSize: 14, color: AppColors.textDark),
+        keyboardType: keyboardType,
+        style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: AppColors.inputIconGrey.withOpacity(0.5)),
+          hintStyle: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey),
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          suffixIcon: isPassword
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          prefixIcon: Icon(prefixIcon, color: AppColors.inputIconGrey, size: 22),
+          suffixIcon: isPassword && onToggleVisibility != null
               ? IconButton(
                   icon: Icon(
-                    obscureText ? Icons.visibility_off : Icons.visibility,
+                    obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
                     color: AppColors.inputIconGrey,
-                    size: 20,
+                    size: 22,
                   ),
                   onPressed: onToggleVisibility,
                 )
               : null,
         ),
-        validator: validator ?? (v) => v!.isEmpty ? 'Required' : null,
+        validator: validator ?? ((value) => value == null || value.isEmpty ? 'Wajib diisi' : null),
       ),
     );
   }

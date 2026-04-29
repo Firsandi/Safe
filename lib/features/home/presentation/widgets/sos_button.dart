@@ -102,27 +102,21 @@ class _SosButtonState extends State<SosButton> with SingleTickerProviderStateMix
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Warning Icon in Sharp Diamond
-                    _buildSharpDiamond(),
+                    const Icon(
+                      Icons.shield,
+                      color: Colors.white,
+                      size: 60,
+                    ),
                     const SizedBox(height: 12),
                     Text(
-                      widget.label,
+                      'TAHAN UNTUK\nKIRIM SOS',
+                      textAlign: TextAlign.center,
                       style: AppTextStyles.heading.copyWith(
                         color: Colors.white,
-                        fontSize: 54,
-                        height: 1.0,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      widget.subLabel,
-                      style: AppTextStyles.inputLabel.copyWith(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 10,
+                        fontSize: 14,
+                        height: 1.5,
+                        fontWeight: FontWeight.bold,
                         letterSpacing: 1.5,
-                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ],

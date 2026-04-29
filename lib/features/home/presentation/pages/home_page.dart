@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
-import 'package:safe/core/localization/language_cubit.dart';
-import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/features/emergency/presentation/pages/emergency_countdown_page.dart';
+import 'package:safe/features/emergency/presentation/pages/emergency_contacts_page.dart';
 import '../widgets/sos_button.dart';
-import '../widgets/sentinel_bottom_nav.dart';
-
+import '../widgets/navbar.dart';
 import 'package:safe/features/auth/domain/entities/user_entity.dart';
+import 'package:safe/features/emergency/presentation/bloc/emergency_cubit.dart';
+import 'package:safe/core/utils/injection.dart';
 
 class HomePage extends StatefulWidget {
   final UserEntity user;
@@ -30,77 +30,118 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     });
   }
 
+  Widget _getBody() {
+    switch (_currentIndex) {
+      case 0:
+        return _buildHomeContent();
+      case 1:
+        return BlocProvider(
+          create: (_) => sl<EmergencyCubit>(),
+          child: const EmergencyContactsPage(),
+        );
+      case 2:
+        return _buildPlaceholderPage('Riwayat', Icons.history);
+      case 3:
+        return _buildPlaceholderPage('Lokasi', Icons.location_on_outlined);
+      case 4:
+        return _buildPlaceholderPage('Profil', Icons.person_outline);
+      default:
+        return _buildHomeContent();
+    }
+  }
+
+  Widget _buildPlaceholderPage(String title, IconData icon) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 64, color: AppColors.textGrey),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: AppTextStyles.heading.copyWith(color: AppColors.textDark),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Halaman ini belum tersedia',
+            style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FCFF),
-      bottomNavigationBar: SentinelBottomNav(
+      backgroundColor: AppColors.backgroundLight,
+      bottomNavigationBar: SafeNavbar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // HEADER
-              _buildAnimated(
-                index: 0,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: SafeArea(child: _getBody()),
+    );
+  }
+
+  Widget _buildHomeContent() {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // HEADER (Logo, Bell, Settings)
+          _buildAnimated(
+            index: 0,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Image.asset(
+                    'assets/images/logo.png',
+                    height: 50,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.shield, color: AppColors.primaryRed, size: 34),
+                  ),
+                  Row(
                     children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.shield, color: AppColors.primaryRed, size: 34),
-                          const SizedBox(width: 16),
-                          Text(
-                            l10n.appTitle,
-                            style: AppTextStyles.heading.copyWith(
-                              color: AppColors.primaryRed,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.8,
-                              height: 1.0,
-                            ),
-                          ),
-                        ],
+                      IconButton(
+                        icon: const Icon(Icons.notifications_none, color: AppColors.textDark),
+                        onPressed: () {},
                       ),
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.black12, width: 1),
-                        ),
-                        child: const CircleAvatar(
-                          radius: 22,
-                          backgroundImage: NetworkImage('https://i.pravatar.cc/150?u=a042581f4e29026704d'),
-                        ),
+                      IconButton(
+                        icon: const Icon(Icons.settings_outlined, color: AppColors.textDark),
+                        onPressed: () {},
                       ),
                     ],
                   ),
-                ),
+                ],
               ),
+            ),
+          ),
 
-              // MONITORING STATUS BADGE
-              _buildAnimated(
-                index: 1,
-                child: Center(
-                  child: Container(
-                    margin: const EdgeInsets.only(top: 15),
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          // GREETING & BADGE
+          _buildAnimated(
+            index: 1,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Halo, ${widget.user.name}',
+                    style: AppTextStyles.heading.copyWith(
+                      color: AppColors.primaryRed,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF0F7FF),
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF1E88E5).withOpacity(0.05),
-                          blurRadius: 15,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.inputBorder),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -108,153 +149,155 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                         const BreathingDot(),
                         const SizedBox(width: 8),
                         Text(
-                          l10n.monitoringActive,
+                          'Sensor Aktif — memantau',
                           style: AppTextStyles.inputLabel.copyWith(
-                            color: const Color(0xFF1E88E5),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 13,
+                            color: AppColors.textGrey,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
+                ],
               ),
-
-              // GREETING
-              _buildAnimated(
-                index: 2,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Halo, ${widget.user.name}',
-                        style: AppTextStyles.heading.copyWith(
-                          color: Colors.black,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        l10n.systemOperational,
-                        style: AppTextStyles.subHeading.copyWith(
-                          color: const Color(0xFF455A64),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // SOS CORE
-              _buildAnimated(
-                index: 3,
-                child: SosButton(
-                  onLongPress: () => _triggerEmergency(context),
-                  label: l10n.sosLabel,
-                  subLabel: l10n.pressHold,
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
-              // MENU GRID
-              _buildAnimated(
-                index: 4,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: _buildMenuCard(
-                          title: l10n.medicalProfileTitle,
-                          subtitle: l10n.vitalsAllergies,
-                          icon: Icons.assignment_ind,
-                          iconBgColor: const Color(0xFFF0F7FF),
-                          iconColor: const Color(0xFF1E88E5),
-                          onTap: () {},
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _buildMenuCard(
-                          title: l10n.emergencyContactsTitle,
-                          subtitle: l10n.trustedCircle,
-                          icon: Icons.people,
-                          iconBgColor: const Color(0xFFFFF1F0),
-                          iconColor: AppColors.primaryRed,
-                          onTap: () {},
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 25),
-
-              // LOCATION PANEL
-              _buildAnimated(
-                index: 5,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Container(
-                    padding: const EdgeInsets.all(18),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(28),
-                      boxShadow: _premiumShadows,
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF5F7F9),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const Icon(Icons.location_on, color: Color(0xFF546E7A), size: 26),
-                        ),
-                        const SizedBox(width: 18),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.currentLocation,
-                                style: AppTextStyles.inputLabel.copyWith(
-                                  fontSize: 10,
-                                  color: const Color(0xFF546E7A),
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Jalan Raya Menteng No. 12, Jakarta',
-                                style: AppTextStyles.subHeading.copyWith(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              
-              const SizedBox(height: 60),
-            ],
+            ),
           ),
-        ),
+          const SizedBox(height: 20),
+
+          // SOS CORE
+          _buildAnimated(
+            index: 2,
+            child: SosButton(
+              onLongPress: () => _triggerEmergency(context),
+              label: '',
+              subLabel: '',
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // INSTRUCTION TEXT
+          _buildAnimated(
+            index: 3,
+            child: Center(
+              child: Text(
+                'Bantuan akan segera dikirimkan ke\nlokasi Anda saat ini',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.subHeading.copyWith(
+                  color: AppColors.textGrey,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+
+          // MENU GRID (Two cards)
+          _buildAnimated(
+            index: 4,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _buildMenuCard(
+                      title: 'Kontak darurat',
+                      subtitle: '3 aktif',
+                      subtitleColor: AppColors.primaryRed,
+                      icon: Icons.contact_phone_outlined,
+                      iconBgColor: const Color(0xFFEDF4FE),
+                      iconColor: const Color(0xFF193855),
+                      onTap: () {
+                        setState(() => _currentIndex = 1);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildMenuCard(
+                      title: 'Riwayat SOS',
+                      subtitle: '2 kejadian',
+                      subtitleColor: AppColors.textDark,
+                      icon: Icons.history,
+                      iconBgColor: AppColors.primaryRed.withOpacity(0.1),
+                      iconColor: AppColors.primaryRed,
+                      onTap: () {},
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 24),
+
+          // MAP PANEL
+          _buildAnimated(
+            index: 5,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                height: 180,
+                decoration: BoxDecoration(
+                  color: Colors.blueGrey[800],
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Stack(
+                  children: [
+                    // Mock Map Pattern
+                    Opacity(
+                      opacity: 0.5,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          image: const DecorationImage(
+                            image: NetworkImage('https://www.transparenttextures.com/patterns/cubes.png'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Location Badge Overlay
+                    Positioned(
+                      bottom: 16,
+                      left: 16,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.location_on_outlined, color: AppColors.textDark, size: 16),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Sumbersari, Jember',
+                              style: AppTextStyles.subHeading.copyWith(
+                                color: AppColors.textDark,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 40),
+        ],
       ),
     );
   }
@@ -275,6 +318,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   Widget _buildMenuCard({
     required String title,
     required String subtitle,
+    required Color subtitleColor,
     required IconData icon,
     required Color iconBgColor,
     required Color iconColor,
@@ -283,16 +327,22 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: _premiumShadows,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+            padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -300,26 +350,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: iconBgColor,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icon, color: iconColor, size: 28),
+                  child: Icon(icon, color: iconColor, size: 24),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 Text(
                   title,
                   style: AppTextStyles.subHeading.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black,
-                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
+                    fontSize: 14,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: AppTextStyles.footer.copyWith(
-                    fontSize: 11,
-                    color: Colors.black38,
-                    fontWeight: FontWeight.w500,
+                  style: AppTextStyles.subHeading.copyWith(
+                    fontSize: 14,
+                    color: subtitleColor,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
@@ -329,14 +379,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
     );
   }
-
-  List<BoxShadow> get _premiumShadows => [
-    BoxShadow(
-      color: Colors.black.withOpacity(0.03),
-      blurRadius: 20,
-      offset: const Offset(0, 10),
-    ),
-  ];
 
   void _triggerEmergency(BuildContext context) {
     Navigator.push(
@@ -379,7 +421,7 @@ class _BreathingDotState extends State<BreathingDot> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _animation,
-      child: const Icon(Icons.circle, color: Color(0xFF1E88E5), size: 10),
+      child: const Icon(Icons.circle, color: Color(0xFF22C55E), size: 10), // Hijau
     );
   }
 }
