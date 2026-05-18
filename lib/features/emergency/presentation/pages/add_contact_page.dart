@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dio/dio.dart';
+import 'dart:convert';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/utils/injection.dart';
 import '../../domain/entities/contact_entity.dart';
 import '../bloc/emergency_cubit.dart';
 
@@ -15,6 +18,15 @@ class AddContactPage extends StatefulWidget {
 class _AddContactPageState extends State<AddContactPage> {
   final _phoneController = TextEditingController();
   bool _hasSearched = false;
+
+  String _getInitials(String name) {
+    if (name.isEmpty) return '?';
+    final parts = name.trim().split(' ');
+    if (parts.length > 1) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+  }
 
   @override
   void dispose() {
@@ -42,9 +54,9 @@ class _AddContactPageState extends State<AddContactPage> {
         ),
         title: Image.asset(
           'assets/images/logo.png',
-          height: 30,
+          height: 48,
           errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.shield, color: AppColors.primaryRed, size: 30),
+              const Icon(Icons.shield, color: AppColors.primaryRed, size: 32),
         ),
       ),
       body: Column(
@@ -59,7 +71,7 @@ class _AddContactPageState extends State<AddContactPage> {
                 Text('Tambah Kontak Darurat', style: AppTextStyles.heading),
                 const SizedBox(height: 8),
                 Text(
-                  'Cari berdasarkan nomor telepon. Hanya pengguna yang sudah terdaftar yang dapat ditambahkan.',
+                  'Cari berdasarkan nomor telepon atau email. Hanya pengguna yang sudah terdaftar yang dapat ditambahkan.',
                   style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
                 ),
               ],
@@ -73,11 +85,11 @@ class _AddContactPageState extends State<AddContactPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('NOMOR TELEPON', style: AppTextStyles.inputLabel),
+                Text('NOMOR TELEPON / EMAIL', style: AppTextStyles.inputLabel),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    // Phone input
+                    // Phone / Email input
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
@@ -87,21 +99,21 @@ class _AddContactPageState extends State<AddContactPage> {
                         ),
                         child: TextField(
                           controller: _phoneController,
-                          keyboardType: TextInputType.phone,
+                          keyboardType: TextInputType.emailAddress,
                           style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
                           onChanged: (value) {
-                            // Auto-search when user types 10+ digits
+                            // Auto-search when user types 10+ characters
                             if (value.trim().length >= 10) {
                               _onSearch();
                             }
                           },
                           onSubmitted: (_) => _onSearch(),
                           decoration: InputDecoration(
-                            hintText: 'Contoh: 081234567890',
+                            hintText: 'Contoh: 08123456789 atau email@safe.com',
                             hintStyle: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                            prefixIcon: const Icon(Icons.phone_outlined, color: AppColors.inputIconGrey, size: 22),
+                            prefixIcon: const Icon(Icons.contact_mail_outlined, color: AppColors.inputIconGrey, size: 22),
                           ),
                         ),
                       ),
@@ -183,7 +195,7 @@ class _AddContactPageState extends State<AddContactPage> {
           Icon(Icons.search, size: 48, color: AppColors.textGrey.withOpacity(0.3)),
           const SizedBox(height: 16),
           Text(
-            'Masukkan nomor telepon untuk mencari',
+            'Masukkan nomor telepon atau email untuk mencari',
             style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
           ),
         ],
@@ -217,7 +229,7 @@ class _AddContactPageState extends State<AddContactPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              'Nomor ini belum terdaftar di aplikasi SAFE. Hanya pengguna terdaftar yang bisa ditambahkan.',
+              'Kontak ini belum terdaftar di aplikasi SAFE. Hanya pengguna terdaftar yang bisa ditambahkan.',
               textAlign: TextAlign.center,
               style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 13),
             ),
@@ -233,6 +245,8 @@ class _AddContactPageState extends State<AddContactPage> {
       itemCount: users.length,
       itemBuilder: (context, index) {
         final user = users[index];
+        final bool isAlreadyAdded = user.status == 'Tersambung' || user.status == 'Menunggu Konfirmasi';
+
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
@@ -245,18 +259,23 @@ class _AddContactPageState extends State<AddContactPage> {
             borderRadius: BorderRadius.circular(16),
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
-              onTap: () => _confirmAddContact(user),
+              onTap: isAlreadyAdded ? null : () => _confirmAddContact(user),
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
                     CircleAvatar(
                       radius: 24,
+                      backgroundImage: (user.profileImage != null && user.profileImage!.isNotEmpty)
+                          ? MemoryImage(base64Decode(user.profileImage!))
+                          : null,
                       backgroundColor: const Color(0xFFEDF4FE),
-                      child: Text(
-                        user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
-                        style: AppTextStyles.heading.copyWith(fontSize: 18, color: const Color(0xFF193855)),
-                      ),
+                      child: (user.profileImage == null || user.profileImage!.isEmpty)
+                          ? Text(
+                              _getInitials(user.name),
+                              style: AppTextStyles.heading.copyWith(fontSize: 18, color: const Color(0xFF193855)),
+                            )
+                          : null,
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -281,18 +300,26 @@ class _AddContactPageState extends State<AddContactPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF193855),
+                        color: isAlreadyAdded
+                            ? Colors.grey[200]
+                            : const Color(0xFF193855),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.add, color: Colors.white, size: 16),
+                          Icon(
+                            isAlreadyAdded
+                                ? (user.status == 'Tersambung' ? Icons.check : Icons.hourglass_empty)
+                                : Icons.add,
+                            color: isAlreadyAdded ? Colors.grey[600] : Colors.white,
+                            size: 16,
+                          ),
                           const SizedBox(width: 4),
                           Text(
-                            'Tambah',
+                            user.status.isNotEmpty ? user.status : 'Tambah',
                             style: AppTextStyles.subHeading.copyWith(
-                              color: Colors.white,
+                              color: isAlreadyAdded ? Colors.grey[600] : Colors.white,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -331,20 +358,77 @@ class _AddContactPageState extends State<AddContactPage> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () {
-              context.read<EmergencyCubit>().addContact(user.id, user.name, user.phoneNumber);
-              Navigator.pop(dialogContext); // close dialog
-              Navigator.pop(context); // go back to contacts page
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${user.name} berhasil ditambahkan sebagai kontak darurat'),
-                  backgroundColor: const Color(0xFF22C55E),
-                ),
-              );
+              Navigator.pop(dialogContext); // close confirm dialog
+              _addContactRemote(user); // perform API call
             },
             child: const Text('Tambah', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
+  }
+
+  Future<void> _addContactRemote(ContactEntity user) async {
+    // Show a loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: AppColors.primaryRed),
+      ),
+    );
+
+    try {
+      final dio = sl<Dio>();
+      final response = await dio.post(
+        '/api/contacts',
+        data: {'target_user_id': user.id},
+      );
+
+      // Pop loading dialog
+      if (mounted) Navigator.pop(context);
+
+      if (response.statusCode == 200) {
+        // Reload BLoC contacts
+        if (mounted) {
+          context.read<EmergencyCubit>().loadContacts();
+          Navigator.pop(context); // Go back to emergency page
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Permintaan kontak berhasil dikirim ke ${user.name}!'),
+              backgroundColor: const Color(0xFF22C55E),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } on DioException catch (e) {
+      // Pop loading dialog
+      if (mounted) Navigator.pop(context);
+
+      final errorMessage = e.response?.data['error'] ?? 'Gagal menambahkan kontak';
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage.toString()),
+            backgroundColor: AppColors.primaryRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      // Pop loading dialog
+      if (mounted) Navigator.pop(context);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Terjadi kesalahan: ${e.toString()}'),
+            backgroundColor: AppColors.primaryRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 }

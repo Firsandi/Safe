@@ -41,7 +41,7 @@ class _LoginPageState extends State<LoginPage> {
             if (state is AuthSuccess) {
               // Simpan session
               SessionManager.saveSession(
-                token: 'logged_in',
+                token: state.user.token ?? 'logged_in',
                 userData: {
                   'user_id': state.user.userId,
                   'name': state.user.name,
@@ -49,6 +49,7 @@ class _LoginPageState extends State<LoginPage> {
                   'phone_number': state.user.phoneNumber,
                   'blood_type': state.user.bloodType,
                   'medical_notes': state.user.medicalNotes,
+                  'profile_image': state.user.profileImage,
                 },
               );
               Navigator.pushAndRemoveUntil(

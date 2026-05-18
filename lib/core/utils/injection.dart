@@ -14,6 +14,8 @@ import 'package:safe/features/emergency/domain/repositories/emergency_repository
 import 'package:safe/features/emergency/domain/usecases/emergency_usecases.dart';
 import 'package:safe/features/emergency/presentation/bloc/emergency_cubit.dart';
 
+import 'package:safe/core/utils/session_manager.dart';
+
 final sl = GetIt.instance;
 
 Future<void> init() async {
@@ -63,15 +65,30 @@ Future<void> init() async {
   );
 
   // EXTERNAL
-  sl.registerLazySingleton(() => Dio(
-        BaseOptions(
-          baseUrl: 'http://10.0.2.2:8080', // Alamat host untuk Emulator Android ke backend native
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 10),
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        ),
-      ));
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: 'http://10.0.2.2:8080', // Alamat host untuk Emulator Android ke backend native
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    ),
+  );
+
+  // Interceptor untuk menambahkan Bearer Token pada setiap request
+  dio.interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final token = await SessionManager.getToken();
+        if (token != null && token.isNotEmpty && token != 'logged_in') {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+        return handler.next(options);
+      },
+    ),
+  );
+
+  sl.registerLazySingleton(() => dio);
 }

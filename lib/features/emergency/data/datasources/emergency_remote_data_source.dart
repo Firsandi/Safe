@@ -20,9 +20,9 @@ class EmergencyRemoteDataSourceImpl implements EmergencyRemoteDataSource {
   Future<List<ContactModel>> getContacts() async {
     try {
       final response = await dio.get('/api/contacts');
-      return (response.data['contacts'] as List)
-          .map((json) => ContactModel.fromJson(json))
-          .toList();
+      final list = response.data['contacts'] as List?;
+      if (list == null) return [];
+      return list.map((json) => ContactModel.fromJson(json)).toList();
     } on DioException catch (e) {
       throw ServerException(e.response?.data['error'] ?? 'Server error (GetContacts)');
     }
@@ -32,9 +32,9 @@ class EmergencyRemoteDataSourceImpl implements EmergencyRemoteDataSource {
   Future<List<ContactModel>> getPendingRequests() async {
     try {
       final response = await dio.get('/api/contacts/requests');
-      return (response.data['requests'] as List)
-          .map((json) => ContactModel.fromJson(json))
-          .toList();
+      final list = response.data['requests'] as List?;
+      if (list == null) return [];
+      return list.map((json) => ContactModel.fromJson(json)).toList();
     } on DioException catch (e) {
       throw ServerException(e.response?.data['error'] ?? 'Server error (GetRequests)');
     }
@@ -44,9 +44,9 @@ class EmergencyRemoteDataSourceImpl implements EmergencyRemoteDataSource {
   Future<List<ContactModel>> searchUsers(String query) async {
     try {
       final response = await dio.get('/api/users/search', queryParameters: {'q': query});
-      return (response.data['users'] as List)
-          .map((json) => ContactModel.fromJson(json))
-          .toList();
+      final list = response.data['users'] as List?;
+      if (list == null) return [];
+      return list.map((json) => ContactModel.fromJson(json)).toList();
     } on DioException catch (e) {
       throw ServerException(e.response?.data['error'] ?? 'Server error (SearchUsers)');
     }

@@ -10,6 +10,8 @@ import 'package:safe/features/auth/domain/entities/user_entity.dart';
 import 'package:safe/features/emergency/presentation/bloc/emergency_cubit.dart';
 import 'package:safe/core/utils/injection.dart';
 
+import 'package:safe/features/auth/presentation/pages/profile_page.dart';
+
 class HomePage extends StatefulWidget {
   final UserEntity user;
   const HomePage({super.key, required this.user});
@@ -44,7 +46,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       case 3:
         return _buildPlaceholderPage('Lokasi', Icons.location_on_outlined);
       case 4:
-        return _buildPlaceholderPage('Profil', Icons.person_outline);
+        return ProfilePage(user: widget.user);
       default:
         return _buildHomeContent();
     }

@@ -8,9 +8,11 @@ class UserModel extends UserEntity {
     required super.phoneNumber,
     super.bloodType,
     super.medicalNotes,
+    super.token,
+    super.profileImage,
   });
 
-  factory UserModel.fromJson(Map<String, dynamic> json) {
+  factory UserModel.fromJson(Map<String, dynamic> json, {String? token}) {
     return UserModel(
       userId: json['user_id'] ?? '',      
       email: json['email'] ?? '',    
@@ -18,6 +20,8 @@ class UserModel extends UserEntity {
       phoneNumber: json['phone_number'] ?? '',
       bloodType: json['blood_type'],
       medicalNotes: json['medical_notes'],
+      token: token ?? json['token'],
+      profileImage: json['profile_image'] ?? '',
     );
   }
 
@@ -29,6 +33,8 @@ class UserModel extends UserEntity {
       'phone_number': phoneNumber,
       'blood_type': bloodType,
       'medical_notes': medicalNotes,
+      'token': token,
+      'profile_image': profileImage,
     };
   }
 }

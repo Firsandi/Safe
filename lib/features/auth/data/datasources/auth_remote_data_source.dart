@@ -31,7 +31,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         },
       );
 
-      return UserModel.fromJson(response.data['user']);
+      final token = response.data['token'] as String?;
+      return UserModel.fromJson(response.data['user'], token: token);
     } on DioException catch (e) {
       final message = e.response?.data['error'] ?? 'Server error (Login)';
       throw ServerException(message);
@@ -62,7 +63,8 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         },
       );
 
-      return UserModel.fromJson(response.data['user']);
+      final token = response.data['token'] as String?;
+      return UserModel.fromJson(response.data['user'], token: token);
     } on DioException catch (e) {
       final message = e.response?.data['error'] ?? 'Server error (Register)';
       throw ServerException(message);

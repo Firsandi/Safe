@@ -17,6 +17,8 @@ class EmergencyRepositoryImpl implements EmergencyRepository {
       return Right(contacts);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -27,6 +29,8 @@ class EmergencyRepositoryImpl implements EmergencyRepository {
       return Right(requests);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -37,6 +41,8 @@ class EmergencyRepositoryImpl implements EmergencyRepository {
       return Right(users);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
     }
   }
 
