@@ -67,7 +67,7 @@ Future<void> init() async {
   // EXTERNAL
   final dio = Dio(
     BaseOptions(
-      baseUrl: 'http://10.0.2.2:8080', // Alamat host untuk Emulator Android ke backend native
+      baseUrl: 'http://10.195.242.226:8080', // Alamat host untuk HP Fisik
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {
