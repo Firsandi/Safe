@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:safe/core/utils/session_manager.dart';
 import '../utils/injection.dart';
 
 class LocationService {
@@ -12,7 +13,13 @@ class LocationService {
   static Future<void> loadActiveSosId() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      activeSosId = prefs.getString('active_sos_id');
+      final userData = await SessionManager.getUserData();
+      final userId = userData != null ? userData['user_id'] : null;
+      if (userId != null) {
+        activeSosId = prefs.getString('active_sos_id_$userId');
+      } else {
+        activeSosId = null;
+      }
     } catch (_) {}
   }
 
@@ -21,10 +28,19 @@ class LocationService {
     activeSosId = id;
     try {
       final prefs = await SharedPreferences.getInstance();
-      if (id == null) {
-        await prefs.remove('active_sos_id');
+      final userData = await SessionManager.getUserData();
+      final userId = userData != null ? userData['user_id'] : null;
+      if (userId != null) {
+        if (id == null) {
+          await prefs.remove('active_sos_id_$userId');
+        } else {
+          await prefs.setString('active_sos_id_$userId', id);
+        }
       } else {
-        await prefs.setString('active_sos_id', id);
+        // Fallback for global clear
+        if (id == null) {
+          await prefs.remove('active_sos_id');
+        }
       }
     } catch (_) {}
   }

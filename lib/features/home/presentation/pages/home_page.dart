@@ -19,6 +19,8 @@ import 'package:safe/features/emergency/presentation/bloc/emergency_cubit.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/features/auth/presentation/pages/profile_page.dart';
 import 'package:safe/l10n/app_localizations.dart';
+import 'package:safe/core/services/notification_local_service.dart';
+import 'package:safe/features/home/presentation/pages/notification_page.dart';
 
 class HomePage extends StatefulWidget {
   final UserEntity user;
@@ -49,6 +51,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   // Real-time Statistics
   int _activeContactsCount = 0;
   int _sosHistoryCount = 0;
+  int _unreadNotificationCount = 0;
+  int _historyInitialTabIndex = 0;
 
   @override
   void initState() {
@@ -59,6 +63,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     });
     _startSensorMonitoring();
     _loadStats();
+    _loadUnreadNotificationCount();
     _syncActiveSosState(); // Check and synchronize active SOS event
 
     // Register callback for background sync success
@@ -66,10 +71,46 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       if (mounted) {
         setState(() {});
         _loadStats();
+        _loadUnreadNotificationCount();
       }
     };
     // Start background sync loop
     OfflineSyncService.startSyncLoop(context);
+  }
+
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      final count = await NotificationLocalService.getUnreadCount();
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = count;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _navigateToNotifications() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const NotificationPage()),
+    );
+
+    _loadUnreadNotificationCount();
+
+    if (result != null && result is Map) {
+      final action = result['action'];
+      if (action == 'go_to_history') {
+        final tabIndex = result['tab'] ?? 0;
+        setState(() {
+          _currentIndex = 2; // Riwayat SOS
+          _historyInitialTabIndex = tabIndex;
+        });
+      } else if (action == 'go_to_contacts') {
+        setState(() {
+          _currentIndex = 1; // Kontak darurat
+        });
+      }
+    }
   }
 
 
@@ -255,7 +296,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           child: const EmergencyContactsPage(),
         );
       case 2:
-        return const EmergencyHistoryPage();
+        return EmergencyHistoryPage(
+          initialTabIndex: _historyInitialTabIndex,
+          key: ValueKey('history_page_$_historyInitialTabIndex'),
+        );
       case 3:
         return _buildPlaceholderPage(AppLocalizations.of(context)!.locationTitle, Icons.location_on_outlined);
       case 4:
@@ -288,9 +332,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       bottomNavigationBar: SafeNavbar(
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() => _currentIndex = index);
+          setState(() {
+            _currentIndex = index;
+            if (index == 2) {
+              _historyInitialTabIndex = 0; // reset to default tab
+            }
+          });
           if (index == 0) {
             _loadStats();
+            _loadUnreadNotificationCount();
           }
         },
       ),
@@ -312,7 +362,40 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 Image.asset('assets/images/logo.png', height: 50,
                   errorBuilder: (c, e, s) => const Icon(Icons.shield, color: AppColors.primaryRed, size: 34)),
                 Row(children: [
-                  IconButton(icon: const Icon(Icons.notifications_none, color: AppColors.textDark), onPressed: () {}),
+                  IconButton(
+                    icon: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        const Icon(Icons.notifications_none, color: AppColors.textDark),
+                        if (_unreadNotificationCount > 0)
+                          Positioned(
+                            right: -2,
+                            top: -2,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: AppColors.primaryRed,
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 16,
+                                minHeight: 16,
+                              ),
+                              child: Text(
+                                '$_unreadNotificationCount',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    onPressed: _navigateToNotifications,
+                  ),
                   IconButton(icon: const Icon(Icons.settings_outlined, color: AppColors.textDark), onPressed: () {}),
                 ]),
               ],
@@ -410,7 +493,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                       iconBgColor: AppColors.primaryRed.withOpacity(0.1),
                       iconColor: AppColors.primaryRed,
                       onTap: () {
-                        setState(() => _currentIndex = 2);
+                        setState(() {
+                          _currentIndex = 2;
+                          _historyInitialTabIndex = 0; // reset to default tab
+                        });
                       },
                     ),
                   ),
