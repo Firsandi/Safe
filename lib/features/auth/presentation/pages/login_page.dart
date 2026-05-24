@@ -223,7 +223,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const FaIcon(FontAwesomeIcons.google, color: Colors.blue, size: 20), // Placeholder color, usually custom icon or package
+                            Image.asset('assets/images/google_logo.png', height: 20, width: 20),
                             const SizedBox(width: 12),
                             Text('Masuk dengan Google', style: AppTextStyles.buttonSecondary),
                           ],
