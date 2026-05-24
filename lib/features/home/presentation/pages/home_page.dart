@@ -1,15 +1,21 @@
+import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sensors_plus/sensors_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/features/emergency/presentation/pages/emergency_countdown_page.dart';
 import 'package:safe/features/emergency/presentation/pages/emergency_contacts_page.dart';
+import 'package:safe/features/emergency/presentation/pages/emergency_history_page.dart';
+import 'package:safe/core/services/location_service.dart';
+import 'package:safe/core/services/offline_sync_service.dart';
 import '../widgets/sos_button.dart';
 import '../widgets/navbar.dart';
 import 'package:safe/features/auth/domain/entities/user_entity.dart';
 import 'package:safe/features/emergency/presentation/bloc/emergency_cubit.dart';
 import 'package:safe/core/utils/injection.dart';
-
 import 'package:safe/features/auth/presentation/pages/profile_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -24,11 +30,184 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   int _currentIndex = 0;
   bool _isInit = false;
 
+  // Sensor Subscriptions and States
+  StreamSubscription? _accelerometerSub;
+  StreamSubscription? _gyroscopeSub;
+
+  DateTime? _lastShakeTime;
+  final double _shakeThreshold = 15.0;
+  int _shakeCount = 0;
+
+  bool _freefallDetected = false;
+  DateTime? _freefallTime;
+  double _lastRotationRate = 0.0;
+  bool _isEmergencyTriggered = false;
+
+  // Real-time Statistics
+  int _activeContactsCount = 0;
+  int _sosHistoryCount = 0;
+
   @override
   void initState() {
     super.initState();
     Future.delayed(const Duration(milliseconds: 200), () {
       if (mounted) setState(() => _isInit = true);
+    });
+    _startSensorMonitoring();
+    _loadStats();
+
+    // Register callback for background sync success
+    OfflineSyncService.onSyncSuccess = () {
+      if (mounted) {
+        setState(() {});
+        _loadStats();
+      }
+    };
+    // Start background sync loop
+    OfflineSyncService.startSyncLoop(context);
+  }
+
+  Future<void> _loadStats() async {
+    try {
+      final dio = sl<Dio>();
+      
+      // Fetch contacts count
+      final contactsRes = await dio.get('/api/contacts');
+      final contactsList = contactsRes.data['contacts'] as List?;
+      final activeContacts = contactsList?.where((c) => c['status'] == 'Tersambung').length ?? 0;
+
+      // Fetch history count
+      final historyRes = await dio.get('/api/sos/history/sent');
+      final historyList = historyRes.data as List?;
+      final historyCount = historyList?.length ?? 0;
+
+      if (mounted) {
+        setState(() {
+          _activeContactsCount = activeContacts;
+          _sosHistoryCount = historyCount;
+        });
+      }
+    } catch (_) {
+      // Quietly ignore
+    }
+  }
+
+  @override
+  void dispose() {
+    _accelerometerSub?.cancel();
+    _gyroscopeSub?.cancel();
+    OfflineSyncService.onSyncSuccess = null;
+    OfflineSyncService.stopSyncLoop();
+    super.dispose();
+  }
+
+  void _startSensorMonitoring() {
+    // 1. Gyroscope to measure angular velocity (tumbling/rotation rate)
+    _gyroscopeSub = gyroscopeEventStream(samplingPeriod: SensorInterval.uiInterval).listen((GyroscopeEvent event) {
+      if (_isEmergencyTriggered) return;
+
+      double x = event.x;
+      double y = event.y;
+      double z = event.z;
+      // Calculate rotation rate magnitude in rad/s
+      _lastRotationRate = math.sqrt(x * x + y * y + z * z);
+    });
+
+    // 2. Accelerometer to measure linear acceleration forces (including gravity)
+    _accelerometerSub = accelerometerEventStream(samplingPeriod: SensorInterval.uiInterval).listen((AccelerometerEvent event) {
+      if (_isEmergencyTriggered) return;
+
+      double x = event.x;
+      double y = event.y;
+      double z = event.z;
+      
+      // Calculate total acceleration magnitude (including gravity, normally around 9.8 m/s^2)
+      double magnitude = math.sqrt(x * x + y * y + z * z);
+
+      // --- SHAKE DETECTION ---
+      // Measure change excluding gravity
+      double accelerationExcludingGravity = (magnitude - 9.8).abs();
+      if (accelerationExcludingGravity > _shakeThreshold) {
+        final now = DateTime.now();
+        // Debounce shake events
+        if (_lastShakeTime == null || now.difference(_lastShakeTime!) > const Duration(milliseconds: 250)) {
+          if (_lastShakeTime != null && now.difference(_lastShakeTime!) < const Duration(seconds: 2)) {
+            _shakeCount++;
+            if (_shakeCount >= 4) {
+              _shakeCount = 0;
+              _triggerEmergencyFromSensor(
+                reason: "Guncangan Keras Terdeteksi",
+                force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
+              );
+            }
+          } else {
+            _shakeCount = 1;
+          }
+          _lastShakeTime = now;
+        }
+      }
+
+      // --- FALL / CRASH DETECTION ---
+      // Step A: Detect Free Fall (magnitude drops close to 0 m/s^2)
+      if (magnitude < 3.0) {
+        _freefallDetected = true;
+        _freefallTime = DateTime.now();
+      }
+
+      // Step B: Detect Impact (magnitude spikes high)
+      if (magnitude > 28.0) {
+        final now = DateTime.now();
+        
+        // 1. Classic Fall: free fall followed shortly by a high impact
+        if (_freefallDetected && _freefallTime != null) {
+          if (now.difference(_freefallTime!) < const Duration(milliseconds: 1000)) {
+            _freefallDetected = false;
+            _triggerEmergencyFromSensor(
+              reason: "Jatuh Terdeteksi",
+              force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
+            );
+            return;
+          }
+        }
+
+        // 2. Tumbling/Crash: high rotation rate (gyroscope) combined with high impact force
+        if (_lastRotationRate > 7.0) {
+          _triggerEmergencyFromSensor(
+            reason: "Tabrakan & Benturan Terdeteksi",
+            force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
+          );
+          return;
+        }
+
+        // 3. Direct Severe Impact: extremely high acceleration force (>3.5 G)
+        if (magnitude > 35.0) {
+          _triggerEmergencyFromSensor(
+            reason: "Benturan Keras Terdeteksi",
+            force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
+          );
+          return;
+        }
+      }
+    });
+  }
+
+  void _triggerEmergencyFromSensor({required String reason, required String force}) {
+    if (_isEmergencyTriggered) return;
+    setState(() => _isEmergencyTriggered = true);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EmergencyCountdownPage(
+          triggerReason: reason,
+          impactForce: force,
+          triggerType: 'auto',
+        ),
+      ),
+    ).then((_) {
+      // Reset trigger flag when returning from countdown page
+      setState(() => _isEmergencyTriggered = false);
+      _loadStats(); // reload statistics
     });
   }
 
@@ -42,7 +221,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: const EmergencyContactsPage(),
         );
       case 2:
-        return _buildPlaceholderPage('Riwayat', Icons.history);
+        return const EmergencyHistoryPage();
       case 3:
         return _buildPlaceholderPage('Lokasi', Icons.location_on_outlined);
       case 4:
@@ -79,7 +258,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       backgroundColor: AppColors.backgroundLight,
       bottomNavigationBar: SafeNavbar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+          if (index == 0) {
+            _loadStats();
+          }
+        },
       ),
       body: SafeArea(child: _getBody()),
     );
@@ -120,6 +304,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             ),
           ),
+
+          // ACTIVE SOS BANNER (only shown if location tracking is currently active)
+          _buildActiveSosBanner(),
 
           // GREETING & BADGE
           _buildAnimated(
@@ -204,7 +391,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   Expanded(
                     child: _buildMenuCard(
                       title: 'Kontak darurat',
-                      subtitle: '3 aktif',
+                      subtitle: '$_activeContactsCount aktif',
                       subtitleColor: AppColors.primaryRed,
                       icon: Icons.contact_phone_outlined,
                       iconBgColor: const Color(0xFFEDF4FE),
@@ -218,12 +405,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   Expanded(
                     child: _buildMenuCard(
                       title: 'Riwayat SOS',
-                      subtitle: '2 kejadian',
+                      subtitle: '$_sosHistoryCount kejadian',
                       subtitleColor: AppColors.textDark,
                       icon: Icons.history,
                       iconBgColor: AppColors.primaryRed.withOpacity(0.1),
                       iconColor: AppColors.primaryRed,
-                      onTap: () {},
+                      onTap: () {
+                        setState(() => _currentIndex = 2);
+                      },
                     ),
                   ),
                 ],
@@ -246,16 +435,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
                 child: Stack(
                   children: [
-                    // Mock Map Pattern
-                    Opacity(
-                      opacity: 0.5,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          image: const DecorationImage(
-                            image: NetworkImage('https://www.transparenttextures.com/patterns/cubes.png'),
-                            fit: BoxFit.cover,
-                          ),
+                    // Mock Map Pattern via CustomPaint
+                    Positioned.fill(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: CustomPaint(
+                          painter: const MockMapPainter(),
                         ),
                       ),
                     ),
@@ -369,9 +554,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 Text(
                   subtitle,
                   style: AppTextStyles.subHeading.copyWith(
-                    fontSize: 14,
                     color: subtitleColor,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -382,10 +567,165 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     );
   }
 
+  Widget _buildActiveSosBanner() {
+    if (LocationService.activeSosId == null) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFEF4444).withOpacity(0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const _BlinkingLocationIcon(),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'SOS AKTIF',
+                  style: AppTextStyles.subHeading.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Mengirimkan lokasi real-time Anda...',
+                  style: AppTextStyles.subHeading.copyWith(
+                    color: Colors.white.withOpacity(0.9),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: _resolveActiveSos,
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
+            child: Text(
+              'Matikan',
+              style: AppTextStyles.subHeading.copyWith(
+                color: const Color(0xFFEF4444),
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _resolveActiveSos() async {
+    final sosId = LocationService.activeSosId;
+    if (sosId == null) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: AppColors.primaryRed),
+      ),
+    );
+
+    try {
+      final dio = sl<Dio>();
+      await dio.post('/api/sos/$sosId/resolve', data: {
+        'status': 'resolved',
+      });
+
+      LocationService.stopTrackingSos();
+
+      if (mounted) {
+        Navigator.pop(context);
+        setState(() {});
+        _loadStats();
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('SOS berhasil dinonaktifkan'),
+            backgroundColor: Color(0xFF10B981),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menonaktifkan SOS: ${e.toString()}'),
+            backgroundColor: AppColors.primaryRed,
+          ),
+        );
+      }
+    }
+  }
+
   void _triggerEmergency(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const EmergencyCountdownPage()),
+    );
+  }
+}
+
+class _BlinkingLocationIcon extends StatefulWidget {
+  const _BlinkingLocationIcon();
+
+  @override
+  State<_BlinkingLocationIcon> createState() => _BlinkingLocationIconState();
+}
+
+class _BlinkingLocationIconState extends State<_BlinkingLocationIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.3, end: 1.0).animate(_controller),
+      child: const Icon(
+        Icons.location_on,
+        color: Colors.white,
+        size: 28,
+      ),
     );
   }
 }
@@ -426,4 +766,66 @@ class _BreathingDotState extends State<BreathingDot> with SingleTickerProviderSt
       child: const Icon(Icons.circle, color: Color(0xFF22C55E), size: 10), // Hijau
     );
   }
+}
+
+class MockMapPainter extends CustomPainter {
+  const MockMapPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Background Grid
+    final gridPaint = Paint()
+      ..color = Colors.white.withOpacity(0.04)
+      ..strokeWidth = 1.0;
+
+    const double step = 20.0;
+    for (double i = 0; i < size.width; i += step) {
+      canvas.drawLine(Offset(i, 0), Offset(i, size.height), gridPaint);
+    }
+    for (double i = 0; i < size.height; i += step) {
+      canvas.drawLine(Offset(0, i), Offset(size.width, i), gridPaint);
+    }
+
+    // Abstract roads
+    final roadPaint = Paint()
+      ..color = Colors.white.withOpacity(0.08)
+      ..strokeWidth = 6.0
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    final roadBorderPaint = Paint()
+      ..color = Colors.white.withOpacity(0.03)
+      ..strokeWidth = 10.0
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    // Draw main roads
+    final roadPath1 = Path()
+      ..moveTo(0, size.height * 0.4)
+      ..lineTo(size.width, size.height * 0.6);
+
+    final roadPath2 = Path()
+      ..moveTo(size.width * 0.35, 0)
+      ..quadraticBezierTo(size.width * 0.4, size.height * 0.5, size.width * 0.7, size.height);
+
+    canvas.drawPath(roadPath1, roadBorderPaint);
+    canvas.drawPath(roadPath1, roadPaint);
+
+    canvas.drawPath(roadPath2, roadBorderPaint);
+    canvas.drawPath(roadPath2, roadPaint);
+
+    // Glowing location circle indicator
+    final centerPaint = Paint()
+      ..color = const Color(0xFFEF4444).withOpacity(0.15) // Red
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(size.width * 0.5, size.height * 0.45), 24.0, centerPaint);
+
+    final innerPaint = Paint()
+      ..color = const Color(0xFFEF4444).withOpacity(0.3) // Red
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(size.width * 0.5, size.height * 0.45), 12.0, innerPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

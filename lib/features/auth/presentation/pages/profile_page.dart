@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/features/auth/domain/entities/user_entity.dart';
@@ -142,22 +143,48 @@ class _ProfilePageState extends State<ProfilePage> {
       final picker = ImagePicker();
       final XFile? pickedFile = await picker.pickImage(
         source: source,
-        maxWidth: 512,
-        maxHeight: 512,
+        maxWidth: 1024, // increase resolution so cropper has high quality input
+        maxHeight: 1024,
         imageQuality: 85,
       );
 
       if (pickedFile != null) {
-        final bytes = await pickedFile.readAsBytes();
-        final base64String = base64Encode(bytes);
-        setSheetState(() {
-          _tempBase64Image = base64String;
-        });
+        final croppedFile = await ImageCropper().cropImage(
+          sourcePath: pickedFile.path,
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Potong Foto Profil',
+              toolbarColor: const Color(0xFF193855),
+              toolbarWidgetColor: Colors.white,
+              statusBarColor: const Color(0xFF193855),
+              initAspectRatio: CropAspectRatioPreset.square,
+              lockAspectRatio: true,
+              aspectRatioPresets: [CropAspectRatioPreset.square],
+              cropStyle: CropStyle.circle,
+              hideBottomControls: false,
+            ),
+            IOSUiSettings(
+              title: 'Potong Foto Profil',
+              aspectRatioLockEnabled: true,
+              resetAspectRatioEnabled: false,
+              aspectRatioPresets: [CropAspectRatioPreset.square],
+              cropStyle: CropStyle.circle,
+            ),
+          ],
+        );
+
+        if (croppedFile != null) {
+          final bytes = await croppedFile.readAsBytes();
+          final base64String = base64Encode(bytes);
+          setSheetState(() {
+            _tempBase64Image = base64String;
+          });
+        }
       }
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Gagal mengambil foto: ${e.toString()}'),
+          content: Text('Gagal mengambil/memotong foto: ${e.toString()}'),
           backgroundColor: AppColors.primaryRed,
           behavior: SnackBarBehavior.floating,
         ),
@@ -309,10 +336,11 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Future<void> _saveProfile(BuildContext sheetContext) async {
+  Future<void> _saveProfile(BuildContext sheetContext, StateSetter setSheetState) async {
     final navigator = Navigator.of(sheetContext);
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _isLoading = true);
+    setSheetState(() {}); // Trigger rebuild of the sheet to show loading indicator
     try {
       final dio = sl<Dio>();
 
@@ -365,6 +393,9 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
+      try {
+        setSheetState(() {}); // Reset loading indicator in sheet if still open
+      } catch (_) {}
     }
   }
 
@@ -418,7 +449,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 left: 24,
                 right: 24,
                 top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom +
+                    MediaQuery.of(this.context).padding.bottom +
+                    56,
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -600,7 +633,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           backgroundColor: const Color(0xFF193855),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        onPressed: _isLoading ? null : () => _saveProfile(sheetContext),
+                        onPressed: _isLoading ? null : () => _saveProfile(sheetContext, setSheetState),
                         child: _isLoading
                             ? const CircularProgressIndicator(color: Colors.white)
                             : const Text('Simpan Perubahan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),

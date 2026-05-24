@@ -62,6 +62,12 @@ class _AppEntryState extends State<_AppEntry> {
 
   Future<void> _checkSession() async {
     try {
+      // Ubah ke true jika ingin selalu reset session dan masuk ke halaman login/splash saat aplikasi dijalankan kembali (untuk testing)
+      bool forceFreshStart = false;
+      if (forceFreshStart) {
+        await SessionManager.clearSession();
+      }
+
       final isLoggedIn = await SessionManager.isLoggedIn();
       
       if (isLoggedIn) {

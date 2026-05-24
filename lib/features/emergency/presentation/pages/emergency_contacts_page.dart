@@ -189,7 +189,11 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
 
   Widget _buildTabContent(EmergencyState state, Widget Function() onLoaded) {
     if (state is EmergencyLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+        itemCount: 3,
+        itemBuilder: (context, index) => const BreathingSkeletonContactCard(),
+      );
     } else if (state is EmergencyLoaded) {
       return onLoaded();
     } else if (state is EmergencyError) {
@@ -447,6 +451,122 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
           ),
         );
       },
+    );
+  }
+}
+
+// Beautiful Custom Pulsing Skeleton Card for Contacts Loading state
+class BreathingSkeletonContactCard extends StatefulWidget {
+  const BreathingSkeletonContactCard({super.key});
+
+  @override
+  State<BreathingSkeletonContactCard> createState() => _BreathingSkeletonContactCardState();
+}
+
+class _BreathingSkeletonContactCardState extends State<BreathingSkeletonContactCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.4, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final blockColor = Colors.grey[200]!;
+    return FadeTransition(
+      opacity: _animation,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.inputBorder),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: blockColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 120,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: blockColor,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: 90,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: blockColor,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: blockColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        width: 60,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: blockColor,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: blockColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

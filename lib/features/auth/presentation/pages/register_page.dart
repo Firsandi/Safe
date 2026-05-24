@@ -86,6 +86,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
   final _formKey = GlobalKey<FormState>();
   bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   @override
   void dispose() {
@@ -308,8 +309,8 @@ class _RegisterPageState extends State<RegisterPage> {
 
                         // CONTENT DYNAMIC BASED ON STEP
                         _currentStep == 1
-                            ? _buildStep1Content(state)
-                            : _buildStep2Content(state),
+                            ? _buildStep1Content(context, state)
+                            : _buildStep2Content(context, state),
                       ],
                     ),
                   ),
@@ -322,7 +323,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildStep1Content(AuthState state) {
+  Widget _buildStep1Content(BuildContext context, AuthState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -406,7 +407,12 @@ class _RegisterPageState extends State<RegisterPage> {
           hint: 'Ulangi kata sandi Anda',
           prefixIcon: Icons.lock_outline,
           isPassword: true,
-          obscureText: !_isPasswordVisible,
+          obscureText: !_isConfirmPasswordVisible,
+          onToggleVisibility: () {
+            setState(() {
+              _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+            });
+          },
         ),
         const SizedBox(height: 28),
 
@@ -416,13 +422,13 @@ class _RegisterPageState extends State<RegisterPage> {
           height: 54,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF193855), // Dark Blue for navigation / neutral
+              backgroundColor: AppColors.primaryRed,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(27),
               ),
               elevation: 4,
-              shadowColor: const Color(0xFF193855).withOpacity(0.3),
+              shadowColor: AppColors.primaryRed.withOpacity(0.3),
             ),
             onPressed: _nextStep,
             child: Row(
@@ -471,7 +477,7 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const FaIcon(FontAwesomeIcons.google, color: Colors.blue, size: 20),
+                Image.asset('assets/images/google_logo.png', height: 20, width: 20),
                 const SizedBox(width: 12),
                 Text('Daftar dengan Google', style: AppTextStyles.buttonSecondary),
               ],
@@ -479,6 +485,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
         ),
         const SizedBox(height: 32),
+
 
         // LOGIN LINK
         Row(
@@ -505,7 +512,7 @@ class _RegisterPageState extends State<RegisterPage> {
     );
   }
 
-  Widget _buildStep2Content(AuthState state) {
+  Widget _buildStep2Content(BuildContext context, AuthState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
