@@ -18,7 +18,6 @@ import 'package:safe/features/auth/domain/entities/user_entity.dart';
 import 'package:safe/features/emergency/presentation/bloc/emergency_cubit.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/features/auth/presentation/pages/profile_page.dart';
-import 'package:safe/features/emergency/presentation/pages/emergency_history_page.dart';
 import 'package:safe/l10n/app_localizations.dart';
 
 class HomePage extends StatefulWidget {
@@ -335,8 +334,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                   ),
                 ],
               ),
-            ]),
-          )),
+            ),
+          ),
           const SizedBox(height: 20),
 
           // SOS BUTTON
@@ -451,7 +450,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 ),
               ),
             ),
-          )),
+          ),
           const SizedBox(height: 40),
         ],
       ),
@@ -647,8 +646,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     }
   }
 
-  void _triggerEmergency(BuildContext context) {
-    Navigator.push(
+  void _triggerEmergency(BuildContext context) async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const EmergencyCountdownPage()),
     );
