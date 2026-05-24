@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:safe/core/error/dio_error_handler.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/features/auth/domain/entities/user_entity.dart';
@@ -140,28 +141,54 @@ class _ProfilePageState extends State<ProfilePage> {
     return parts[0][0].toUpperCase();
   }
 
-  Future<void> _pickImage(StateSetter setSheetState) async {
+  Future<void> _pickImage(StateSetter setSheetState, ImageSource source) async {
     final messenger = ScaffoldMessenger.of(context);
     try {
       final picker = ImagePicker();
       final XFile? pickedFile = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 512,
-        maxHeight: 512,
+        source: source,
+        maxWidth: 1024, // increase resolution so cropper has high quality input
+        maxHeight: 1024,
         imageQuality: 85,
       );
 
       if (pickedFile != null) {
-        final bytes = await pickedFile.readAsBytes();
-        final base64String = base64Encode(bytes);
-        setSheetState(() {
-          _tempBase64Image = base64String;
-        });
+        final croppedFile = await ImageCropper().cropImage(
+          sourcePath: pickedFile.path,
+          uiSettings: [
+            AndroidUiSettings(
+              toolbarTitle: 'Potong Foto Profil',
+              toolbarColor: const Color(0xFF193855),
+              toolbarWidgetColor: Colors.white,
+              statusBarColor: const Color(0xFF193855),
+              initAspectRatio: CropAspectRatioPreset.square,
+              lockAspectRatio: true,
+              aspectRatioPresets: [CropAspectRatioPreset.square],
+              cropStyle: CropStyle.circle,
+              hideBottomControls: false,
+            ),
+            IOSUiSettings(
+              title: 'Potong Foto Profil',
+              aspectRatioLockEnabled: true,
+              resetAspectRatioEnabled: false,
+              aspectRatioPresets: [CropAspectRatioPreset.square],
+              cropStyle: CropStyle.circle,
+            ),
+          ],
+        );
+
+        if (croppedFile != null) {
+          final bytes = await croppedFile.readAsBytes();
+          final base64String = base64Encode(bytes);
+          setSheetState(() {
+            _tempBase64Image = base64String;
+          });
+        }
       }
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Gagal memilih foto. Silakan coba lagi.'),
+          content: Text('Gagal mengambil/memotong foto: ${e.toString()}'),
           backgroundColor: AppColors.primaryRed,
           behavior: SnackBarBehavior.floating,
         ),
@@ -169,10 +196,155 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  Future<void> _saveProfile(BuildContext sheetContext) async {
+  void _showImageSourceDialog(StateSetter setSheetState) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // DRAG HANDLE
+                Center(
+                  child: Container(
+                    width: 48,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  'Pilih Sumber Foto',
+                  style: AppTextStyles.heading.copyWith(fontSize: 18),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Ambil foto langsung dari kamera atau pilih dari galeri.',
+                  style: AppTextStyles.subHeading.copyWith(fontSize: 12, color: Colors.grey),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // CAMERA OPTION
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.pop(context);
+                            _pickImage(setSheetState, ImageSource.camera);
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            decoration: BoxDecoration(
+                              color: AppColors.inputBackground,
+                              border: Border.all(color: AppColors.inputBorder),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFE8ECEF),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.camera_alt_outlined,
+                                    color: Color(0xFF193855),
+                                    size: 28,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Kamera',
+                                  style: AppTextStyles.subHeading.copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textDark,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // GALLERY OPTION
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.pop(context);
+                            _pickImage(setSheetState, ImageSource.gallery);
+                          },
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 20),
+                            decoration: BoxDecoration(
+                              color: AppColors.inputBackground,
+                              border: Border.all(color: AppColors.inputBorder),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFFE8ECEF),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.photo_library_outlined,
+                                    color: Color(0xFF193855),
+                                    size: 28,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'Galeri',
+                                  style: AppTextStyles.subHeading.copyWith(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textDark,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _saveProfile(BuildContext sheetContext, StateSetter setSheetState) async {
     final navigator = Navigator.of(sheetContext);
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _isLoading = true);
+    setSheetState(() {}); // Trigger rebuild of the sheet to show loading indicator
     try {
       final dio = sl<Dio>();
 
@@ -233,6 +405,9 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
+      try {
+        setSheetState(() {}); // Reset loading indicator in sheet if still open
+      } catch (_) {}
     }
   }
 
@@ -286,7 +461,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 left: 24,
                 right: 24,
                 top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                bottom: MediaQuery.of(context).viewInsets.bottom +
+                    MediaQuery.of(this.context).padding.bottom +
+                    56,
               ),
               child: SingleChildScrollView(
                 child: Column(
@@ -319,7 +496,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     // CAMERA EDIT AVATAR
                     Center(
                       child: GestureDetector(
-                        onTap: () => _pickImage(setSheetState),
+                        onTap: () => _showImageSourceDialog(setSheetState),
                         child: Stack(
                           children: [
                             CircleAvatar(
@@ -468,7 +645,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           backgroundColor: const Color(0xFF193855),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        onPressed: _isLoading ? null : () => _saveProfile(sheetContext),
+                        onPressed: _isLoading ? null : () => _saveProfile(sheetContext, setSheetState),
                         child: _isLoading
                             ? const CircularProgressIndicator(color: Colors.white)
                             : Text(AppLocalizations.of(context)!.saveChanges, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),

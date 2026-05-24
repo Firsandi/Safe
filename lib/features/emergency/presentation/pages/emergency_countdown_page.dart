@@ -1,12 +1,24 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:dio/dio.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/l10n/app_localizations.dart';
+import 'package:safe/core/utils/injection.dart';
+import 'package:safe/core/services/location_service.dart';
+import 'package:safe/core/services/offline_sync_service.dart';
 
 class EmergencyCountdownPage extends StatefulWidget {
-  const EmergencyCountdownPage({super.key});
+  final String? triggerReason;
+  final String? impactForce;
+  final String triggerType;
+  const EmergencyCountdownPage({
+    super.key,
+    this.triggerReason,
+    this.impactForce,
+    this.triggerType = 'manual',
+  });
 
   @override
   State<EmergencyCountdownPage> createState() => _EmergencyCountdownPageState();
@@ -18,12 +30,7 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
   int _secondsRemaining = _totalSeconds;
   Timer? _timer;
   bool _isCancelled = false;
-  bool _alertSent = false;
-
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
-  late AnimationController _cancelSliderController;
-  double _dragPosition = 0.0; // 0.0 to 1.0 (0% to 100% dragged up)
+  Position? _currentPosition;
 
   @override
   void initState() {
@@ -43,7 +50,16 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
     );
 
     _startTimer();
-    HapticFeedback.heavyImpact();
+    _fetchInitialLocation();
+  }
+
+  Future<void> _fetchInitialLocation() async {
+    final position = await LocationService.getCurrentLocation();
+    if (mounted) {
+      setState(() {
+        _currentPosition = position;
+      });
+    }
   }
 
   void _startTimer() {
@@ -61,10 +77,116 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
     });
   }
 
-  void _onTimeout() {
-    if (!_isCancelled && mounted) {
-      setState(() => _alertSent = true);
-      HapticFeedback.heavyImpact();
+  void _onTimeout() async {
+    if (!_isCancelled) {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const Center(
+          child: CircularProgressIndicator(color: AppColors.primaryRed),
+        ),
+      );
+
+      try {
+        final double lat = _currentPosition?.latitude ?? -8.184486;
+        final double lng = _currentPosition?.longitude ?? 113.668074;
+
+        final dio = sl<Dio>();
+        final response = await dio.post('/api/sos/trigger', data: {
+          'trigger_type': widget.triggerType,
+          'latitude': lat,
+          'longitude': lng,
+        });
+
+        // Close loading dialog
+        if (!mounted) return;
+        Navigator.pop(context);
+
+        if (response.statusCode == 200 || response.statusCode == 201) {
+          final eventData = response.data;
+          final sosId = eventData != null ? eventData['sos_id'] : null;
+          if (sosId != null) {
+            LocationService.startTrackingSos(sosId.toString());
+          }
+
+          if (!mounted) return;
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('ALERT SENT'),
+              content: const Text('Emergency services and contacts have been notified.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+      } catch (e) {
+        // Close loading dialog if open
+        if (!mounted) return;
+        Navigator.pop(context);
+
+        // Queue SOS request offline
+        final double lat = _currentPosition?.latitude ?? -8.184486;
+        final double lng = _currentPosition?.longitude ?? 113.668074;
+        await OfflineSyncService.queueSos(
+          triggerType: widget.triggerType,
+          latitude: lat,
+          longitude: lng,
+        );
+
+        if (!mounted) return;
+
+        // Show a premium/informative offline alert dialog in the user's language preference
+        final isIndonesian = Localizations.localeOf(context).languageCode == 'id';
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Row(
+              children: [
+                const Icon(Icons.wifi_off, color: AppColors.primaryRed, size: 28),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    isIndonesian ? 'Koneksi Terganggu' : 'Connection Issues',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              isIndonesian
+                  ? 'Gagal mengirim SOS karena masalah jaringan. SOS Anda telah masuk antrean offline dan akan otomatis dikirim saat sinyal membaik.\n\nHarap hubungi nomor darurat atau kontak Anda secara manual jika memungkinkan.'
+                  : 'Failed to send SOS due to connection issues. Your SOS is saved in the offline queue and will sync automatically when your connection is restored.\n\nPlease contact emergency services or your contacts manually if possible.',
+              style: const TextStyle(fontSize: 14),
+            ),
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primaryRed,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close Dialog
+                  Navigator.of(context).popUntil((route) => route.isFirst); // Go back home
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
     }
   }
 
@@ -206,7 +328,7 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
                 
                 // ACCIDENT DETECTED HEADER
                 Text(
-                  l10n.accidentDetected.toUpperCase(),
+                  (widget.triggerReason ?? l10n.accidentDetected).toUpperCase(),
                   style: AppTextStyles.heading.copyWith(
                     color: AppColors.primaryRed,
                     fontSize: 26,
@@ -300,7 +422,7 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
                   child: Row(
                     children: [
                       Expanded(
-                        child: _buildDataCard(Icons.speed, 'IMPACT FORCE', '4.2 G', AppColors.primaryRed),
+                        child: _buildDataCard('IMPACT FORCE', widget.impactForce ?? '0.0 G', AppColors.primaryRed),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
