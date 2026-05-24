@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:dio/dio.dart';
 import 'dart:convert';
+import '../../../../core/error/dio_error_handler.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/injection.dart';
@@ -406,11 +407,10 @@ class _AddContactPageState extends State<AddContactPage> {
       // Pop loading dialog
       if (mounted) Navigator.pop(context);
 
-      final errorMessage = e.response?.data['error'] ?? 'Gagal menambahkan kontak';
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(errorMessage.toString()),
+            content: Text(DioErrorHandler.getMessage(e)),
             backgroundColor: AppColors.primaryRed,
             behavior: SnackBarBehavior.floating,
           ),
@@ -422,8 +422,8 @@ class _AddContactPageState extends State<AddContactPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Terjadi kesalahan: ${e.toString()}'),
+          const SnackBar(
+            content: Text('Gagal menambahkan kontak. Silakan coba lagi.'),
             backgroundColor: AppColors.primaryRed,
             behavior: SnackBarBehavior.floating,
           ),

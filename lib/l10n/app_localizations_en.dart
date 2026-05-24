@@ -166,4 +166,185 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get navHistory => 'HISTORY';
+
+  @override
+  String get navHome => 'HOME';
+
+  @override
+  String get navLocation => 'LOCATION';
+
+  @override
+  String get navProfile => 'PROFILE';
+
+  @override
+  String get settingsLanguage => 'Language';
+
+  @override
+  String get settingsLanguageSub => 'Set app language preference';
+
+  @override
+  String get settingsHelp => 'Help Center';
+
+  @override
+  String get settingsHelpSub => 'FAQ & Support Contact';
+
+  @override
+  String get logout => 'LOG OUT OF SYSTEM';
+
+  @override
+  String get sensorActive => 'Sensor Active — monitoring';
+
+  @override
+  String get helpSentToLocation =>
+      'Help will be dispatched to\nyour current location immediately';
+
+  @override
+  String get historySos => 'SOS History';
+
+  @override
+  String get emergencyContactsSub => '3 active';
+
+  @override
+  String get historySosSub => '2 events';
+
+  @override
+  String get notAvailableYet => 'This page is not available yet';
+
+  @override
+  String get locationTitle => 'Location';
+
+  @override
+  String get emergencyCancelled => 'Emergency cancelled — you are safe';
+
+  @override
+  String get alertSent => 'ALERT SENT';
+
+  @override
+  String get alertSentDesc =>
+      'Emergency services and contacts have been notified.';
+
+  @override
+  String get backToHome => 'BACK TO HOME';
+
+  @override
+  String get searchPlaceholder => 'Search name or phone number...';
+
+  @override
+  String get contactsLoadFailed => 'Unable to load contacts';
+
+  @override
+  String get retry => 'Retry';
+
+  @override
+  String get noResultsFound => 'No results found';
+
+  @override
+  String noContactsMatching(String query) {
+    return 'No contacts match \"$query\"';
+  }
+
+  @override
+  String get noEmergencyContacts => 'No emergency contacts yet';
+
+  @override
+  String get addContactsInstruction =>
+      'Add emergency contacts to be contacted in emergency situations.';
+
+  @override
+  String get noIncomingRequests => 'No incoming requests';
+
+  @override
+  String get incomingRequestsInstruction =>
+      'Incoming requests from other users who want to add you will appear here.';
+
+  @override
+  String get callContact => 'Call';
+
+  @override
+  String get sendWhatsApp => 'Send WhatsApp message';
+
+  @override
+  String get viewProfile => 'View Profile';
+
+  @override
+  String get deleteContactTitle => 'Delete Contact';
+
+  @override
+  String deleteContactConfirm(String name) {
+    return 'Are you sure you want to remove $name from emergency contacts?';
+  }
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get connected => 'Connected';
+
+  @override
+  String get pending => 'Pending';
+
+  @override
+  String get myContacts => 'My Contacts';
+
+  @override
+  String get incomingRequests => 'Incoming Requests';
+
+  @override
+  String get emergencyContactsDesc =>
+      'Manage the list of trusted people during emergency situations.';
+
+  @override
+  String get editProfileTitle => 'Edit Profile & Medical';
+
+  @override
+  String get editProfileSub =>
+      'Update your photo, personal details and medical history.';
+
+  @override
+  String get fullNameLabel => 'FULL NAME';
+
+  @override
+  String get phoneLabel => 'PHONE NUMBER';
+
+  @override
+  String get bloodTypeLabel => 'BLOOD TYPE';
+
+  @override
+  String get choose => 'Choose';
+
+  @override
+  String get medicalHistoryLabel => 'MEDICAL HISTORY / ALLERGIES';
+
+  @override
+  String get medicalHistoryHint => 'e.g. Asthma, Peanut Allergy';
+
+  @override
+  String get saveChanges => 'Save Changes';
+
+  @override
+  String get medicalDataCenter => 'MEDICAL DATA CENTER';
+
+  @override
+  String get bloodTypeCard => 'BLOOD TYPE';
+
+  @override
+  String get allergiesCard => 'ALLERGIES / DISEASE';
+
+  @override
+  String get none => 'None';
+
+  @override
+  String get settings => 'SETTINGS';
+
+  @override
+  String get enterFullName => 'Enter full name';
+
+  @override
+  String get languageTitle => 'Select Language';
+
+  @override
+  String get languageSelect => 'Select your app language:';
 }

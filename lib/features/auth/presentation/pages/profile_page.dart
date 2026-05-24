@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:safe/core/error/dio_error_handler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:safe/core/theme/app_colors.dart';
@@ -9,6 +10,9 @@ import 'package:safe/features/auth/domain/entities/user_entity.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/core/utils/session_manager.dart';
 import 'package:safe/features/auth/presentation/pages/login_page.dart';
+import 'package:safe/features/home/presentation/pages/language_page.dart';
+import 'package:safe/features/home/presentation/pages/help_center_page.dart';
+import 'package:safe/l10n/app_localizations.dart';
 
 class ProfilePage extends StatefulWidget {
   final UserEntity user;
@@ -383,10 +387,18 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
         );
       }
+    } on DioException catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(DioErrorHandler.getMessage(e)),
+          backgroundColor: AppColors.primaryRed,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } catch (e) {
       messenger.showSnackBar(
         SnackBar(
-          content: Text('Gagal memperbarui profil: ${e.toString()}'),
+          content: const Text('Gagal memperbarui profil. Silakan coba lagi.'),
           backgroundColor: AppColors.primaryRed,
           behavior: SnackBarBehavior.floating,
         ),
@@ -471,12 +483,12 @@ class _ProfilePageState extends State<ProfilePage> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'Ubah Profil & Medis',
+                      AppLocalizations.of(context)!.editProfileTitle,
                       style: AppTextStyles.heading.copyWith(fontSize: 20),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Perbarui foto, data diri dan riwayat medis Anda.',
+                      AppLocalizations.of(context)!.editProfileSub,
                       style: AppTextStyles.subHeading.copyWith(fontSize: 13),
                     ),
                     const SizedBox(height: 24),
@@ -527,16 +539,16 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 24),
 
                     // EDIT NAMA
-                    Text('NAMA LENGKAP', style: AppTextStyles.inputLabel),
+                    Text(AppLocalizations.of(context)!.fullNameLabel, style: AppTextStyles.inputLabel),
                     const SizedBox(height: 8),
                     _buildInputField(
                       controller: _nameController,
-                      hint: 'Masukkan nama lengkap',
+                      hint: AppLocalizations.of(context)!.enterFullName,
                     ),
                     const SizedBox(height: 16),
 
                     // EDIT HANDPHONE
-                    Text('NOMOR HANDPHONE', style: AppTextStyles.inputLabel),
+                    Text(AppLocalizations.of(context)!.phoneLabel, style: AppTextStyles.inputLabel),
                     const SizedBox(height: 8),
                     _buildInputField(
                       controller: _phoneController,
@@ -546,7 +558,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 16),
 
                     // EDIT GOLONGAN DARAH
-                    Text('GOLONGAN DARAH', style: AppTextStyles.inputLabel),
+                    Text(AppLocalizations.of(context)!.bloodTypeLabel, style: AppTextStyles.inputLabel),
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -558,7 +570,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
                           value: _selectedBloodType,
-                          hint: Text('Pilih', style: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey)),
+                          hint: Text(AppLocalizations.of(context)!.choose, style: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey)),
                           icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.inputIconGrey),
                           isExpanded: true,
                           style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
@@ -579,7 +591,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 16),
 
                     // EDIT ALERGI (Autocomplete)
-                    Text('RIWAYAT PENYAKIT / ALERGI', style: AppTextStyles.inputLabel),
+                    Text(AppLocalizations.of(context)!.medicalHistoryLabel, style: AppTextStyles.inputLabel),
                     const SizedBox(height: 8),
                     Autocomplete<String>(
                       optionsBuilder: (TextEditingValue textEditingValue) {
@@ -613,7 +625,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             focusNode: focusNode,
                             style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
                             decoration: InputDecoration(
-                              hintText: 'Cth: Asma, Alergi Kacang',
+                              hintText: AppLocalizations.of(context)!.medicalHistoryHint,
                               hintStyle: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey),
                               border: InputBorder.none,
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -636,7 +648,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         onPressed: _isLoading ? null : () => _saveProfile(sheetContext, setSheetState),
                         child: _isLoading
                             ? const CircularProgressIndicator(color: Colors.white)
-                            : const Text('Simpan Perubahan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                            : Text(AppLocalizations.of(context)!.saveChanges, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                       ),
                     ),
                   ],
@@ -763,7 +775,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   // PUSAT DATA MEDIS SECTION
                   Text(
-                    'PUSAT DATA MEDIS',
+                    AppLocalizations.of(context)!.medicalDataCenter,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -800,9 +812,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                 children: [
                                   const Icon(Icons.water_drop, color: AppColors.primaryRed, size: 16),
                                   const SizedBox(width: 6),
-                                  const Text(
-                                    'GOL. DARAH',
-                                    style: TextStyle(
+                                  Text(
+                                    AppLocalizations.of(context)!.bloodTypeCard,
+                                    style: const TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
                                       color: AppColors.primaryRed,
@@ -845,13 +857,13 @@ class _ProfilePageState extends State<ProfilePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Row(
+                              Row(
                                 children: [
-                                  Icon(Icons.coronavirus_outlined, color: Color(0xFF193855), size: 16),
-                                  SizedBox(width: 6),
+                                  const Icon(Icons.coronavirus_outlined, color: Color(0xFF193855), size: 16),
+                                  const SizedBox(width: 6),
                                   Text(
-                                    'ALERGI / PENYAKIT',
-                                    style: TextStyle(
+                                    AppLocalizations.of(context)!.allergiesCard,
+                                    style: const TextStyle(
                                       fontSize: 9,
                                       fontWeight: FontWeight.bold,
                                       color: Color(0xFF193855),
@@ -861,7 +873,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               ),
                               const Spacer(),
                               Text(
-                                _medicalNotesController.text.isNotEmpty ? _medicalNotesController.text : 'Tidak Ada',
+                                _medicalNotesController.text.isNotEmpty ? _medicalNotesController.text : AppLocalizations.of(context)!.none,
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -880,7 +892,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                   // PENGATURAN SECTION
                   Text(
-                    'PENGATURAN',
+                    AppLocalizations.of(context)!.settings,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -916,10 +928,15 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             child: const Icon(Icons.language, color: Colors.black87, size: 20),
                           ),
-                          title: const Text('Bahasa', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                          subtitle: const Text('Mengatur bahasa di aplikasi', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                          title: Text(AppLocalizations.of(context)!.settingsLanguage, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          subtitle: Text(AppLocalizations.of(context)!.settingsLanguageSub, style: const TextStyle(fontSize: 11, color: Colors.grey)),
                           trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const LanguagePage()),
+                            );
+                          },
                         ),
                         Divider(height: 1, indent: 64, endIndent: 16, color: Colors.grey[200]),
                         // Pusat bantuan row
@@ -932,10 +949,15 @@ class _ProfilePageState extends State<ProfilePage> {
                             ),
                             child: const Icon(Icons.help_outline, color: Colors.black87, size: 20),
                           ),
-                          title: const Text('Pusat Bantuan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                          subtitle: const Text('FAQ & Kontak Dukungan', style: TextStyle(fontSize: 11, color: Colors.grey)),
+                          title: Text(AppLocalizations.of(context)!.settingsHelp, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          subtitle: Text(AppLocalizations.of(context)!.settingsHelpSub, style: const TextStyle(fontSize: 11, color: Colors.grey)),
                           trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const HelpCenterPage()),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -953,14 +975,14 @@ class _ProfilePageState extends State<ProfilePage> {
                         elevation: 0,
                       ),
                       onPressed: _logout,
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.logout, color: Colors.white, size: 18),
-                          SizedBox(width: 8),
+                          const Icon(Icons.logout, color: Colors.white, size: 18),
+                          const SizedBox(width: 8),
                           Text(
-                            'LOGOUT',
-                            style: TextStyle(
+                            AppLocalizations.of(context)!.logout,
+                            style: const TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,

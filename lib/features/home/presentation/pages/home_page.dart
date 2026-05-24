@@ -6,6 +6,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
+import 'package:safe/core/services/crash_detection_service.dart';
 import 'package:safe/features/emergency/presentation/pages/emergency_countdown_page.dart';
 import 'package:safe/features/emergency/presentation/pages/emergency_contacts_page.dart';
 import 'package:safe/features/emergency/presentation/pages/emergency_history_page.dart';
@@ -17,6 +18,8 @@ import 'package:safe/features/auth/domain/entities/user_entity.dart';
 import 'package:safe/features/emergency/presentation/bloc/emergency_cubit.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/features/auth/presentation/pages/profile_page.dart';
+import 'package:safe/features/emergency/presentation/pages/emergency_history_page.dart';
+import 'package:safe/l10n/app_localizations.dart';
 
 class HomePage extends StatefulWidget {
   final UserEntity user;
@@ -26,9 +29,10 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin, WidgetsBindingObserver {
   int _currentIndex = 0;
   bool _isInit = false;
+  final CrashDetectionService _crashDetection = CrashDetectionService();
 
   // Sensor Subscriptions and States
   StreamSubscription? _accelerometerSub;
@@ -50,6 +54,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     Future.delayed(const Duration(milliseconds: 200), () {
       if (mounted) setState(() => _isInit = true);
     });
@@ -223,7 +228,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       case 2:
         return const EmergencyHistoryPage();
       case 3:
-        return _buildPlaceholderPage('Lokasi', Icons.location_on_outlined);
+        return _buildPlaceholderPage(AppLocalizations.of(context)!.locationTitle, Icons.location_on_outlined);
       case 4:
         return ProfilePage(user: widget.user);
       default:
@@ -238,15 +243,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         children: [
           Icon(icon, size: 64, color: AppColors.textGrey),
           const SizedBox(height: 16),
-          Text(
-            title,
-            style: AppTextStyles.heading.copyWith(color: AppColors.textDark),
-          ),
+          Text(title, style: AppTextStyles.heading.copyWith(color: AppColors.textDark)),
           const SizedBox(height: 8),
-          Text(
-            'Halaman ini belum tersedia',
-            style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
-          ),
+          Text(AppLocalizations.of(context)!.notAvailableYet,
+            style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14)),
         ],
       ),
     );
@@ -274,36 +274,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // HEADER (Logo, Bell, Settings)
-          _buildAnimated(
-            index: 0,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Image.asset(
-                    'assets/images/logo.png',
-                    height: 50,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.shield, color: AppColors.primaryRed, size: 34),
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.notifications_none, color: AppColors.textDark),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.settings_outlined, color: AppColors.textDark),
-                        onPressed: () {},
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+          // HEADER
+          _buildAnimated(index: 0, child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Image.asset('assets/images/logo.png', height: 50,
+                  errorBuilder: (c, e, s) => const Icon(Icons.shield, color: AppColors.primaryRed, size: 34)),
+                Row(children: [
+                  IconButton(icon: const Icon(Icons.notifications_none, color: AppColors.textDark), onPressed: () {}),
+                  IconButton(icon: const Icon(Icons.settings_outlined, color: AppColors.textDark), onPressed: () {}),
+                ]),
+              ],
             ),
-          ),
+          )),
 
           // ACTIVE SOS BANNER (only shown if location tracking is currently active)
           _buildActiveSosBanner(),
@@ -350,35 +335,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                   ),
                 ],
               ),
-            ),
-          ),
+            ]),
+          )),
           const SizedBox(height: 20),
 
-          // SOS CORE
-          _buildAnimated(
-            index: 2,
-            child: SosButton(
-              onLongPress: () => _triggerEmergency(context),
-              label: '',
-              subLabel: '',
-            ),
-          ),
+          // SOS BUTTON
+          _buildAnimated(index: 2, child: SosButton(
+            onLongPress: () => _triggerEmergency(context), label: '', subLabel: '')),
           const SizedBox(height: 16),
 
-          // INSTRUCTION TEXT
-          _buildAnimated(
-            index: 3,
-            child: Center(
-              child: Text(
-                'Bantuan akan segera dikirimkan ke\nlokasi Anda saat ini',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.subHeading.copyWith(
-                  color: AppColors.textGrey,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
+          // INSTRUCTION
+          _buildAnimated(index: 3, child: Center(
+            child: Text(AppLocalizations.of(context)!.helpSentToLocation,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14)))),
           const SizedBox(height: 32),
 
           // MENU GRID (Two cards)
@@ -481,8 +451,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                 ),
               ),
             ),
-          ),
-
+          )),
           const SizedBox(height: 40),
         ],
       ),
@@ -503,13 +472,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildMenuCard({
-    required String title,
-    required String subtitle,
-    required Color subtitleColor,
-    required IconData icon,
-    required Color iconBgColor,
-    required Color iconColor,
-    required VoidCallback onTap,
+    required String title, required String subtitle, required Color subtitleColor,
+    required IconData icon, required Color iconBgColor, required Color iconColor, required VoidCallback onTap,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -688,6 +652,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       context,
       MaterialPageRoute(builder: (context) => const EmergencyCountdownPage()),
     );
+    // If cancelled, start cooldown on crash detection service
+    if (result == 'cancelled') {
+      _crashDetection.startCooldown();
+    }
   }
 }
 
@@ -732,7 +700,6 @@ class _BlinkingLocationIconState extends State<_BlinkingLocationIcon>
 
 class BreathingDot extends StatefulWidget {
   const BreathingDot({super.key});
-
   @override
   State<BreathingDot> createState() => _BreathingDotState();
 }
@@ -744,27 +711,17 @@ class _BreathingDotState extends State<BreathingDot> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    )..repeat(reverse: true);
-    _animation = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 1))..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.3, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  void dispose() { _controller.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _animation,
-      child: const Icon(Icons.circle, color: Color(0xFF22C55E), size: 10), // Hijau
-    );
+    return FadeTransition(opacity: _animation,
+      child: const Icon(Icons.circle, color: Color(0xFF22C55E), size: 10));
   }
 }
 

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../../../core/error/exception.dart';
+import '../../../../core/error/dio_error_handler.dart';
 import '../models/contact_model.dart';
 
 abstract class EmergencyRemoteDataSource {
@@ -9,6 +10,7 @@ abstract class EmergencyRemoteDataSource {
   Future<void> addContact(String userId, String name, String phoneNumber);
   Future<void> acceptRequest(String requestId);
   Future<void> rejectRequest(String requestId);
+  Future<void> deleteContact(String contactId);
 }
 
 class EmergencyRemoteDataSourceImpl implements EmergencyRemoteDataSource {
@@ -24,7 +26,7 @@ class EmergencyRemoteDataSourceImpl implements EmergencyRemoteDataSource {
       if (list == null) return [];
       return list.map((json) => ContactModel.fromJson(json)).toList();
     } on DioException catch (e) {
-      throw ServerException(e.response?.data['error'] ?? 'Server error (GetContacts)');
+      throw ServerException(DioErrorHandler.getMessage(e));
     }
   }
 
@@ -36,7 +38,7 @@ class EmergencyRemoteDataSourceImpl implements EmergencyRemoteDataSource {
       if (list == null) return [];
       return list.map((json) => ContactModel.fromJson(json)).toList();
     } on DioException catch (e) {
-      throw ServerException(e.response?.data['error'] ?? 'Server error (GetRequests)');
+      throw ServerException(DioErrorHandler.getMessage(e));
     }
   }
 
@@ -48,7 +50,7 @@ class EmergencyRemoteDataSourceImpl implements EmergencyRemoteDataSource {
       if (list == null) return [];
       return list.map((json) => ContactModel.fromJson(json)).toList();
     } on DioException catch (e) {
-      throw ServerException(e.response?.data['error'] ?? 'Server error (SearchUsers)');
+      throw ServerException(DioErrorHandler.getMessage(e));
     }
   }
 
@@ -61,7 +63,7 @@ class EmergencyRemoteDataSourceImpl implements EmergencyRemoteDataSource {
         'phone_number': phoneNumber,
       });
     } on DioException catch (e) {
-      throw ServerException(e.response?.data['error'] ?? 'Server error (AddContact)');
+      throw ServerException(DioErrorHandler.getMessage(e));
     }
   }
 
@@ -70,7 +72,7 @@ class EmergencyRemoteDataSourceImpl implements EmergencyRemoteDataSource {
     try {
       await dio.post('/api/contacts/requests/$requestId/accept');
     } on DioException catch (e) {
-      throw ServerException(e.response?.data['error'] ?? 'Server error (AcceptRequest)');
+      throw ServerException(DioErrorHandler.getMessage(e));
     }
   }
 
@@ -79,7 +81,16 @@ class EmergencyRemoteDataSourceImpl implements EmergencyRemoteDataSource {
     try {
       await dio.post('/api/contacts/requests/$requestId/reject');
     } on DioException catch (e) {
-      throw ServerException(e.response?.data['error'] ?? 'Server error (RejectRequest)');
+      throw ServerException(DioErrorHandler.getMessage(e));
+    }
+  }
+
+  @override
+  Future<void> deleteContact(String contactId) async {
+    try {
+      await dio.delete('/api/contacts/$contactId');
+    } on DioException catch (e) {
+      throw ServerException(DioErrorHandler.getMessage(e));
     }
   }
 }

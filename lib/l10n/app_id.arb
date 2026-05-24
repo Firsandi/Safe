@@ -51,5 +51,81 @@
   "navStatus": "STATUS",
   "navContacts": "KONTAK",
   "navMedical": "MEDIS",
-  "navHistory": "RIWAYAT"
+  "navHistory": "RIWAYAT",
+  "navHome": "BERANDA",
+  "navLocation": "LOKASI",
+  "navProfile": "PROFIL",
+  
+  "settingsLanguage": "Bahasa",
+  "settingsLanguageSub": "Mengatur bahasa di aplikasi",
+  "settingsHelp": "Pusat Bantuan",
+  "settingsHelpSub": "FAQ & Kontak Dukungan",
+  "logout": "KELUAR DARI SISTEM",
+  "sensorActive": "Sensor Aktif — memantau",
+  "helpSentToLocation": "Bantuan akan segera dikirimkan ke\nlokasi Anda saat ini",
+  "historySos": "Riwayat SOS",
+  "emergencyContactsSub": "3 aktif",
+  "historySosSub": "2 kejadian",
+  "notAvailableYet": "Halaman ini belum tersedia",
+  "locationTitle": "Lokasi",
+  
+  "emergencyCancelled": "Darurat dibatalkan — Anda aman",
+  "alertSent": "ALERT TERKIRIM",
+  "alertSentDesc": "Kontak darurat dan layanan penyelamat telah diberitahu.",
+  "backToHome": "KEMBALI KE BERANDA",
+  "searchPlaceholder": "Cari nama atau nomor telepon...",
+  "contactsLoadFailed": "Tidak dapat memuat kontak",
+  "retry": "Coba Lagi",
+  "noResultsFound": "Tidak ditemukan",
+  "noContactsMatching": "Tidak ada kontak yang cocok dengan \"{query}\"",
+  "@noContactsMatching": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "noEmergencyContacts": "Belum ada kontak darurat",
+  "addContactsInstruction": "Tambahkan kontak darurat agar dapat dihubungi saat situasi darurat.",
+  "noIncomingRequests": "Tidak ada permintaan masuk",
+  "incomingRequestsInstruction": "Permintaan masuk dari pengguna lain yang ingin menambahkan Anda akan muncul di sini.",
+  "callContact": "Hubungi",
+  "sendWhatsApp": "Kirim via WhatsApp",
+  "viewProfile": "Lihat Profil",
+  "deleteContactTitle": "Hapus Kontak",
+  "deleteContactConfirm": "Apakah Anda yakin ingin menghapus {name} dari kontak darurat?",
+  "@deleteContactConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "Batal",
+  "delete": "Hapus",
+  "connected": "Tersambung",
+  "pending": "Menunggu",
+  
+  "myContacts": "Kontak Saya",
+  "incomingRequests": "Permintaan Masuk",
+  "emergencyContactsDesc": "Kelola daftar orang yang dapat dipercaya saat situasi darurat.",
+  
+  "editProfileTitle": "Ubah Profil & Medis",
+  "editProfileSub": "Perbarui foto, data diri dan riwayat medis Anda.",
+  "fullNameLabel": "NAMA LENGKAP",
+  "phoneLabel": "NOMOR HANDPHONE",
+  "bloodTypeLabel": "GOLONGAN DARAH",
+  "choose": "Pilih",
+  "medicalHistoryLabel": "RIWAYAT PENYAKIT / ALERGI",
+  "medicalHistoryHint": "Cth: Asma, Alergi Kacang",
+  "saveChanges": "Simpan Perubahan",
+  "medicalDataCenter": "PUSAT DATA MEDIS",
+  "bloodTypeCard": "GOL. DARAH",
+  "allergiesCard": "ALERGI / PENYAKIT",
+  "none": "Tidak Ada",
+  "settings": "PENGATURAN",
+  "enterFullName": "Masukkan nama lengkap",
+  
+  "languageTitle": "Pilih Bahasa",
+  "languageSelect": "Pilih bahasa aplikasi Anda:"
 }

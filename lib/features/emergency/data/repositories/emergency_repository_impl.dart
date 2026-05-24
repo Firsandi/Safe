@@ -18,7 +18,7 @@ class EmergencyRepositoryImpl implements EmergencyRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(const ServerFailure('Terjadi kesalahan. Silakan coba lagi.'));
     }
   }
 
@@ -30,7 +30,7 @@ class EmergencyRepositoryImpl implements EmergencyRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(const ServerFailure('Terjadi kesalahan. Silakan coba lagi.'));
     }
   }
 
@@ -42,7 +42,7 @@ class EmergencyRepositoryImpl implements EmergencyRepository {
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure(e.toString()));
+      return Left(const ServerFailure('Terjadi kesalahan. Silakan coba lagi.'));
     }
   }
 
@@ -70,6 +70,16 @@ class EmergencyRepositoryImpl implements EmergencyRepository {
   Future<Either<Failure, void>> rejectRequest(String requestId) async {
     try {
       await remoteDataSource.rejectRequest(requestId);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteContact(String contactId) async {
+    try {
+      await remoteDataSource.deleteContact(contactId);
       return const Right(null);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
