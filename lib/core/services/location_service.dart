@@ -1,11 +1,33 @@
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/injection.dart';
 
 class LocationService {
   static StreamSubscription<Position>? _positionStreamSubscription;
   static String? activeSosId;
+
+  /// Loads the persisted active SOS ID from local storage
+  static Future<void> loadActiveSosId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      activeSosId = prefs.getString('active_sos_id');
+    } catch (_) {}
+  }
+
+  /// Saves or clears the active SOS ID in local storage and memory
+  static Future<void> saveActiveSosId(String? id) async {
+    activeSosId = id;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (id == null) {
+        await prefs.remove('active_sos_id');
+      } else {
+        await prefs.setString('active_sos_id', id);
+      }
+    } catch (_) {}
+  }
 
   /// Requests location permission and returns whether it is granted
   static Future<bool> requestPermission() async {
@@ -53,14 +75,14 @@ class LocationService {
   }
 
   /// Starts streaming real-time location and posting updates to the backend for an active SOS
-  static void startTrackingSos(String sosId) async {
+  static Future<void> startTrackingSos(String sosId) async {
     // Cancel existing if any
     stopTrackingSos();
 
     final hasPermission = await requestPermission();
     if (!hasPermission) return;
 
-    activeSosId = sosId;
+    await saveActiveSosId(sosId);
 
     const LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high,
@@ -92,6 +114,6 @@ class LocationService {
   static void stopTrackingSos() {
     _positionStreamSubscription?.cancel();
     _positionStreamSubscription = null;
-    activeSosId = null;
+    saveActiveSosId(null);
   }
 }

@@ -59,6 +59,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     });
     _startSensorMonitoring();
     _loadStats();
+    _syncActiveSosState(); // Check and synchronize active SOS event
 
     // Register callback for background sync success
     OfflineSyncService.onSyncSuccess = () {
@@ -69,6 +70,35 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     };
     // Start background sync loop
     OfflineSyncService.startSyncLoop(context);
+  }
+
+
+
+  Future<void> _syncActiveSosState() async {
+    try {
+      final dio = sl<Dio>();
+      final response = await dio.get('/api/sos/active');
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        if (data['active'] == true && data['sos_id'] != null) {
+          final sosId = data['sos_id'].toString();
+          await LocationService.saveActiveSosId(sosId);
+          LocationService.startTrackingSos(sosId);
+        } else {
+          await LocationService.saveActiveSosId(null);
+          LocationService.stopTrackingSos();
+        }
+      }
+    } catch (e) {
+      // Offline fallback: load local persisted state
+      await LocationService.loadActiveSosId();
+      if (LocationService.activeSosId != null) {
+        LocationService.startTrackingSos(LocationService.activeSosId!);
+      }
+    }
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _loadStats() async {
@@ -401,52 +431,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 decoration: BoxDecoration(
                   color: Colors.blueGrey[800],
                   borderRadius: BorderRadius.circular(16),
-                ),
-                child: Stack(
-                  children: [
-                    // Mock Map Pattern via CustomPaint
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: CustomPaint(
-                          painter: const MockMapPainter(),
-                        ),
-                      ),
-                    ),
-                    // Location Badge Overlay
-                    Positioned(
-                      bottom: 16,
-                      left: 16,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.location_on_outlined, color: AppColors.textDark, size: 16),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Sumbersari, Jember',
-                              style: AppTextStyles.subHeading.copyWith(
-                                color: AppColors.textDark,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
+                ),
+                child: const ClipRRect(
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                  child: CustomPaint(
+                    painter: MockMapPainter(),
+                  ),
                 ),
               ),
             ),

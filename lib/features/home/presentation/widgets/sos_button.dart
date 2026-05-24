@@ -128,35 +128,6 @@ class _SosButtonState extends State<SosButton> with SingleTickerProviderStateMix
       ),
     );
   }
-
-  Widget _buildSharpDiamond() {
-    return Container(
-      width: 44,
-      height: 44,
-      alignment: Alignment.center,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Transform.rotate(
-            angle: 0.785398, // 45 degrees
-            child: Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-          ),
-          const Icon(
-            Icons.priority_high,
-            color: AppColors.primaryRed,
-            size: 28,
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class ModernRipplePainter extends CustomPainter {

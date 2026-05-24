@@ -13,6 +13,7 @@ import 'package:safe/features/auth/presentation/pages/login_page.dart';
 import 'package:safe/features/home/presentation/pages/language_page.dart';
 import 'package:safe/features/home/presentation/pages/help_center_page.dart';
 import 'package:safe/l10n/app_localizations.dart';
+import 'package:safe/core/services/location_service.dart';
 
 class ProfilePage extends StatefulWidget {
   final UserEntity user;
@@ -432,6 +433,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (confirm == true) {
+      LocationService.stopTrackingSos();
       await SessionManager.clearSession();
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(

@@ -8,10 +8,12 @@ import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/features/auth/presentation/pages/splash_page.dart';
 import 'package:safe/features/auth/data/models/user_model.dart';
 import 'package:safe/features/home/presentation/pages/home_page.dart';
+import 'package:safe/core/services/notification_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await di.init();
+  await NotificationManager.initialize();
   runApp(const SafeApp());
 }
 
@@ -64,6 +66,7 @@ class _AppEntryState extends State<_AppEntry> {
     try {
       // Ubah ke true jika ingin selalu reset session dan masuk ke halaman login/splash saat aplikasi dijalankan kembali (untuk testing)
       bool forceFreshStart = false;
+      // ignore: dead_code
       if (forceFreshStart) {
         await SessionManager.clearSession();
       }
@@ -75,6 +78,7 @@ class _AppEntryState extends State<_AppEntry> {
         if (userData != null) {
           final user = UserModel.fromJson(userData);
           _targetPage = HomePage(user: user);
+          NotificationManager.uploadFcmToken(); // Refresh FCM token in background
         }
       }
     } catch (e) {
