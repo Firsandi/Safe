@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:safe/core/theme/app_colors.dart';
@@ -31,6 +32,11 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
   Timer? _timer;
   bool _isCancelled = false;
   Position? _currentPosition;
+  bool _alertSent = false;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+  late AnimationController _cancelSliderController;
+  double _dragPosition = 0.0;
 
   @override
   void initState() {
@@ -422,7 +428,7 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
                   child: Row(
                     children: [
                       Expanded(
-                        child: _buildDataCard('IMPACT FORCE', widget.impactForce ?? '0.0 G', AppColors.primaryRed),
+                        child: _buildDataCard(Icons.speed, 'IMPACT FORCE', widget.impactForce ?? '0.0 G', AppColors.primaryRed),
                       ),
                       const SizedBox(width: 14),
                       Expanded(

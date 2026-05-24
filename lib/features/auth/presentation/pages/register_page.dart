@@ -466,10 +466,13 @@ class _RegisterPageState extends State<RegisterPage> {
           child: OutlinedButton(
             style: OutlinedButton.styleFrom(
               backgroundColor: Colors.white,
-              side: BorderSide(color: AppColors.inputBorder),
+              foregroundColor: AppColors.textDark,
+              side: const BorderSide(color: AppColors.inputBorder),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(27),
               ),
+              elevation: 1,
+              shadowColor: Colors.black.withOpacity(0.15),
             ),
             onPressed: () {
               // TODO: Implement Google Sign Up
