@@ -34,6 +34,7 @@ Future<void> init() async {
         addContactUseCase: sl(),
         acceptRequestUseCase: sl(),
         rejectRequestUseCase: sl(),
+        deleteContactUseCase: sl(),
       ));
 
   // USE CASES
@@ -45,6 +46,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => AddContactUseCase(sl()));
   sl.registerLazySingleton(() => AcceptRequestUseCase(sl()));
   sl.registerLazySingleton(() => RejectRequestUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteContactUseCase(sl()));
 
   // REPOSITORIES
   sl.registerLazySingleton<AuthRepository>(

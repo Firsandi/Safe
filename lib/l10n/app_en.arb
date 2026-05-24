@@ -51,5 +51,81 @@
   "navStatus": "STATUS",
   "navContacts": "CONTACTS",
   "navMedical": "MEDICAL",
-  "navHistory": "HISTORY"
+  "navHistory": "HISTORY",
+  "navHome": "HOME",
+  "navLocation": "LOCATION",
+  "navProfile": "PROFILE",
+  
+  "settingsLanguage": "Language",
+  "settingsLanguageSub": "Set app language preference",
+  "settingsHelp": "Help Center",
+  "settingsHelpSub": "FAQ & Support Contact",
+  "logout": "LOG OUT OF SYSTEM",
+  "sensorActive": "Sensor Active — monitoring",
+  "helpSentToLocation": "Help will be dispatched to\nyour current location immediately",
+  "historySos": "SOS History",
+  "emergencyContactsSub": "3 active",
+  "historySosSub": "2 events",
+  "notAvailableYet": "This page is not available yet",
+  "locationTitle": "Location",
+  
+  "emergencyCancelled": "Emergency cancelled — you are safe",
+  "alertSent": "ALERT SENT",
+  "alertSentDesc": "Emergency services and contacts have been notified.",
+  "backToHome": "BACK TO HOME",
+  "searchPlaceholder": "Search name or phone number...",
+  "contactsLoadFailed": "Unable to load contacts",
+  "retry": "Retry",
+  "noResultsFound": "No results found",
+  "noContactsMatching": "No contacts match \"{query}\"",
+  "@noContactsMatching": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "noEmergencyContacts": "No emergency contacts yet",
+  "addContactsInstruction": "Add emergency contacts to be contacted in emergency situations.",
+  "noIncomingRequests": "No incoming requests",
+  "incomingRequestsInstruction": "Incoming requests from other users who want to add you will appear here.",
+  "callContact": "Call",
+  "sendWhatsApp": "Send WhatsApp message",
+  "viewProfile": "View Profile",
+  "deleteContactTitle": "Delete Contact",
+  "deleteContactConfirm": "Are you sure you want to remove {name} from emergency contacts?",
+  "@deleteContactConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "connected": "Connected",
+  "pending": "Pending",
+  
+  "myContacts": "My Contacts",
+  "incomingRequests": "Incoming Requests",
+  "emergencyContactsDesc": "Manage the list of trusted people during emergency situations.",
+  
+  "editProfileTitle": "Edit Profile & Medical",
+  "editProfileSub": "Update your photo, personal details and medical history.",
+  "fullNameLabel": "FULL NAME",
+  "phoneLabel": "PHONE NUMBER",
+  "bloodTypeLabel": "BLOOD TYPE",
+  "choose": "Choose",
+  "medicalHistoryLabel": "MEDICAL HISTORY / ALLERGIES",
+  "medicalHistoryHint": "e.g. Asthma, Peanut Allergy",
+  "saveChanges": "Save Changes",
+  "medicalDataCenter": "MEDICAL DATA CENTER",
+  "bloodTypeCard": "BLOOD TYPE",
+  "allergiesCard": "ALLERGIES / DISEASE",
+  "none": "None",
+  "settings": "SETTINGS",
+  "enterFullName": "Enter full name",
+  
+  "languageTitle": "Select Language",
+  "languageSelect": "Select your app language:"
 }

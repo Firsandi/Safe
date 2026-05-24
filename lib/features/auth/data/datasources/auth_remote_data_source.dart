@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../../../core/error/exception.dart';
+import '../../../../core/error/dio_error_handler.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
@@ -34,10 +35,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final token = response.data['token'] as String?;
       return UserModel.fromJson(response.data['user'], token: token);
     } on DioException catch (e) {
-      final message = e.response?.data['error'] ?? 'Server error (Login)';
-      throw ServerException(message);
+      throw ServerException(DioErrorHandler.getMessage(e));
     } catch (e) {
-      throw ServerException('Login failed: $e');
+      throw ServerException('Gagal login. Silakan coba lagi.');
     }
   }
 
@@ -66,10 +66,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final token = response.data['token'] as String?;
       return UserModel.fromJson(response.data['user'], token: token);
     } on DioException catch (e) {
-      final message = e.response?.data['error'] ?? 'Server error (Register)';
-      throw ServerException(message);
+      throw ServerException(DioErrorHandler.getMessage(e));
     } catch (e) {
-      throw ServerException('Registration failed: $e');
+      throw ServerException('Gagal mendaftar. Periksa koneksi internet Anda.');
     }
   }
 }

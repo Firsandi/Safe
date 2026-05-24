@@ -70,3 +70,13 @@ class RejectRequestUseCase implements UseCase<void, String> {
     return repository.rejectRequest(requestId);
   }
 }
+
+class DeleteContactUseCase implements UseCase<void, String> {
+  final EmergencyRepository repository;
+  DeleteContactUseCase(this.repository);
+
+  @override
+  Future<Either<Failure, void>> call(String contactId) {
+    return repository.deleteContact(contactId);
+  }
+}

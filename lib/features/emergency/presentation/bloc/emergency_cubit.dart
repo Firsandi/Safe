@@ -40,6 +40,7 @@ class EmergencyCubit extends Cubit<EmergencyState> {
   final AddContactUseCase addContactUseCase;
   final AcceptRequestUseCase acceptRequestUseCase;
   final RejectRequestUseCase rejectRequestUseCase;
+  final DeleteContactUseCase deleteContactUseCase;
 
   EmergencyCubit({
     required this.getContactsUseCase,
@@ -48,6 +49,7 @@ class EmergencyCubit extends Cubit<EmergencyState> {
     required this.addContactUseCase,
     required this.acceptRequestUseCase,
     required this.rejectRequestUseCase,
+    required this.deleteContactUseCase,
   }) : super(EmergencyInitial());
 
   Future<void> loadContacts() async {
@@ -101,6 +103,14 @@ class EmergencyCubit extends Cubit<EmergencyState> {
 
   Future<void> rejectRequest(String requestId) async {
     final result = await rejectRequestUseCase(requestId);
+    result.fold(
+      (failure) => emit(EmergencyError(failure.message)),
+      (_) => loadContacts(),
+    );
+  }
+
+  Future<void> deleteContact(String contactId) async {
+    final result = await deleteContactUseCase(contactId);
     result.fold(
       (failure) => emit(EmergencyError(failure.message)),
       (_) => loadContacts(),

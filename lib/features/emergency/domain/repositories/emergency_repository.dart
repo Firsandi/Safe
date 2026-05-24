@@ -9,4 +9,5 @@ abstract class EmergencyRepository {
   Future<Either<Failure, void>> addContact(String userId, String name, String phoneNumber);
   Future<Either<Failure, void>> acceptRequest(String requestId);
   Future<Either<Failure, void>> rejectRequest(String requestId);
+  Future<Either<Failure, void>> deleteContact(String contactId);
 }

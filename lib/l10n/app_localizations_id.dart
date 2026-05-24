@@ -165,4 +165,185 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get navHistory => 'RIWAYAT';
+
+  @override
+  String get navHome => 'BERANDA';
+
+  @override
+  String get navLocation => 'LOKASI';
+
+  @override
+  String get navProfile => 'PROFIL';
+
+  @override
+  String get settingsLanguage => 'Bahasa';
+
+  @override
+  String get settingsLanguageSub => 'Mengatur bahasa di aplikasi';
+
+  @override
+  String get settingsHelp => 'Pusat Bantuan';
+
+  @override
+  String get settingsHelpSub => 'FAQ & Kontak Dukungan';
+
+  @override
+  String get logout => 'KELUAR DARI SISTEM';
+
+  @override
+  String get sensorActive => 'Sensor Aktif — memantau';
+
+  @override
+  String get helpSentToLocation =>
+      'Bantuan akan segera dikirimkan ke\nlokasi Anda saat ini';
+
+  @override
+  String get historySos => 'Riwayat SOS';
+
+  @override
+  String get emergencyContactsSub => '3 aktif';
+
+  @override
+  String get historySosSub => '2 kejadian';
+
+  @override
+  String get notAvailableYet => 'Halaman ini belum tersedia';
+
+  @override
+  String get locationTitle => 'Lokasi';
+
+  @override
+  String get emergencyCancelled => 'Darurat dibatalkan — Anda aman';
+
+  @override
+  String get alertSent => 'ALERT TERKIRIM';
+
+  @override
+  String get alertSentDesc =>
+      'Kontak darurat dan layanan penyelamat telah diberitahu.';
+
+  @override
+  String get backToHome => 'KEMBALI KE BERANDA';
+
+  @override
+  String get searchPlaceholder => 'Cari nama atau nomor telepon...';
+
+  @override
+  String get contactsLoadFailed => 'Tidak dapat memuat kontak';
+
+  @override
+  String get retry => 'Coba Lagi';
+
+  @override
+  String get noResultsFound => 'Tidak ditemukan';
+
+  @override
+  String noContactsMatching(String query) {
+    return 'Tidak ada kontak yang cocok dengan \"$query\"';
+  }
+
+  @override
+  String get noEmergencyContacts => 'Belum ada kontak darurat';
+
+  @override
+  String get addContactsInstruction =>
+      'Tambahkan kontak darurat agar dapat dihubungi saat situasi darurat.';
+
+  @override
+  String get noIncomingRequests => 'Tidak ada permintaan masuk';
+
+  @override
+  String get incomingRequestsInstruction =>
+      'Permintaan masuk dari pengguna lain yang ingin menambahkan Anda akan muncul di sini.';
+
+  @override
+  String get callContact => 'Hubungi';
+
+  @override
+  String get sendWhatsApp => 'Kirim via WhatsApp';
+
+  @override
+  String get viewProfile => 'Lihat Profil';
+
+  @override
+  String get deleteContactTitle => 'Hapus Kontak';
+
+  @override
+  String deleteContactConfirm(String name) {
+    return 'Apakah Anda yakin ingin menghapus $name dari kontak darurat?';
+  }
+
+  @override
+  String get cancel => 'Batal';
+
+  @override
+  String get delete => 'Hapus';
+
+  @override
+  String get connected => 'Tersambung';
+
+  @override
+  String get pending => 'Menunggu';
+
+  @override
+  String get myContacts => 'Kontak Saya';
+
+  @override
+  String get incomingRequests => 'Permintaan Masuk';
+
+  @override
+  String get emergencyContactsDesc =>
+      'Kelola daftar orang yang dapat dipercaya saat situasi darurat.';
+
+  @override
+  String get editProfileTitle => 'Ubah Profil & Medis';
+
+  @override
+  String get editProfileSub =>
+      'Perbarui foto, data diri dan riwayat medis Anda.';
+
+  @override
+  String get fullNameLabel => 'NAMA LENGKAP';
+
+  @override
+  String get phoneLabel => 'NOMOR HANDPHONE';
+
+  @override
+  String get bloodTypeLabel => 'GOLONGAN DARAH';
+
+  @override
+  String get choose => 'Pilih';
+
+  @override
+  String get medicalHistoryLabel => 'RIWAYAT PENYAKIT / ALERGI';
+
+  @override
+  String get medicalHistoryHint => 'Cth: Asma, Alergi Kacang';
+
+  @override
+  String get saveChanges => 'Simpan Perubahan';
+
+  @override
+  String get medicalDataCenter => 'PUSAT DATA MEDIS';
+
+  @override
+  String get bloodTypeCard => 'GOL. DARAH';
+
+  @override
+  String get allergiesCard => 'ALERGI / PENYAKIT';
+
+  @override
+  String get none => 'Tidak Ada';
+
+  @override
+  String get settings => 'PENGATURAN';
+
+  @override
+  String get enterFullName => 'Masukkan nama lengkap';
+
+  @override
+  String get languageTitle => 'Pilih Bahasa';
+
+  @override
+  String get languageSelect => 'Pilih bahasa aplikasi Anda:';
 }

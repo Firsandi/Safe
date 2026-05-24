@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
+import 'package:safe/core/services/crash_detection_service.dart';
 import 'package:safe/features/emergency/presentation/pages/emergency_countdown_page.dart';
 import 'package:safe/features/emergency/presentation/pages/emergency_contacts_page.dart';
 import '../widgets/sos_button.dart';
@@ -11,6 +12,8 @@ import 'package:safe/features/emergency/presentation/bloc/emergency_cubit.dart';
 import 'package:safe/core/utils/injection.dart';
 
 import 'package:safe/features/auth/presentation/pages/profile_page.dart';
+import 'package:safe/features/emergency/presentation/pages/emergency_history_page.dart';
+import 'package:safe/l10n/app_localizations.dart';
 
 class HomePage extends StatefulWidget {
   final UserEntity user;
@@ -20,16 +23,42 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
+class _HomePageState extends State<HomePage> with TickerProviderStateMixin, WidgetsBindingObserver {
   int _currentIndex = 0;
   bool _isInit = false;
+  final CrashDetectionService _crashDetection = CrashDetectionService();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     Future.delayed(const Duration(milliseconds: 200), () {
       if (mounted) setState(() => _isInit = true);
     });
+    // Start crash detection
+    _crashDetection.onCrashDetected = _onCrashDetected;
+    _crashDetection.start();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _crashDetection.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _crashDetection.start();
+    } else if (state == AppLifecycleState.paused) {
+      _crashDetection.stop();
+    }
+  }
+
+  void _onCrashDetected() {
+    if (!mounted) return;
+    _triggerEmergency(context);
   }
 
   Widget _getBody() {
@@ -42,9 +71,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           child: const EmergencyContactsPage(),
         );
       case 2:
-        return _buildPlaceholderPage('Riwayat', Icons.history);
+        return const EmergencyHistoryPage();
       case 3:
-        return _buildPlaceholderPage('Lokasi', Icons.location_on_outlined);
+        return _buildPlaceholderPage(AppLocalizations.of(context)!.locationTitle, Icons.location_on_outlined);
       case 4:
         return ProfilePage(user: widget.user);
       default:
@@ -59,15 +88,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         children: [
           Icon(icon, size: 64, color: AppColors.textGrey),
           const SizedBox(height: 16),
-          Text(
-            title,
-            style: AppTextStyles.heading.copyWith(color: AppColors.textDark),
-          ),
+          Text(title, style: AppTextStyles.heading.copyWith(color: AppColors.textDark)),
           const SizedBox(height: 8),
-          Text(
-            'Halaman ini belum tersedia',
-            style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
-          ),
+          Text(AppLocalizations.of(context)!.notAvailableYet,
+            style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14)),
         ],
       ),
     );
@@ -90,214 +114,104 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // HEADER (Logo, Bell, Settings)
-          _buildAnimated(
-            index: 0,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Image.asset(
-                    'assets/images/logo.png',
-                    height: 50,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.shield, color: AppColors.primaryRed, size: 34),
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.notifications_none, color: AppColors.textDark),
-                        onPressed: () {},
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.settings_outlined, color: AppColors.textDark),
-                        onPressed: () {},
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+          // HEADER
+          _buildAnimated(index: 0, child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Image.asset('assets/images/logo.png', height: 50,
+                  errorBuilder: (c, e, s) => const Icon(Icons.shield, color: AppColors.primaryRed, size: 34)),
+                Row(children: [
+                  IconButton(icon: const Icon(Icons.notifications_none, color: AppColors.textDark), onPressed: () {}),
+                  IconButton(icon: const Icon(Icons.settings_outlined, color: AppColors.textDark), onPressed: () {}),
+                ]),
+              ],
             ),
-          ),
+          )),
 
-          // GREETING & BADGE
-          _buildAnimated(
-            index: 1,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Halo, ${widget.user.name}',
-                    style: AppTextStyles.heading.copyWith(
-                      color: AppColors.primaryRed,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.inputBorder),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const BreathingDot(),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Sensor Aktif — memantau',
-                          style: AppTextStyles.inputLabel.copyWith(
-                            color: AppColors.textGrey,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+          // GREETING
+          _buildAnimated(index: 1, child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Halo, ${widget.user.name}',
+                style: AppTextStyles.heading.copyWith(color: AppColors.primaryRed, fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white, borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.inputBorder)),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  const BreathingDot(),
+                  const SizedBox(width: 8),
+                  Text(AppLocalizations.of(context)!.sensorActive,
+                    style: AppTextStyles.inputLabel.copyWith(color: AppColors.textGrey, fontWeight: FontWeight.bold, fontSize: 12)),
+                ]),
               ),
-            ),
-          ),
+            ]),
+          )),
           const SizedBox(height: 20),
 
-          // SOS CORE
-          _buildAnimated(
-            index: 2,
-            child: SosButton(
-              onLongPress: () => _triggerEmergency(context),
-              label: '',
-              subLabel: '',
-            ),
-          ),
+          // SOS BUTTON
+          _buildAnimated(index: 2, child: SosButton(
+            onLongPress: () => _triggerEmergency(context), label: '', subLabel: '')),
           const SizedBox(height: 16),
 
-          // INSTRUCTION TEXT
-          _buildAnimated(
-            index: 3,
-            child: Center(
-              child: Text(
-                'Bantuan akan segera dikirimkan ke\nlokasi Anda saat ini',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.subHeading.copyWith(
-                  color: AppColors.textGrey,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
+          // INSTRUCTION
+          _buildAnimated(index: 3, child: Center(
+            child: Text(AppLocalizations.of(context)!.helpSentToLocation,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14)))),
           const SizedBox(height: 32),
 
-          // MENU GRID (Two cards)
-          _buildAnimated(
-            index: 4,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildMenuCard(
-                      title: 'Kontak darurat',
-                      subtitle: '3 aktif',
-                      subtitleColor: AppColors.primaryRed,
-                      icon: Icons.contact_phone_outlined,
-                      iconBgColor: const Color(0xFFEDF4FE),
-                      iconColor: const Color(0xFF193855),
-                      onTap: () {
-                        setState(() => _currentIndex = 1);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildMenuCard(
-                      title: 'Riwayat SOS',
-                      subtitle: '2 kejadian',
-                      subtitleColor: AppColors.textDark,
-                      icon: Icons.history,
-                      iconBgColor: AppColors.primaryRed.withOpacity(0.1),
-                      iconColor: AppColors.primaryRed,
-                      onTap: () {},
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
+          // MENU GRID
+          _buildAnimated(index: 4, child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Row(children: [
+              Expanded(child: _buildMenuCard(
+                title: AppLocalizations.of(context)!.emergencyContactsTitle, 
+                subtitle: AppLocalizations.of(context)!.emergencyContactsSub, 
+                subtitleColor: AppColors.primaryRed,
+                icon: Icons.contact_phone_outlined, iconBgColor: const Color(0xFFEDF4FE),
+                iconColor: const Color(0xFF193855), onTap: () => setState(() => _currentIndex = 1))),
+              const SizedBox(width: 16),
+              Expanded(child: _buildMenuCard(
+                title: AppLocalizations.of(context)!.historySos, 
+                subtitle: AppLocalizations.of(context)!.historySosSub, 
+                subtitleColor: AppColors.textDark,
+                icon: Icons.history, iconBgColor: AppColors.primaryRed.withOpacity(0.1),
+                iconColor: AppColors.primaryRed, onTap: () => setState(() => _currentIndex = 2))),
+            ]),
+          )),
           const SizedBox(height: 24),
 
           // MAP PANEL
-          _buildAnimated(
-            index: 5,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Container(
-                height: 180,
-                decoration: BoxDecoration(
-                  color: Colors.blueGrey[800],
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Stack(
-                  children: [
-                    // Mock Map Pattern
-                    Opacity(
-                      opacity: 0.5,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(16),
-                          image: const DecorationImage(
-                            image: NetworkImage('https://www.transparenttextures.com/patterns/cubes.png'),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
-                    ),
-                    // Location Badge Overlay
-                    Positioned(
-                      bottom: 16,
-                      left: 16,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.location_on_outlined, color: AppColors.textDark, size: 16),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Sumbersari, Jember',
-                              style: AppTextStyles.subHeading.copyWith(
-                                color: AppColors.textDark,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+          _buildAnimated(index: 5, child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Container(
+              height: 180,
+              decoration: BoxDecoration(color: Colors.blueGrey[800], borderRadius: BorderRadius.circular(16)),
+              child: Stack(children: [
+                Opacity(opacity: 0.5, child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    image: const DecorationImage(
+                      image: NetworkImage('https://www.transparenttextures.com/patterns/cubes.png'),
+                      fit: BoxFit.cover)))),
+                Positioned(bottom: 16, left: 16, child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10)]),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.location_on_outlined, color: AppColors.textDark, size: 16),
+                    const SizedBox(width: 8),
+                    Text('Sumbersari, Jember', style: AppTextStyles.subHeading.copyWith(
+                      color: AppColors.textDark, fontWeight: FontWeight.bold, fontSize: 12)),
+                  ]))),
+              ]),
             ),
-          ),
-
+          )),
           const SizedBox(height: 40),
         ],
       ),
@@ -318,81 +232,43 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   }
 
   Widget _buildMenuCard({
-    required String title,
-    required String subtitle,
-    required Color subtitleColor,
-    required IconData icon,
-    required Color iconBgColor,
-    required Color iconColor,
-    required VoidCallback onTap,
+    required String title, required String subtitle, required Color subtitleColor,
+    required IconData icon, required Color iconBgColor, required Color iconColor, required VoidCallback onTap,
   }) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: iconBgColor,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, color: iconColor, size: 24),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  title,
-                  style: AppTextStyles.subHeading.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textDark,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: AppTextStyles.subHeading.copyWith(
-                    fontSize: 14,
-                    color: subtitleColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))]),
+      child: Material(color: Colors.transparent, child: InkWell(
+        onTap: onTap, borderRadius: BorderRadius.circular(16),
+        child: Padding(padding: const EdgeInsets.all(20), child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Container(padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: iconBgColor, borderRadius: BorderRadius.circular(12)),
+              child: Icon(icon, color: iconColor, size: 24)),
+            const SizedBox(height: 24),
+            Text(title, style: AppTextStyles.subHeading.copyWith(fontWeight: FontWeight.bold, color: AppColors.textDark, fontSize: 14)),
+            const SizedBox(height: 4),
+            Text(subtitle, style: AppTextStyles.subHeading.copyWith(fontSize: 14, color: subtitleColor, fontWeight: FontWeight.bold)),
+          ],
+        )),
+      )),
     );
   }
 
-  void _triggerEmergency(BuildContext context) {
-    Navigator.push(
+  void _triggerEmergency(BuildContext context) async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const EmergencyCountdownPage()),
     );
+    // If cancelled, start cooldown on crash detection service
+    if (result == 'cancelled') {
+      _crashDetection.startCooldown();
+    }
   }
 }
 
 class BreathingDot extends StatefulWidget {
   const BreathingDot({super.key});
-
   @override
   State<BreathingDot> createState() => _BreathingDotState();
 }
@@ -404,26 +280,16 @@ class _BreathingDotState extends State<BreathingDot> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    )..repeat(reverse: true);
-    _animation = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 1))..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.3, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
+  void dispose() { _controller.dispose(); super.dispose(); }
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _animation,
-      child: const Icon(Icons.circle, color: Color(0xFF22C55E), size: 10), // Hijau
-    );
+    return FadeTransition(opacity: _animation,
+      child: const Icon(Icons.circle, color: Color(0xFF22C55E), size: 10));
   }
 }

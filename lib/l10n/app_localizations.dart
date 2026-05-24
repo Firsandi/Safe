@@ -409,6 +409,348 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'HISTORY'**
   String get navHistory;
+
+  /// No description provided for @navHome.
+  ///
+  /// In en, this message translates to:
+  /// **'HOME'**
+  String get navHome;
+
+  /// No description provided for @navLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'LOCATION'**
+  String get navLocation;
+
+  /// No description provided for @navProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'PROFILE'**
+  String get navProfile;
+
+  /// No description provided for @settingsLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguage;
+
+  /// No description provided for @settingsLanguageSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Set app language preference'**
+  String get settingsLanguageSub;
+
+  /// No description provided for @settingsHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Help Center'**
+  String get settingsHelp;
+
+  /// No description provided for @settingsHelpSub.
+  ///
+  /// In en, this message translates to:
+  /// **'FAQ & Support Contact'**
+  String get settingsHelpSub;
+
+  /// No description provided for @logout.
+  ///
+  /// In en, this message translates to:
+  /// **'LOG OUT OF SYSTEM'**
+  String get logout;
+
+  /// No description provided for @sensorActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Sensor Active — monitoring'**
+  String get sensorActive;
+
+  /// No description provided for @helpSentToLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Help will be dispatched to\nyour current location immediately'**
+  String get helpSentToLocation;
+
+  /// No description provided for @historySos.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS History'**
+  String get historySos;
+
+  /// No description provided for @emergencyContactsSub.
+  ///
+  /// In en, this message translates to:
+  /// **'3 active'**
+  String get emergencyContactsSub;
+
+  /// No description provided for @historySosSub.
+  ///
+  /// In en, this message translates to:
+  /// **'2 events'**
+  String get historySosSub;
+
+  /// No description provided for @notAvailableYet.
+  ///
+  /// In en, this message translates to:
+  /// **'This page is not available yet'**
+  String get notAvailableYet;
+
+  /// No description provided for @locationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get locationTitle;
+
+  /// No description provided for @emergencyCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency cancelled — you are safe'**
+  String get emergencyCancelled;
+
+  /// No description provided for @alertSent.
+  ///
+  /// In en, this message translates to:
+  /// **'ALERT SENT'**
+  String get alertSent;
+
+  /// No description provided for @alertSentDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency services and contacts have been notified.'**
+  String get alertSentDesc;
+
+  /// No description provided for @backToHome.
+  ///
+  /// In en, this message translates to:
+  /// **'BACK TO HOME'**
+  String get backToHome;
+
+  /// No description provided for @searchPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search name or phone number...'**
+  String get searchPlaceholder;
+
+  /// No description provided for @contactsLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load contacts'**
+  String get contactsLoadFailed;
+
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @noResultsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
+  String get noResultsFound;
+
+  /// No description provided for @noContactsMatching.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts match \"{query}\"'**
+  String noContactsMatching(String query);
+
+  /// No description provided for @noEmergencyContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'No emergency contacts yet'**
+  String get noEmergencyContacts;
+
+  /// No description provided for @addContactsInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'Add emergency contacts to be contacted in emergency situations.'**
+  String get addContactsInstruction;
+
+  /// No description provided for @noIncomingRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No incoming requests'**
+  String get noIncomingRequests;
+
+  /// No description provided for @incomingRequestsInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming requests from other users who want to add you will appear here.'**
+  String get incomingRequestsInstruction;
+
+  /// No description provided for @callContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get callContact;
+
+  /// No description provided for @sendWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send WhatsApp message'**
+  String get sendWhatsApp;
+
+  /// No description provided for @viewProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'View Profile'**
+  String get viewProfile;
+
+  /// No description provided for @deleteContactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Contact'**
+  String get deleteContactTitle;
+
+  /// No description provided for @deleteContactConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove {name} from emergency contacts?'**
+  String deleteContactConfirm(String name);
+
+  /// No description provided for @cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// No description provided for @delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get delete;
+
+  /// No description provided for @connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected'**
+  String get connected;
+
+  /// No description provided for @pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get pending;
+
+  /// No description provided for @myContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'My Contacts'**
+  String get myContacts;
+
+  /// No description provided for @incomingRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming Requests'**
+  String get incomingRequests;
+
+  /// No description provided for @emergencyContactsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage the list of trusted people during emergency situations.'**
+  String get emergencyContactsDesc;
+
+  /// No description provided for @editProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Profile & Medical'**
+  String get editProfileTitle;
+
+  /// No description provided for @editProfileSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Update your photo, personal details and medical history.'**
+  String get editProfileSub;
+
+  /// No description provided for @fullNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'FULL NAME'**
+  String get fullNameLabel;
+
+  /// No description provided for @phoneLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'PHONE NUMBER'**
+  String get phoneLabel;
+
+  /// No description provided for @bloodTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'BLOOD TYPE'**
+  String get bloodTypeLabel;
+
+  /// No description provided for @choose.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get choose;
+
+  /// No description provided for @medicalHistoryLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'MEDICAL HISTORY / ALLERGIES'**
+  String get medicalHistoryLabel;
+
+  /// No description provided for @medicalHistoryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Asthma, Peanut Allergy'**
+  String get medicalHistoryHint;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Changes'**
+  String get saveChanges;
+
+  /// No description provided for @medicalDataCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'MEDICAL DATA CENTER'**
+  String get medicalDataCenter;
+
+  /// No description provided for @bloodTypeCard.
+  ///
+  /// In en, this message translates to:
+  /// **'BLOOD TYPE'**
+  String get bloodTypeCard;
+
+  /// No description provided for @allergiesCard.
+  ///
+  /// In en, this message translates to:
+  /// **'ALLERGIES / DISEASE'**
+  String get allergiesCard;
+
+  /// No description provided for @none.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get none;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'SETTINGS'**
+  String get settings;
+
+  /// No description provided for @enterFullName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter full name'**
+  String get enterFullName;
+
+  /// No description provided for @languageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Language'**
+  String get languageTitle;
+
+  /// No description provided for @languageSelect.
+  ///
+  /// In en, this message translates to:
+  /// **'Select your app language:'**
+  String get languageSelect;
 }
 
 class _AppLocalizationsDelegate
