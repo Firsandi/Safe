@@ -81,24 +81,30 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                 // Header
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                  child: _isSearching ? _buildSearchBar() : _buildHeader(),
+                  child: _buildHeader(),
                 ),
 
                 // Title
-                if (!_isSearching)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(AppLocalizations.of(context)!.emergencyContactsTitle, style: AppTextStyles.heading),
+                      const SizedBox(height: 8),
+                      Text(
+                        AppLocalizations.of(context)!.emergencyContactsDesc,
+                        style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Search Bar (visible only when searching)
+                if (_isSearching)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(AppLocalizations.of(context)!.emergencyContactsTitle, style: AppTextStyles.heading),
-                        const SizedBox(height: 8),
-                        Text(
-                          AppLocalizations.of(context)!.emergencyContactsDesc,
-                          style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
-                        ),
-                      ],
-                    ),
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                    child: _buildSearchBar(),
                   ),
                 const SizedBox(height: 8),
 
@@ -178,10 +184,11 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
       children: [
         Image.asset('assets/images/logo.png', height: 48,
           errorBuilder: (c, e, s) => const Icon(Icons.shield, color: AppColors.primaryRed, size: 32)),
-        IconButton(
-          icon: const Icon(Icons.search, color: AppColors.textDark),
-          onPressed: () => setState(() => _isSearching = true),
-        ),
+        if (!_isSearching)
+          IconButton(
+            icon: const Icon(Icons.search, color: AppColors.textDark),
+            onPressed: () => setState(() => _isSearching = true),
+          ),
       ],
     );
   }
@@ -233,7 +240,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
     } else if (state is EmergencyLoaded) {
       return onLoaded();
     } else if (state is EmergencyError) {
-      return _buildEmptyState();
+      return _buildErrorState(state.message);
     }
     return _buildEmptyState();
   }

@@ -153,6 +153,20 @@ class NotificationLocalService {
     } catch (_) {}
   }
 
+  /// Deletes multiple notifications by their IDs
+  static Future<void> deleteNotifications(List<String> ids) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = await _getStorageKey();
+      final notifications = await loadNotifications();
+      
+      notifications.removeWhere((item) => ids.contains(item.id));
+      
+      final dataStr = jsonEncode(notifications.map((n) => n.toJson()).toList());
+      await prefs.setString(key, dataStr);
+    } catch (_) {}
+  }
+
   /// Clears all notifications
   static Future<void> clearAll() async {
     try {
