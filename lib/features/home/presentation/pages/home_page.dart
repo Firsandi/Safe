@@ -19,6 +19,10 @@ import 'package:safe/features/emergency/presentation/bloc/emergency_cubit.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/features/auth/presentation/pages/profile_page.dart';
 import 'package:safe/l10n/app_localizations.dart';
+import 'package:safe/core/services/notification_local_service.dart';
+import 'package:safe/features/home/presentation/pages/notification_page.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:geolocator/geolocator.dart';
 
 class HomePage extends StatefulWidget {
   final UserEntity user;
@@ -49,26 +53,105 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   // Real-time Statistics
   int _activeContactsCount = 0;
   int _sosHistoryCount = 0;
+  int _unreadNotificationCount = 0;
+  int _historyInitialTabIndex = 0;
+
+  // Permissions check state
+  bool _hasLocationPermission = true;
+  bool _hasNotificationPermission = true;
+  bool _checkingPermissions = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _checkPermissionsState().then((_) {
+      if (mounted && (!_hasLocationPermission || !_hasNotificationPermission)) {
+        _requestPermissions();
+      }
+    });
     Future.delayed(const Duration(milliseconds: 200), () {
       if (mounted) setState(() => _isInit = true);
     });
     _startSensorMonitoring();
     _loadStats();
+    _loadUnreadNotificationCount();
+    _syncActiveSosState(); // Check and synchronize active SOS event
 
     // Register callback for background sync success
     OfflineSyncService.onSyncSuccess = () {
       if (mounted) {
         setState(() {});
         _loadStats();
+        _loadUnreadNotificationCount();
       }
     };
     // Start background sync loop
     OfflineSyncService.startSyncLoop(context);
+  }
+
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      final count = await NotificationLocalService.getUnreadCount();
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = count;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _navigateToNotifications() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const NotificationPage()),
+    );
+
+    _loadUnreadNotificationCount();
+
+    if (result != null && result is Map) {
+      final action = result['action'];
+      if (action == 'go_to_history') {
+        final tabIndex = result['tab'] ?? 0;
+        setState(() {
+          _currentIndex = 2; // Riwayat SOS
+          _historyInitialTabIndex = tabIndex;
+        });
+      } else if (action == 'go_to_contacts') {
+        setState(() {
+          _currentIndex = 1; // Kontak darurat
+        });
+      }
+    }
+  }
+
+
+
+  Future<void> _syncActiveSosState() async {
+    try {
+      final dio = sl<Dio>();
+      final response = await dio.get('/api/sos/active');
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        if (data['active'] == true && data['sos_id'] != null) {
+          final sosId = data['sos_id'].toString();
+          await LocationService.saveActiveSosId(sosId);
+          LocationService.startTrackingSos(sosId);
+        } else {
+          await LocationService.saveActiveSosId(null);
+          LocationService.stopTrackingSos();
+        }
+      }
+    } catch (e) {
+      // Offline fallback: load local persisted state
+      await LocationService.loadActiveSosId();
+      if (LocationService.activeSosId != null) {
+        LocationService.startTrackingSos(LocationService.activeSosId!);
+      }
+    }
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _loadStats() async {
@@ -98,6 +181,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _accelerometerSub?.cancel();
     _gyroscopeSub?.cancel();
     OfflineSyncService.onSyncSuccess = null;
@@ -139,8 +223,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             _shakeCount++;
             if (_shakeCount >= 4) {
               _shakeCount = 0;
+              if (!mounted) return;
               _triggerEmergencyFromSensor(
-                reason: "Guncangan Keras Terdeteksi",
+                reason: AppLocalizations.of(context)?.severeShakeDetected ?? "Severe Shake Detected",
                 force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
               );
             }
@@ -166,8 +251,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         if (_freefallDetected && _freefallTime != null) {
           if (now.difference(_freefallTime!) < const Duration(milliseconds: 1000)) {
             _freefallDetected = false;
+            if (!mounted) return;
             _triggerEmergencyFromSensor(
-              reason: "Jatuh Terdeteksi",
+              reason: AppLocalizations.of(context)?.fallDetected ?? "Fall Detected",
               force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
             );
             return;
@@ -176,8 +262,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
 
         // 2. Tumbling/Crash: high rotation rate (gyroscope) combined with high impact force
         if (_lastRotationRate > 7.0) {
+          if (!mounted) return;
           _triggerEmergencyFromSensor(
-            reason: "Tabrakan & Benturan Terdeteksi",
+            reason: AppLocalizations.of(context)?.crashImpactDetected ?? "Crash & Impact Detected",
             force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
           );
           return;
@@ -185,8 +272,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
 
         // 3. Direct Severe Impact: extremely high acceleration force (>3.5 G)
         if (magnitude > 35.0) {
+          if (!mounted) return;
           _triggerEmergencyFromSensor(
-            reason: "Benturan Keras Terdeteksi",
+            reason: AppLocalizations.of(context)?.severeImpactDetected ?? "Severe Impact Detected",
             force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
           );
           return;
@@ -225,7 +313,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           child: const EmergencyContactsPage(),
         );
       case 2:
-        return const EmergencyHistoryPage();
+        return EmergencyHistoryPage(
+          initialTabIndex: _historyInitialTabIndex,
+          key: ValueKey('history_page_$_historyInitialTabIndex'),
+        );
       case 3:
         return _buildPlaceholderPage(AppLocalizations.of(context)!.locationTitle, Icons.location_on_outlined);
       case 4:
@@ -252,15 +343,258 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermissionsState();
+    }
+  }
+
+  Future<void> _checkPermissionsState() async {
+    try {
+      // 1. Cek izin lokasi (tanpa mengharuskan GPS aktif)
+      final locPermission = await Geolocator.checkPermission();
+      final locGranted = locPermission == LocationPermission.always ||
+          locPermission == LocationPermission.whileInUse;
+
+      // 2. Cek izin notifikasi
+      final settings = await FirebaseMessaging.instance.getNotificationSettings();
+      final notifGranted = settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional;
+
+      if (mounted) {
+        setState(() {
+          _hasLocationPermission = locGranted;
+          _hasNotificationPermission = notifGranted;
+          _checkingPermissions = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _checkingPermissions = false);
+      }
+    }
+  }
+
+  Future<void> _requestPermissions() async {
+    // 1. Minta izin lokasi secara langsung via Geolocator
+    var locPermissionStatus = await Geolocator.checkPermission();
+    if (locPermissionStatus == LocationPermission.denied) {
+      locPermissionStatus = await Geolocator.requestPermission();
+    }
+    
+    // 2. Minta izin notifikasi
+    final messaging = FirebaseMessaging.instance;
+    final settings = await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+      criticalAlert: true,
+    );
+    final notifGranted = settings.authorizationStatus == AuthorizationStatus.authorized ||
+        settings.authorizationStatus == AuthorizationStatus.provisional;
+
+    // Jika ditolak secara permanen, arahkan ke pengaturan aplikasi
+    if (locPermissionStatus == LocationPermission.deniedForever) {
+      await Geolocator.openAppSettings();
+    } else if (!notifGranted) {
+      final currentSettings = await FirebaseMessaging.instance.getNotificationSettings();
+      if (currentSettings.authorizationStatus == AuthorizationStatus.denied) {
+        await Geolocator.openAppSettings();
+      }
+    }
+
+    await _checkPermissionsState();
+  }
+
+  Widget _buildPermissionRequestScreen() {
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(
+      backgroundColor: const Color(0xFFF9ECEC), // Desaturated soft red/pink background
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Spacer(),
+              // Glimmering Shield/Alert Icon
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryRed.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.security,
+                  size: 80,
+                  color: AppColors.primaryRed,
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Title
+              Text(
+                l10n.permissionRequiredTitle,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.heading.copyWith(
+                  color: AppColors.primaryRed,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Description
+              Text(
+                l10n.permissionRequiredDesc,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.subHeading.copyWith(
+                  color: Colors.black87,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
+              // List of permissions missing
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _buildPermissionStatusRow(
+                      icon: Icons.location_on,
+                      title: l10n.locationTitle,
+                      isGranted: _hasLocationPermission,
+                    ),
+                    const Divider(height: 24, color: Color(0xFFEEEEEE)),
+                    _buildPermissionStatusRow(
+                      icon: Icons.notifications,
+                      title: 'Notification / Push Alert',
+                      isGranted: _hasNotificationPermission,
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              // Instruction
+              Text(
+                l10n.openSettingsInstruction,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.inputLabel.copyWith(
+                  color: Colors.black54,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Button
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _requestPermissions,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryRed,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    l10n.allowPermissionsButton.toUpperCase(),
+                    style: AppTextStyles.heading.copyWith(
+                      fontSize: 14,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPermissionStatusRow({
+    required IconData icon,
+    required String title,
+    required bool isGranted,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: isGranted ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: isGranted ? Colors.green : AppColors.primaryRed,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Text(
+            title,
+            style: AppTextStyles.subHeading.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+        Icon(
+          isGranted ? Icons.check_circle : Icons.cancel,
+          color: isGranted ? Colors.green : AppColors.primaryRed,
+          size: 22,
+        ),
+      ],
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_checkingPermissions) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primaryRed),
+        ),
+      );
+    }
+
+    if (!_hasLocationPermission || !_hasNotificationPermission) {
+      return _buildPermissionRequestScreen();
+    }
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       bottomNavigationBar: SafeNavbar(
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() => _currentIndex = index);
+          setState(() {
+            _currentIndex = index;
+            if (index == 2) {
+              _historyInitialTabIndex = 0; // reset to default tab
+            }
+          });
           if (index == 0) {
             _loadStats();
+            _loadUnreadNotificationCount();
           }
         },
       ),
@@ -282,7 +616,40 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 Image.asset('assets/images/logo.png', height: 50,
                   errorBuilder: (c, e, s) => const Icon(Icons.shield, color: AppColors.primaryRed, size: 34)),
                 Row(children: [
-                  IconButton(icon: const Icon(Icons.notifications_none, color: AppColors.textDark), onPressed: () {}),
+                  IconButton(
+                    icon: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        const Icon(Icons.notifications_none, color: AppColors.textDark),
+                        if (_unreadNotificationCount > 0)
+                          Positioned(
+                            right: -2,
+                            top: -2,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: AppColors.primaryRed,
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 16,
+                                minHeight: 16,
+                              ),
+                              child: Text(
+                                '$_unreadNotificationCount',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    onPressed: _navigateToNotifications,
+                  ),
                   IconButton(icon: const Icon(Icons.settings_outlined, color: AppColors.textDark), onPressed: () {}),
                 ]),
               ],
@@ -301,7 +668,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Halo, ${widget.user.name}',
+                    AppLocalizations.of(context)!.helloUser(widget.user.name),
                     style: AppTextStyles.heading.copyWith(
                       color: AppColors.primaryRed,
                       fontSize: 24,
@@ -322,7 +689,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                         const BreathingDot(),
                         const SizedBox(width: 8),
                         Text(
-                          'Sensor Aktif — memantau',
+                          AppLocalizations.of(context)!.sensorActive,
                           style: AppTextStyles.inputLabel.copyWith(
                             color: AppColors.textGrey,
                             fontWeight: FontWeight.bold,
@@ -359,8 +726,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 children: [
                   Expanded(
                     child: _buildMenuCard(
-                      title: 'Kontak darurat',
-                      subtitle: '$_activeContactsCount aktif',
+                      title: AppLocalizations.of(context)!.emergencyContactsTitle,
+                      subtitle: AppLocalizations.of(context)!.activeContactsCount(_activeContactsCount),
                       subtitleColor: AppColors.primaryRed,
                       icon: Icons.contact_phone_outlined,
                       iconBgColor: const Color(0xFFEDF4FE),
@@ -373,14 +740,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildMenuCard(
-                      title: 'Riwayat SOS',
-                      subtitle: '$_sosHistoryCount kejadian',
+                      title: AppLocalizations.of(context)!.historySos,
+                      subtitle: AppLocalizations.of(context)!.sosHistoryCount(_sosHistoryCount),
                       subtitleColor: AppColors.textDark,
                       icon: Icons.history,
                       iconBgColor: AppColors.primaryRed.withOpacity(0.1),
                       iconColor: AppColors.primaryRed,
                       onTap: () {
-                        setState(() => _currentIndex = 2);
+                        setState(() {
+                          _currentIndex = 2;
+                          _historyInitialTabIndex = 0; // reset to default tab
+                        });
                       },
                     ),
                   ),
@@ -401,52 +771,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 decoration: BoxDecoration(
                   color: Colors.blueGrey[800],
                   borderRadius: BorderRadius.circular(16),
-                ),
-                child: Stack(
-                  children: [
-                    // Mock Map Pattern via CustomPaint
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: CustomPaint(
-                          painter: const MockMapPainter(),
-                        ),
-                      ),
-                    ),
-                    // Location Badge Overlay
-                    Positioned(
-                      bottom: 16,
-                      left: 16,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.location_on_outlined, color: AppColors.textDark, size: 16),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Sumbersari, Jember',
-                              style: AppTextStyles.subHeading.copyWith(
-                                color: AppColors.textDark,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
+                ),
+                child: const ClipRRect(
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                  child: CustomPaint(
+                    painter: MockMapPainter(),
+                  ),
                 ),
               ),
             ),
@@ -560,7 +897,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'SOS AKTIF',
+                  AppLocalizations.of(context)!.sosActiveBanner,
                   style: AppTextStyles.subHeading.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -569,7 +906,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Mengirimkan lokasi real-time Anda...',
+                  AppLocalizations.of(context)!.sendingRealtimeLocation,
                   style: AppTextStyles.subHeading.copyWith(
                     color: Colors.white.withOpacity(0.9),
                     fontSize: 12,
@@ -588,7 +925,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
             child: Text(
-              'Matikan',
+              AppLocalizations.of(context)!.turnOff,
               style: AppTextStyles.subHeading.copyWith(
                 color: const Color(0xFFEF4444),
                 fontWeight: FontWeight.bold,
@@ -627,9 +964,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         _loadStats();
         
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('SOS berhasil dinonaktifkan'),
-            backgroundColor: Color(0xFF10B981),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.sosDisabledSuccess),
+            backgroundColor: const Color(0xFF10B981),
           ),
         );
       }
@@ -638,7 +975,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal menonaktifkan SOS: ${e.toString()}'),
+            content: Text(AppLocalizations.of(context)!.sosDisableFailed(e.toString())),
             backgroundColor: AppColors.primaryRed,
           ),
         );

@@ -127,5 +127,53 @@
   "enterFullName": "Masukkan nama lengkap",
   
   "languageTitle": "Pilih Bahasa",
-  "languageSelect": "Pilih bahasa aplikasi Anda:"
+  "languageSelect": "Pilih bahasa aplikasi Anda:",
+  "helloUser": "Halo, {name}",
+  "@helloUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "activeContactsCount": "{count} aktif",
+  "@activeContactsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sosHistoryCount": "{count} kejadian",
+  "@sosHistoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sosActiveBanner": "SOS AKTIF",
+  "sendingRealtimeLocation": "Mengirimkan lokasi real-time Anda...",
+  "turnOff": "Matikan",
+  "sosDisabledSuccess": "SOS berhasil dinonaktifkan",
+  "sosDisableFailed": "Gagal menonaktifkan SOS: {error}",
+  "@sosDisableFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "permissionRequiredTitle": "Izin Aplikasi Diperlukan",
+  "permissionRequiredDesc": "SAFE memerlukan izin Lokasi dan Notifikasi untuk memantau keselamatan Anda dan mengirimkan bantuan saat darurat. Tanpa izin ini, aplikasi tidak dapat melindungi Anda.",
+  "allowPermissionsButton": "Berikan Izin",
+  "openSettingsInstruction": "Jika izin tidak diberikan, silakan aktifkan secara manual di Pengaturan Aplikasi.",
+  "severeShakeDetected": "Guncangan Keras Terdeteksi",
+  "fallDetected": "Jatuh Terdeteksi",
+  "crashImpactDetected": "Tabrakan & Benturan Terdeteksi",
+  "severeImpactDetected": "Benturan Keras Terdeteksi",
+  "impactForceLabel": "KEKUATAN BENTURAN",
+  "locationLabel": "LOKASI",
+  "connectionIssuesTitle": "Koneksi Terganggu",
+  "connectionIssuesDesc": "Gagal mengirim SOS karena masalah jaringan. SOS Anda telah masuk antrean offline dan akan otomatis dikirim saat sinyal membaik.\n\nHarap hubungi nomor darurat atau kontak Anda secara manual jika memungkinkan."
 }

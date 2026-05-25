@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_state.dart';
 import 'package:safe/core/utils/injection.dart';
+import 'package:safe/core/utils/google_auth_helper.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -396,6 +396,11 @@ class _RegisterPageState extends State<RegisterPage> {
               _isPasswordVisible = !_isPasswordVisible;
             });
           },
+          validator: (value) {
+            if (value == null || value.isEmpty) return 'Wajib diisi';
+            if (value.length < 8) return 'Kata sandi minimal 8 karakter';
+            return null;
+          },
         ),
         const SizedBox(height: 16),
         
@@ -474,9 +479,7 @@ class _RegisterPageState extends State<RegisterPage> {
               elevation: 1,
               shadowColor: Colors.black.withOpacity(0.15),
             ),
-            onPressed: () {
-              // TODO: Implement Google Sign Up
-            },
+            onPressed: () => GoogleAuthHelper.signIn(context),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

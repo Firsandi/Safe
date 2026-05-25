@@ -346,4 +346,75 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get languageSelect => 'Pilih bahasa aplikasi Anda:';
+
+  @override
+  String helloUser(String name) {
+    return 'Halo, $name';
+  }
+
+  @override
+  String activeContactsCount(int count) {
+    return '$count aktif';
+  }
+
+  @override
+  String sosHistoryCount(int count) {
+    return '$count kejadian';
+  }
+
+  @override
+  String get sosActiveBanner => 'SOS AKTIF';
+
+  @override
+  String get sendingRealtimeLocation => 'Mengirimkan lokasi real-time Anda...';
+
+  @override
+  String get turnOff => 'Matikan';
+
+  @override
+  String get sosDisabledSuccess => 'SOS berhasil dinonaktifkan';
+
+  @override
+  String sosDisableFailed(String error) {
+    return 'Gagal menonaktifkan SOS: $error';
+  }
+
+  @override
+  String get permissionRequiredTitle => 'Izin Aplikasi Diperlukan';
+
+  @override
+  String get permissionRequiredDesc =>
+      'SAFE memerlukan izin Lokasi dan Notifikasi untuk memantau keselamatan Anda dan mengirimkan bantuan saat darurat. Tanpa izin ini, aplikasi tidak dapat melindungi Anda.';
+
+  @override
+  String get allowPermissionsButton => 'Berikan Izin';
+
+  @override
+  String get openSettingsInstruction =>
+      'Jika izin tidak diberikan, silakan aktifkan secara manual di Pengaturan Aplikasi.';
+
+  @override
+  String get severeShakeDetected => 'Guncangan Keras Terdeteksi';
+
+  @override
+  String get fallDetected => 'Jatuh Terdeteksi';
+
+  @override
+  String get crashImpactDetected => 'Tabrakan & Benturan Terdeteksi';
+
+  @override
+  String get severeImpactDetected => 'Benturan Keras Terdeteksi';
+
+  @override
+  String get impactForceLabel => 'KEKUATAN BENTURAN';
+
+  @override
+  String get locationLabel => 'LOKASI';
+
+  @override
+  String get connectionIssuesTitle => 'Koneksi Terganggu';
+
+  @override
+  String get connectionIssuesDesc =>
+      'Gagal mengirim SOS karena masalah jaringan. SOS Anda telah masuk antrean offline dan akan otomatis dikirim saat sinyal membaik.\n\nHarap hubungi nomor darurat atau kontak Anda secara manual jika memungkinkan.';
 }

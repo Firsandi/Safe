@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/core/utils/injection.dart';
@@ -8,8 +7,10 @@ import 'package:safe/core/utils/session_manager.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_state.dart';
 import 'package:safe/features/home/presentation/pages/home_page.dart';
+import 'package:safe/core/utils/google_auth_helper.dart';
 import 'register_page.dart';
 import 'forgot_password_page.dart';
+import 'package:safe/core/services/notification_manager.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -37,10 +38,10 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocProvider(
         create: (_) => sl<AuthCubit>(),
         child: BlocConsumer<AuthCubit, AuthState>(
-          listener: (context, state) {
+          listener: (context, state) async {
             if (state is AuthSuccess) {
               // Simpan session
-              SessionManager.saveSession(
+              await SessionManager.saveSession(
                 token: state.user.token ?? 'logged_in',
                 userData: {
                   'user_id': state.user.userId,
@@ -52,6 +53,7 @@ class _LoginPageState extends State<LoginPage> {
                   'profile_image': state.user.profileImage,
                 },
               );
+              NotificationManager.uploadFcmToken();
               Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
@@ -220,9 +222,7 @@ class _LoginPageState extends State<LoginPage> {
                           elevation: 1,
                           shadowColor: Colors.black.withOpacity(0.15),
                         ),
-                        onPressed: () {
-                          // TODO: Implement Google Sign In
-                        },
+                        onPressed: () => GoogleAuthHelper.signIn(context),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

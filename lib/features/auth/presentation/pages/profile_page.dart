@@ -13,6 +13,7 @@ import 'package:safe/features/auth/presentation/pages/login_page.dart';
 import 'package:safe/features/home/presentation/pages/language_page.dart';
 import 'package:safe/features/home/presentation/pages/help_center_page.dart';
 import 'package:safe/l10n/app_localizations.dart';
+import 'package:safe/core/services/location_service.dart';
 
 class ProfilePage extends StatefulWidget {
   final UserEntity user;
@@ -432,6 +433,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (confirm == true) {
+      LocationService.stopTrackingSos();
       await SessionManager.clearSession();
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
@@ -672,16 +674,10 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // HEADER BAR (SAFE logo & edit pencil icon button)
+                  // HEADER BAR (edit pencil icon button)
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Image.asset(
-                        'assets/images/logo.png',
-                        height: 48,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.shield, color: AppColors.primaryRed, size: 32),
-                      ),
                       GestureDetector(
                         onTap: _showEditProfileBottomSheet,
                         child: Container(

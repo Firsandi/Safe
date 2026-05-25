@@ -6,7 +6,8 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/injection.dart';
 
 class EmergencyHistoryPage extends StatefulWidget {
-  const EmergencyHistoryPage({super.key});
+  final int initialTabIndex;
+  const EmergencyHistoryPage({super.key, this.initialTabIndex = 0});
 
   @override
   State<EmergencyHistoryPage> createState() => _EmergencyHistoryPageState();
@@ -279,6 +280,7 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
   Widget build(BuildContext context) {
     return DefaultTabController(
       length: 2,
+      initialIndex: widget.initialTabIndex,
       child: Scaffold(
         backgroundColor: AppColors.backgroundLight,
         body: Column(

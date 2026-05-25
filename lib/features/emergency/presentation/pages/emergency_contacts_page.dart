@@ -81,54 +81,79 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                 // Header
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                  child: _isSearching ? _buildSearchBar() : _buildHeader(),
+                  child: _buildHeader(),
                 ),
 
                 // Title
-                if (!_isSearching)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(AppLocalizations.of(context)!.emergencyContactsTitle, style: AppTextStyles.heading),
+                      const SizedBox(height: 8),
+                      Text(
+                        AppLocalizations.of(context)!.emergencyContactsDesc,
+                        style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Search Bar (visible only when searching)
+                if (_isSearching)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(AppLocalizations.of(context)!.emergencyContactsTitle, style: AppTextStyles.heading),
-                        const SizedBox(height: 8),
-                        Text(
-                          AppLocalizations.of(context)!.emergencyContactsDesc,
-                          style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
-                        ),
-                      ],
-                    ),
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                    child: _buildSearchBar(),
                   ),
                 const SizedBox(height: 8),
 
                 // Custom TabBar
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: TabBar(
                     labelColor: const Color(0xFF193855),
                     unselectedLabelColor: AppColors.textGrey,
                     indicatorColor: const Color(0xFF193855),
                     indicatorSize: TabBarIndicatorSize.tab,
                     indicatorWeight: 3,
-                    labelStyle: AppTextStyles.subHeading.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
-                    unselectedLabelStyle: AppTextStyles.subHeading.copyWith(fontSize: 14),
+                    labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                    labelStyle: AppTextStyles.subHeading.copyWith(fontWeight: FontWeight.bold, fontSize: 13),
+                    unselectedLabelStyle: AppTextStyles.subHeading.copyWith(fontSize: 13),
                     tabs: [
-                      Tab(text: AppLocalizations.of(context)!.myContacts),
                       Tab(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(AppLocalizations.of(context)!.incomingRequests),
-                            if (pendingCount > 0) ...[
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                child: Text('$pendingCount', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
-                              ),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(AppLocalizations.of(context)!.myContacts),
+                        ),
+                      ),
+                      Tab(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(AppLocalizations.of(context)!.incomingRequests),
+                              if (pendingCount > 0) ...[
+                                const SizedBox(width: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    '$pendingCount',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
                       ),
                     ],
@@ -174,14 +199,13 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
 
   Widget _buildHeader() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Image.asset('assets/images/logo.png', height: 48,
-          errorBuilder: (c, e, s) => const Icon(Icons.shield, color: AppColors.primaryRed, size: 32)),
-        IconButton(
-          icon: const Icon(Icons.search, color: AppColors.textDark),
-          onPressed: () => setState(() => _isSearching = true),
-        ),
+        if (!_isSearching)
+          IconButton(
+            icon: const Icon(Icons.search, color: AppColors.textDark),
+            onPressed: () => setState(() => _isSearching = true),
+          ),
       ],
     );
   }
@@ -233,7 +257,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
     } else if (state is EmergencyLoaded) {
       return onLoaded();
     } else if (state is EmergencyError) {
-      return _buildEmptyState();
+      return _buildErrorState(state.message);
     }
     return _buildEmptyState();
   }
@@ -443,14 +467,40 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
 
   Future<void> _launchDialer(String phone) async {
     final uri = Uri(scheme: 'tel', path: phone);
-    if (await canLaunchUrl(uri)) { await launchUrl(uri); }
+    try {
+      final success = await launchUrl(uri);
+      if (!success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to open dialer')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not open dialer: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _launchWhatsApp(String phone) async {
     String cleaned = phone.replaceAll(RegExp(r'[^0-9]'), '');
     if (cleaned.startsWith('0')) cleaned = '62${cleaned.substring(1)}';
     final uri = Uri.parse('https://wa.me/$cleaned');
-    if (await canLaunchUrl(uri)) { await launchUrl(uri, mode: LaunchMode.externalApplication); }
+    try {
+      final success = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to launch WhatsApp')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not launch WhatsApp: $e')),
+        );
+      }
+    }
   }
 
   void _showContactProfile(ContactEntity contact) {
