@@ -38,10 +38,10 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocProvider(
         create: (_) => sl<AuthCubit>(),
         child: BlocConsumer<AuthCubit, AuthState>(
-          listener: (context, state) {
+          listener: (context, state) async {
             if (state is AuthSuccess) {
               // Simpan session
-              SessionManager.saveSession(
+              await SessionManager.saveSession(
                 token: state.user.token ?? 'logged_in',
                 userData: {
                   'user_id': state.user.userId,

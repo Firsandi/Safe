@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
+import 'package:safe/l10n/app_localizations.dart';
 
 class SosButton extends StatefulWidget {
   final VoidCallback onLongPress;
@@ -108,15 +109,18 @@ class _SosButtonState extends State<SosButton> with SingleTickerProviderStateMix
                       size: 60,
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      'TAHAN UNTUK\nKIRIM SOS',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.heading.copyWith(
-                        color: Colors.white,
-                        fontSize: 14,
-                        height: 1.5,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                      child: Text(
+                        AppLocalizations.of(context)?.sosTap ?? 'HOLD TO ACTIVATE SOS',
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.heading.copyWith(
+                          color: Colors.white,
+                          fontSize: 11,
+                          height: 1.3,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.8,
+                        ),
                       ),
                     ),
                   ],

@@ -68,16 +68,9 @@ class NotificationManager {
 
       // 4. Initialize Local Notifications for Android Channels
       const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-      const DarwinInitializationSettings iosInit = DarwinInitializationSettings(
-        requestAlertPermission: true,
-        requestBadgePermission: true,
-        requestSoundPermission: true,
-        requestCriticalPermission: true,
-      );
       
       const InitializationSettings initSettings = InitializationSettings(
         android: androidInit,
-        iOS: iosInit,
       );
 
       await _localNotifications.initialize(
@@ -180,15 +173,8 @@ class NotificationManager {
       playSound: true,
     );
 
-    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-
     const NotificationDetails details = NotificationDetails(
       android: androidDetails,
-      iOS: iosDetails,
     );
 
     await _localNotifications.show(

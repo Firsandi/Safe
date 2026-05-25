@@ -55,16 +55,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   int _historyInitialTabIndex = 0;
   StreamSubscription<int>? _unreadNotificationsSubscription;
 
+
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
     Future.delayed(const Duration(milliseconds: 200), () {
       if (mounted) setState(() => _isInit = true);
     });
     _startSensorMonitoring();
     _loadStats();
     _loadUnreadNotificationCount();
+    _syncNotificationsFromServer();
     _unreadNotificationsSubscription = NotificationLocalService.unreadCountStream.listen((count) {
       if (mounted) {
         setState(() {
@@ -175,9 +179,78 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     }
   }
 
+  Future<void> _syncNotificationsFromServer() async {
+    try {
+      final dio = sl<Dio>();
+      
+      // Parallel fetches for sync
+      final results = await Future.wait([
+        dio.get('/api/contacts/requests'),
+        dio.get('/api/sos/history/received'),
+      ]);
+      
+      final requestsData = results[0].data['requests'] as List?;
+      final receivedSosData = results[1].data as List?;
+      
+      final List<LocalNotification> newNotifs = [];
+
+      if (requestsData != null && requestsData.isNotEmpty) {
+        final notifications = await NotificationLocalService.loadNotifications();
+        for (final req in requestsData) {
+          final reqId = req['id']?.toString() ?? '';
+          if (reqId.isEmpty) continue;
+          final notifId = 'contact_req_$reqId';
+          final exists = notifications.any((n) => n.id == notifId);
+          if (!exists) {
+            newNotifs.add(LocalNotification(
+              id: notifId,
+              title: 'Permintaan Kontak Darurat',
+              body: '${req['name'] ?? 'Seseorang'} ingin menambahkan Anda sebagai kontak darurat.',
+              type: 'contact_request',
+              timestamp: DateTime.now(),
+              isRead: false,
+            ));
+          }
+        }
+      }
+      
+      if (receivedSosData != null && receivedSosData.isNotEmpty) {
+        final notifications = await NotificationLocalService.loadNotifications();
+        for (final item in receivedSosData) {
+          final sosId = item['sos_id']?.toString() ?? '';
+          if (sosId.isEmpty) continue;
+          final notifId = 'sos_event_$sosId';
+          final exists = notifications.any((n) => n.id == notifId);
+          if (!exists) {
+             final title = item['trigger_type'] == 'auto'
+                ? 'EMERGENCY: BENTURAN/KECELAKAAN TERDETEKSI!'
+                : 'EMERGENCY: BUTUH BANTUAN SEGERA!';
+            final name = item['user_name'] ?? item['name'] ?? 'Seseorang';
+            final triggerLabel = item['trigger_type'] == 'auto' ? 'Sensor Otomatis' : 'Manual';
+            
+            newNotifs.add(LocalNotification(
+              id: notifId,
+              title: title,
+              body: '$name mengalami keadaan darurat ($triggerLabel)! Segera periksa lokasi.',
+              type: 'sos_alert',
+              timestamp: DateTime.tryParse(item['created_at'] ?? '') ?? DateTime.now(),
+              isRead: false,
+              payload: Map<String, dynamic>.from(item),
+            ));
+          }
+        }
+      }
+
+      if (newNotifs.isNotEmpty) {
+        await NotificationLocalService.saveNotifications(newNotifs);
+      }
+    } catch (_) {}
+  }
+
   @override
   void dispose() {
     _unreadNotificationsSubscription?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     _accelerometerSub?.cancel();
     _gyroscopeSub?.cancel();
     OfflineSyncService.onSyncSuccess = null;
@@ -219,8 +292,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             _shakeCount++;
             if (_shakeCount >= 4) {
               _shakeCount = 0;
+              if (!mounted) return;
               _triggerEmergencyFromSensor(
-                reason: "Guncangan Keras Terdeteksi",
+                reason: AppLocalizations.of(context)?.severeShakeDetected ?? "Severe Shake Detected",
                 force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
               );
             }
@@ -246,8 +320,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         if (_freefallDetected && _freefallTime != null) {
           if (now.difference(_freefallTime!) < const Duration(milliseconds: 1000)) {
             _freefallDetected = false;
+            if (!mounted) return;
             _triggerEmergencyFromSensor(
-              reason: "Jatuh Terdeteksi",
+              reason: AppLocalizations.of(context)?.fallDetected ?? "Fall Detected",
               force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
             );
             return;
@@ -256,8 +331,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
 
         // 2. Tumbling/Crash: high rotation rate (gyroscope) combined with high impact force
         if (_lastRotationRate > 7.0) {
+          if (!mounted) return;
           _triggerEmergencyFromSensor(
-            reason: "Tabrakan & Benturan Terdeteksi",
+            reason: AppLocalizations.of(context)?.crashImpactDetected ?? "Crash & Impact Detected",
             force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
           );
           return;
@@ -265,8 +341,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
 
         // 3. Direct Severe Impact: extremely high acceleration force (>3.5 G)
         if (magnitude > 35.0) {
+          if (!mounted) return;
           _triggerEmergencyFromSensor(
-            reason: "Benturan Keras Terdeteksi",
+            reason: AppLocalizations.of(context)?.severeImpactDetected ?? "Severe Impact Detected",
             force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
           );
           return;
@@ -334,8 +411,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     );
   }
 
+
+
   @override
   Widget build(BuildContext context) {
+
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       bottomNavigationBar: SafeNavbar(
@@ -423,7 +504,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Halo, ${widget.user.name}',
+                    AppLocalizations.of(context)!.helloUser(widget.user.name),
                     style: AppTextStyles.heading.copyWith(
                       color: AppColors.primaryRed,
                       fontSize: 24,
@@ -444,7 +525,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                         const BreathingDot(),
                         const SizedBox(width: 8),
                         Text(
-                          'Sensor Aktif — memantau',
+                          AppLocalizations.of(context)!.sensorActive,
                           style: AppTextStyles.inputLabel.copyWith(
                             color: AppColors.textGrey,
                             fontWeight: FontWeight.bold,
@@ -481,8 +562,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 children: [
                   Expanded(
                     child: _buildMenuCard(
-                      title: 'Kontak darurat',
-                      subtitle: '$_activeContactsCount aktif',
+                      title: AppLocalizations.of(context)!.emergencyContactsTitle,
+                      subtitle: AppLocalizations.of(context)!.activeContactsCount(_activeContactsCount),
                       subtitleColor: AppColors.primaryRed,
                       icon: Icons.contact_phone_outlined,
                       iconBgColor: const Color(0xFFEDF4FE),
@@ -495,8 +576,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildMenuCard(
-                      title: 'Riwayat SOS',
-                      subtitle: '$_sosHistoryCount kejadian',
+                      title: AppLocalizations.of(context)!.historySos,
+                      subtitle: AppLocalizations.of(context)!.sosHistoryCount(_sosHistoryCount),
                       subtitleColor: AppColors.textDark,
                       icon: Icons.history,
                       iconBgColor: AppColors.primaryRed.withOpacity(0.1),
@@ -652,7 +733,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'SOS AKTIF',
+                  AppLocalizations.of(context)!.sosActiveBanner,
                   style: AppTextStyles.subHeading.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -661,7 +742,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Mengirimkan lokasi real-time Anda...',
+                  AppLocalizations.of(context)!.sendingRealtimeLocation,
                   style: AppTextStyles.subHeading.copyWith(
                     color: Colors.white.withOpacity(0.9),
                     fontSize: 12,
@@ -680,7 +761,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
             child: Text(
-              'Matikan',
+              AppLocalizations.of(context)!.turnOff,
               style: AppTextStyles.subHeading.copyWith(
                 color: const Color(0xFFEF4444),
                 fontWeight: FontWeight.bold,
@@ -719,9 +800,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         _loadStats();
         
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('SOS berhasil dinonaktifkan'),
-            backgroundColor: Color(0xFF10B981),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.sosDisabledSuccess),
+            backgroundColor: const Color(0xFF10B981),
           ),
         );
       }
@@ -730,7 +811,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal menonaktifkan SOS: ${e.toString()}'),
+            content: Text(AppLocalizations.of(context)!.sosDisableFailed(e.toString())),
             backgroundColor: AppColors.primaryRed,
           ),
         );

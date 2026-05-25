@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/injection.dart';
+import '../../../../core/services/notification_local_service.dart';
 
 class EmergencyHistoryPage extends StatefulWidget {
   final int initialTabIndex;
@@ -127,6 +128,7 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
 
         _isLoading = false;
       });
+      _syncReceivedSosToNotifications(rawReceived);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -134,6 +136,41 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
         _isLoading = false;
       });
     }
+  }
+
+  void _syncReceivedSosToNotifications(List<dynamic> receivedList) async {
+    if (receivedList.isEmpty) return;
+    try {
+      final notifications = await NotificationLocalService.loadNotifications();
+      final List<LocalNotification> newNotifs = [];
+      for (final item in receivedList) {
+        final sosId = item['sos_id']?.toString() ?? '';
+        if (sosId.isEmpty) continue;
+        
+        final notifId = 'sos_event_$sosId';
+        final exists = notifications.any((n) => n.id == notifId);
+        if (!exists) {
+          final title = item['trigger_type'] == 'auto'
+              ? 'EMERGENCY: BENTURAN/KECELAKAAN TERDETEKSI!'
+              : 'EMERGENCY: BUTUH BANTUAN SEGERA!';
+          final name = item['user_name'] ?? item['name'] ?? 'Seseorang';
+          final triggerLabel = item['trigger_type'] == 'auto' ? 'Sensor Otomatis' : 'Manual';
+          
+          newNotifs.add(LocalNotification(
+            id: notifId,
+            title: title,
+            body: '$name mengalami keadaan darurat ($triggerLabel)! Segera periksa lokasi.',
+            type: 'sos_alert',
+            timestamp: DateTime.tryParse(item['created_at'] ?? '') ?? DateTime.now(),
+            isRead: false,
+            payload: Map<String, dynamic>.from(item),
+          ));
+        }
+      }
+      if (newNotifs.isNotEmpty) {
+        await NotificationLocalService.saveNotifications(newNotifs);
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadMoreSent() async {

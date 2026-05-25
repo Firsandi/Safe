@@ -15,6 +15,15 @@ class _NotificationPageState extends State<NotificationPage> {
   bool _isLoading = true;
   bool _isSelectionMode = false;
   final Set<String> _selectedIds = {};
+  bool _isAscending = false; // default false = newest first (descending)
+
+  void _sortNotifications(List<LocalNotification> list) {
+    if (_isAscending) {
+      list.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    } else {
+      list.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    }
+  }
 
   void _toggleSelection(String id) {
     setState(() {
@@ -92,6 +101,7 @@ class _NotificationPageState extends State<NotificationPage> {
   Future<void> _loadNotifications() async {
     setState(() => _isLoading = true);
     var list = await NotificationLocalService.loadNotifications();
+    _sortNotifications(list);
 
     if (mounted) {
       setState(() {
@@ -285,9 +295,13 @@ class _NotificationPageState extends State<NotificationPage> {
           ? const Center(child: CircularProgressIndicator(color: AppColors.primaryRed))
           : _notifications.isEmpty
               ? _buildEmptyState()
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  itemCount: _notifications.length,
+              : Column(
+                  children: [
+                    _buildSortHeader(),
+                    Expanded(
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        itemCount: _notifications.length,
                   itemBuilder: (context, index) {
                     final notif = _notifications[index];
                     final color = _getColorForType(notif.type);
@@ -460,6 +474,9 @@ class _NotificationPageState extends State<NotificationPage> {
                     );
                   },
                 ),
+                    ),
+                  ],
+                ),
     );
   }
 
@@ -494,6 +511,55 @@ class _NotificationPageState extends State<NotificationPage> {
               style: AppTextStyles.subHeading.copyWith(
                 color: AppColors.textGrey,
                 fontSize: 13,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSortHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Daftar Pemberitahuan',
+            style: AppTextStyles.subHeading.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppColors.textGrey,
+              fontSize: 12,
+            ),
+          ),
+          InkWell(
+            onTap: () {
+              setState(() {
+                _isAscending = !_isAscending;
+                _sortNotifications(_notifications);
+              });
+            },
+            borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    _isAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                    size: 14,
+                    color: const Color(0xFF193855),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _isAscending ? 'Terlama' : 'Terbaru',
+                    style: AppTextStyles.subHeading.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFF193855),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

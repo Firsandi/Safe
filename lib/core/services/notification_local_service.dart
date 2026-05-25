@@ -117,6 +117,31 @@ class NotificationLocalService {
     } catch (_) {}
   }
 
+  /// Saves multiple notifications to SharedPreferences in a single batch
+  static Future<void> saveNotifications(List<LocalNotification> newNotifications) async {
+    if (newNotifications.isEmpty) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = await _getStorageKey();
+      final notifications = await loadNotifications();
+      
+      final Set<String> existingIds = notifications.map((n) => n.id).toSet();
+      final List<LocalNotification> uniqueNew = newNotifications
+          .where((n) => !existingIds.contains(n.id))
+          .toList();
+          
+      if (uniqueNew.isEmpty) return;
+
+      // Add all unique new items, then sort by timestamp descending (newest first)
+      notifications.addAll(uniqueNew);
+      notifications.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+      
+      final dataStr = jsonEncode(notifications.map((n) => n.toJson()).toList());
+      await prefs.setString(key, dataStr);
+      await _updateUnreadCount();
+    } catch (_) {}
+  }
+
   /// Marks a specific notification as read
   static Future<void> markAsRead(String id) async {
     try {

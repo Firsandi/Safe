@@ -14,6 +14,8 @@ import 'package:safe/features/home/presentation/pages/language_page.dart';
 import 'package:safe/features/home/presentation/pages/help_center_page.dart';
 import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/core/services/location_service.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 
 class ProfilePage extends StatefulWidget {
   final UserEntity user;
@@ -144,6 +146,21 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _pickImage(StateSetter setSheetState, ImageSource source) async {
     final messenger = ScaffoldMessenger.of(context);
+    if (source == ImageSource.camera) {
+      final status = await Permission.camera.request();
+      if (!status.isGranted) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Izin kamera diperlukan untuk mengambil foto.'),
+              backgroundColor: AppColors.primaryRed,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+    }
     try {
       final picker = ImagePicker();
       final XFile? pickedFile = await picker.pickImage(
@@ -674,16 +691,10 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // HEADER BAR (SAFE logo & edit pencil icon button)
+                  // HEADER BAR (edit pencil icon button)
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Image.asset(
-                        'assets/images/logo.png',
-                        height: 48,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.shield, color: AppColors.primaryRed, size: 32),
-                      ),
                       GestureDetector(
                         onTap: _showEditProfileBottomSheet,
                         child: Container(
