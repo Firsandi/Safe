@@ -418,4 +418,187 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get connectionIssuesDesc =>
       'Failed to send SOS due to connection issues. Your SOS is saved in the offline queue and will sync automatically when your connection is restored.\n\nPlease contact emergency services or your contacts manually if possible.';
+
+  @override
+  String get profileDesc => 'Manage your personal details and medical history.';
+
+  @override
+  String get editButtonLabel => 'Edit';
+
+  @override
+  String get historySosDesc => 'Archive of sent and received SOS signals.';
+
+  @override
+  String get historyTabSent => 'My SOS';
+
+  @override
+  String get historyTabReceived => 'SOS Received';
+
+  @override
+  String get historyNoSent => 'You have never sent an SOS signal.';
+
+  @override
+  String get historyNoReceived =>
+      'No incoming SOS signals from your contacts yet.';
+
+  @override
+  String get triggerAuto => 'Auto Detection';
+
+  @override
+  String get triggerManual => 'Manual Trigger';
+
+  @override
+  String get phoneLabelAbbr => 'Phone:';
+
+  @override
+  String get historyLoadFailed => 'Failed to load history';
+
+  @override
+  String get addContactTitle => 'Add Emergency Contact';
+
+  @override
+  String get addContactDesc =>
+      'Search by phone number or email. Only registered users can be added.';
+
+  @override
+  String get addContactInputLabel => 'PHONE NUMBER / EMAIL';
+
+  @override
+  String get addContactInputHint => 'e.g. 08123456789 or email@safe.com';
+
+  @override
+  String get addContactSearchResults => 'SEARCH RESULTS';
+
+  @override
+  String get addContactInitialHint => 'Enter phone number or email to search';
+
+  @override
+  String get addContactNotFound => 'User not found';
+
+  @override
+  String get addContactNotFoundDesc =>
+      'This contact is not registered on SAFE yet. Only registered users can be added.';
+
+  @override
+  String get addContactButton => 'Add';
+
+  @override
+  String get addContactConfirmTitle => 'Add Contact';
+
+  @override
+  String addContactConfirmDesc(String name) {
+    return 'Add $name as an emergency contact?';
+  }
+
+  @override
+  String addContactSuccess(String name) {
+    return 'Contact request successfully sent to $name!';
+  }
+
+  @override
+  String get addContactFailed => 'Failed to add contact. Please try again.';
+
+  @override
+  String get statusActive => 'ACTIVE';
+
+  @override
+  String get statusResolved => 'RESOLVED';
+
+  @override
+  String get statusFalseAlarm => 'FALSE ALARM';
+
+  @override
+  String get noHistory => 'No history';
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String notificationsSelected(int count) {
+    return '$count Selected';
+  }
+
+  @override
+  String get deselectAll => 'Deselect all';
+
+  @override
+  String get selectAll => 'Select all';
+
+  @override
+  String get deleteSelectedTooltip => 'Delete selected';
+
+  @override
+  String get selectNotificationsTooltip => 'Select notifications';
+
+  @override
+  String get markAllAsReadTooltip => 'Mark all as read';
+
+  @override
+  String get deleteAllTooltip => 'Delete all';
+
+  @override
+  String get deleteNotificationTitle => 'Delete Notification';
+
+  @override
+  String deleteSelectedConfirm(int count) {
+    return 'Are you sure you want to delete $count selected notifications?';
+  }
+
+  @override
+  String get selectedDeletedSuccess =>
+      'Selected notifications successfully deleted';
+
+  @override
+  String get allMarkedReadSuccess => 'All notifications marked as read';
+
+  @override
+  String get deleteAllNotificationsTitle => 'Delete All Notifications';
+
+  @override
+  String get deleteAllNotificationsConfirm =>
+      'Are you sure you want to delete all notification history?';
+
+  @override
+  String get allNotificationsDeletedSuccess =>
+      'All notifications successfully deleted';
+
+  @override
+  String get notificationDeletedSuccess => 'Notification successfully deleted';
+
+  @override
+  String get timeJustNow => 'Just now';
+
+  @override
+  String timeMinutesAgo(int count) {
+    return '$count minutes ago';
+  }
+
+  @override
+  String timeHoursAgo(int count) {
+    return '$count hours ago';
+  }
+
+  @override
+  String get timeYesterday => 'Yesterday';
+
+  @override
+  String timeDaysAgo(int count) {
+    return '$count days ago';
+  }
+
+  @override
+  String get noNotifications => 'No Notifications';
+
+  @override
+  String get noNotificationsDesc =>
+      'All incoming notifications related to SOS and emergency contacts will be shown here.';
+
+  @override
+  String get notificationListHeader => 'Notification List';
+
+  @override
+  String get sortOldest => 'Oldest';
+
+  @override
+  String get sortNewest => 'Newest';
 }

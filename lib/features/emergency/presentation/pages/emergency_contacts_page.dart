@@ -11,7 +11,8 @@ import 'package:safe/l10n/app_localizations.dart';
 import '../../../../core/services/notification_local_service.dart';
 
 class EmergencyContactsPage extends StatefulWidget {
-  const EmergencyContactsPage({super.key});
+  final int initialTabIndex;
+  const EmergencyContactsPage({super.key, this.initialTabIndex = 0});
 
   @override
   State<EmergencyContactsPage> createState() => _EmergencyContactsPageState();
@@ -102,6 +103,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
 
         return DefaultTabController(
           length: 2,
+          initialIndex: widget.initialTabIndex,
           child: Scaffold(
             backgroundColor: AppColors.backgroundLight,
             body: Column(

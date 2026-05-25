@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/core/services/notification_local_service.dart';
+import 'package:safe/l10n/app_localizations.dart';
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -56,17 +57,17 @@ class _NotificationPageState extends State<NotificationPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Hapus Notifikasi', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text('Apakah Anda yakin ingin menghapus ${_selectedIds.length} notifikasi terpilih?'),
+        title: Text(AppLocalizations.of(context)!.deleteNotificationTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(AppLocalizations.of(context)!.deleteSelectedConfirm(_selectedIds.length)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+            child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryRed),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+            child: Text(AppLocalizations.of(context)!.delete, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -82,8 +83,8 @@ class _NotificationPageState extends State<NotificationPage> {
           _isSelectionMode = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Notifikasi terpilih berhasil dihapus'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.selectedDeletedSuccess),
             behavior: SnackBarBehavior.floating,
             backgroundColor: AppColors.primaryRed,
           ),
@@ -116,10 +117,10 @@ class _NotificationPageState extends State<NotificationPage> {
     await _loadNotifications();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Semua notifikasi ditandai telah dibaca'),
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.allMarkedReadSuccess),
         behavior: SnackBarBehavior.floating,
-        backgroundColor: Color(0xFF193855),
+        backgroundColor: const Color(0xFF193855),
       ),
     );
   }
@@ -128,17 +129,17 @@ class _NotificationPageState extends State<NotificationPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Hapus Semua Notifikasi', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('Apakah Anda yakin ingin menghapus semua riwayat notifikasi?'),
+        title: Text(AppLocalizations.of(context)!.deleteAllNotificationsTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(AppLocalizations.of(context)!.deleteAllNotificationsConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+            child: Text(AppLocalizations.of(context)!.cancel, style: const TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryRed),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+            child: Text(AppLocalizations.of(context)!.delete, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -151,8 +152,8 @@ class _NotificationPageState extends State<NotificationPage> {
           _notifications = [];
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Semua notifikasi berhasil dihapus'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.allNotificationsDeletedSuccess),
             behavior: SnackBarBehavior.floating,
             backgroundColor: AppColors.primaryRed,
           ),
@@ -164,17 +165,18 @@ class _NotificationPageState extends State<NotificationPage> {
   String _getRelativeTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
+    final l10n = AppLocalizations.of(context)!;
 
     if (difference.inMinutes < 1) {
-      return 'Baru saja';
+      return l10n.timeJustNow;
     } else if (difference.inMinutes < 60) {
-      return '${difference.inMinutes} menit lalu';
+      return l10n.timeMinutesAgo(difference.inMinutes);
     } else if (difference.inHours < 24) {
-      return '${difference.inHours} jam lalu';
+      return l10n.timeHoursAgo(difference.inHours);
     } else if (difference.inDays == 1) {
-      return 'Kemarin';
+      return l10n.timeYesterday;
     } else {
-      return '${difference.inDays} hari lalu';
+      return l10n.timeDaysAgo(difference.inDays);
     }
   }
 
@@ -213,9 +215,12 @@ class _NotificationPageState extends State<NotificationPage> {
       if (notif.type == 'sos_alert') {
         // Redirect to SOS History -> Received tab (index 2 in Home, with initialTabIndex = 1)
         Navigator.pop(context, {'action': 'go_to_history', 'tab': 1});
-      } else if (notif.type == 'contact_request' || notif.type == 'contact_accepted') {
-        // Redirect to Contacts tab (index 1 in Home)
-        Navigator.pop(context, {'action': 'go_to_contacts'});
+      } else if (notif.type == 'contact_request') {
+        // Redirect to Contacts tab -> Permintaan Masuk tab (tab index 1)
+        Navigator.pop(context, {'action': 'go_to_contacts', 'tab': 1});
+      } else if (notif.type == 'contact_accepted') {
+        // Redirect to Contacts tab -> Kontak Saya tab (tab index 0)
+        Navigator.pop(context, {'action': 'go_to_contacts', 'tab': 0});
       } else {
         // Default simply reload and mark as read
         _loadNotifications();
@@ -231,7 +236,9 @@ class _NotificationPageState extends State<NotificationPage> {
         backgroundColor: Colors.white,
         elevation: 0.5,
         title: Text(
-          _isSelectionMode ? '${_selectedIds.length} Terpilih' : 'Notifikasi',
+          _isSelectionMode
+              ? AppLocalizations.of(context)!.notificationsSelected(_selectedIds.length)
+              : AppLocalizations.of(context)!.notificationsTitle,
           style: AppTextStyles.heading.copyWith(fontSize: 18, color: AppColors.textDark),
         ),
         leading: IconButton(
@@ -258,20 +265,20 @@ class _NotificationPageState extends State<NotificationPage> {
                         color: const Color(0xFF193855),
                       ),
                       tooltip: _selectedIds.length == _notifications.length
-                          ? 'Batal pilih semua'
-                          : 'Pilih semua',
+                          ? AppLocalizations.of(context)!.deselectAll
+                          : AppLocalizations.of(context)!.selectAll,
                       onPressed: _toggleSelectAll,
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete_outline, color: AppColors.primaryRed),
-                      tooltip: 'Hapus terpilih',
+                      tooltip: AppLocalizations.of(context)!.deleteSelectedTooltip,
                       onPressed: _deleteSelected,
                     ),
                   ]
                 : [
                     IconButton(
                       icon: const Icon(Icons.checklist_outlined, color: Color(0xFF193855)),
-                      tooltip: 'Pilih notifikasi',
+                      tooltip: AppLocalizations.of(context)!.selectNotificationsTooltip,
                       onPressed: () {
                         setState(() {
                           _isSelectionMode = true;
@@ -280,23 +287,24 @@ class _NotificationPageState extends State<NotificationPage> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.done_all, color: Color(0xFF193855)),
-                      tooltip: 'Tandai semua dibaca',
+                      tooltip: AppLocalizations.of(context)!.markAllAsReadTooltip,
                       onPressed: _markAllAsRead,
                     ),
                     IconButton(
                       icon: const Icon(Icons.delete_sweep_outlined, color: AppColors.primaryRed),
-                      tooltip: 'Hapus semua',
+                      tooltip: AppLocalizations.of(context)!.deleteAllTooltip,
                       onPressed: _deleteAll,
                     ),
                   ])
             : null,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator(color: AppColors.primaryRed))
-          : _notifications.isEmpty
-              ? _buildEmptyState()
-              : Column(
-                  children: [
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: AppColors.primaryRed))
+            : _notifications.isEmpty
+                ? _buildEmptyState()
+                : Column(
+                    children: [
                     _buildSortHeader(),
                     Expanded(
                       child: ListView.builder(
@@ -322,16 +330,17 @@ class _NotificationPageState extends State<NotificationPage> {
                       ),
                       onDismissed: (direction) async {
                         final notifId = notif.id;
+                        final deleteSuccessText = AppLocalizations.of(context)!.notificationDeletedSuccess;
                         setState(() {
                           _notifications.removeAt(index);
                         });
                         final messenger = ScaffoldMessenger.of(context);
                         await NotificationLocalService.deleteNotification(notifId);
                         messenger.showSnackBar(
-                          const SnackBar(
-                            content: Text('Notifikasi berhasil dihapus'),
+                          SnackBar(
+                            content: Text(deleteSuccessText),
                             behavior: SnackBarBehavior.floating,
-                            duration: Duration(seconds: 1),
+                            duration: const Duration(seconds: 1),
                           ),
                         );
                       },
@@ -477,6 +486,7 @@ class _NotificationPageState extends State<NotificationPage> {
                     ),
                   ],
                 ),
+      ),
     );
   }
 
@@ -499,14 +509,14 @@ class _NotificationPageState extends State<NotificationPage> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Tidak Ada Notifikasi',
+            AppLocalizations.of(context)!.noNotifications,
             style: AppTextStyles.heading.copyWith(fontSize: 16, color: AppColors.textDark),
           ),
           const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              'Seluruh pemberitahuan masuk terkait SOS dan kontak darurat Anda akan ditampilkan di sini.',
+              AppLocalizations.of(context)!.noNotificationsDesc,
               textAlign: TextAlign.center,
               style: AppTextStyles.subHeading.copyWith(
                 color: AppColors.textGrey,
@@ -526,7 +536,7 @@ class _NotificationPageState extends State<NotificationPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Daftar Pemberitahuan',
+            AppLocalizations.of(context)!.notificationListHeader,
             style: AppTextStyles.subHeading.copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.textGrey,
@@ -552,7 +562,7 @@ class _NotificationPageState extends State<NotificationPage> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    _isAscending ? 'Terlama' : 'Terbaru',
+                    _isAscending ? AppLocalizations.of(context)!.sortOldest : AppLocalizations.of(context)!.sortNewest,
                     style: AppTextStyles.subHeading.copyWith(
                       fontWeight: FontWeight.bold,
                       color: const Color(0xFF193855),

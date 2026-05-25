@@ -53,6 +53,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   int _sosHistoryCount = 0;
   int _unreadNotificationCount = 0;
   int _historyInitialTabIndex = 0;
+  int _contactsInitialTabIndex = 0;
   StreamSubscription<int>? _unreadNotificationsSubscription;
 
 
@@ -118,8 +119,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           _historyInitialTabIndex = tabIndex;
         });
       } else if (action == 'go_to_contacts') {
+        final tabIndex = result['tab'] ?? 0;
         setState(() {
           _currentIndex = 1; // Kontak darurat
+          _contactsInitialTabIndex = tabIndex;
         });
       }
     }
@@ -379,7 +382,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       case 1:
         return BlocProvider(
           create: (_) => sl<EmergencyCubit>(),
-          child: const EmergencyContactsPage(),
+          child: EmergencyContactsPage(
+            initialTabIndex: _contactsInitialTabIndex,
+            key: ValueKey('contacts_page_$_contactsInitialTabIndex'),
+          ),
         );
       case 2:
         return EmergencyHistoryPage(

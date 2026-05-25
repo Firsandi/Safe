@@ -175,5 +175,109 @@
   "impactForceLabel": "IMPACT FORCE",
   "locationLabel": "LOCATION",
   "connectionIssuesTitle": "Connection Issues",
-  "connectionIssuesDesc": "Failed to send SOS due to connection issues. Your SOS is saved in the offline queue and will sync automatically when your connection is restored.\n\nPlease contact emergency services or your contacts manually if possible."
+  "connectionIssuesDesc": "Failed to send SOS due to connection issues. Your SOS is saved in the offline queue and will sync automatically when your connection is restored.\n\nPlease contact emergency services or your contacts manually if possible.",
+  "profileDesc": "Manage your personal details and medical history.",
+  "editButtonLabel": "Edit",
+  "historySosDesc": "Archive of sent and received SOS signals.",
+  "historyTabSent": "My SOS",
+  "historyTabReceived": "SOS Received",
+  "historyNoSent": "You have never sent an SOS signal.",
+  "historyNoReceived": "No incoming SOS signals from your contacts yet.",
+  "triggerAuto": "Auto Detection",
+  "triggerManual": "Manual Trigger",
+  "phoneLabelAbbr": "Phone:",
+  "historyLoadFailed": "Failed to load history",
+  "addContactTitle": "Add Emergency Contact",
+  "addContactDesc": "Search by phone number or email. Only registered users can be added.",
+  "addContactInputLabel": "PHONE NUMBER / EMAIL",
+  "addContactInputHint": "e.g. 08123456789 or email@safe.com",
+  "addContactSearchResults": "SEARCH RESULTS",
+  "addContactInitialHint": "Enter phone number or email to search",
+  "addContactNotFound": "User not found",
+  "addContactNotFoundDesc": "This contact is not registered on SAFE yet. Only registered users can be added.",
+  "addContactButton": "Add",
+  "addContactConfirmTitle": "Add Contact",
+  "addContactConfirmDesc": "Add {name} as an emergency contact?",
+  "@addContactConfirmDesc": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addContactSuccess": "Contact request successfully sent to {name}!",
+  "@addContactSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addContactFailed": "Failed to add contact. Please try again.",
+  "statusActive": "ACTIVE",
+  "statusResolved": "RESOLVED",
+  "statusFalseAlarm": "FALSE ALARM",
+  "noHistory": "No history",
+  "notificationsTitle": "Notifications",
+  "notificationsSelected": "{count} Selected",
+  "@notificationsSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deselectAll": "Deselect all",
+  "selectAll": "Select all",
+  "deleteSelectedTooltip": "Delete selected",
+  "selectNotificationsTooltip": "Select notifications",
+  "markAllAsReadTooltip": "Mark all as read",
+  "deleteAllTooltip": "Delete all",
+  "deleteNotificationTitle": "Delete Notification",
+  "deleteSelectedConfirm": "Are you sure you want to delete {count} selected notifications?",
+  "@deleteSelectedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectedDeletedSuccess": "Selected notifications successfully deleted",
+  "allMarkedReadSuccess": "All notifications marked as read",
+  "deleteAllNotificationsTitle": "Delete All Notifications",
+  "deleteAllNotificationsConfirm": "Are you sure you want to delete all notification history?",
+  "allNotificationsDeletedSuccess": "All notifications successfully deleted",
+  "notificationDeletedSuccess": "Notification successfully deleted",
+  "timeJustNow": "Just now",
+  "timeMinutesAgo": "{count} minutes ago",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count} hours ago",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYesterday": "Yesterday",
+  "timeDaysAgo": "{count} days ago",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noNotifications": "No Notifications",
+  "noNotificationsDesc": "All incoming notifications related to SOS and emergency contacts will be shown here.",
+  "notificationListHeader": "Notification List",
+  "sortOldest": "Oldest",
+  "sortNewest": "Newest"
 }
+

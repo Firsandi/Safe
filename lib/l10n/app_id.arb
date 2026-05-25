@@ -175,5 +175,109 @@
   "impactForceLabel": "KEKUATAN BENTURAN",
   "locationLabel": "LOKASI",
   "connectionIssuesTitle": "Koneksi Terganggu",
-  "connectionIssuesDesc": "Gagal mengirim SOS karena masalah jaringan. SOS Anda telah masuk antrean offline dan akan otomatis dikirim saat sinyal membaik.\n\nHarap hubungi nomor darurat atau kontak Anda secara manual jika memungkinkan."
+  "connectionIssuesDesc": "Gagal mengirim SOS karena masalah jaringan. SOS Anda telah masuk antrean offline dan akan otomatis dikirim saat sinyal membaik.\n\nHarap hubungi nomor darurat atau kontak Anda secara manual jika memungkinkan.",
+  "profileDesc": "Kelola data diri dan riwayat medis Anda.",
+  "editButtonLabel": "Ubah",
+  "historySosDesc": "Arsip riwayat pengiriman dan penerimaan sinyal SOS.",
+  "historyTabSent": "SOS Saya",
+  "historyTabReceived": "SOS Diterima",
+  "historyNoSent": "Anda belum pernah mengirim sinyal SOS.",
+  "historyNoReceived": "Belum ada sinyal SOS masuk dari kontak Anda.",
+  "triggerAuto": "Deteksi Otomatis",
+  "triggerManual": "Pemicu Manual",
+  "phoneLabelAbbr": "No. HP:",
+  "historyLoadFailed": "Gagal memuat riwayat",
+  "addContactTitle": "Tambah Kontak Darurat",
+  "addContactDesc": "Cari berdasarkan nomor telepon atau email. Hanya pengguna yang sudah terdaftar yang dapat ditambahkan.",
+  "addContactInputLabel": "NOMOR TELEPON / EMAIL",
+  "addContactInputHint": "Contoh: 08123456789 atau email@safe.com",
+  "addContactSearchResults": "HASIL PENCARIAN",
+  "addContactInitialHint": "Masukkan nomor telepon atau email untuk mencari",
+  "addContactNotFound": "Pengguna tidak ditemukan",
+  "addContactNotFoundDesc": "Kontak ini belum terdaftar di aplikasi SAFE. Hanya pengguna terdaftar yang bisa ditambahkan.",
+  "addContactButton": "Tambah",
+  "addContactConfirmTitle": "Tambah Kontak",
+  "addContactConfirmDesc": "Tambahkan {name} sebagai kontak darurat?",
+  "@addContactConfirmDesc": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addContactSuccess": "Permintaan kontak berhasil dikirim ke {name}!",
+  "@addContactSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addContactFailed": "Gagal menambahkan kontak. Silakan coba lagi.",
+  "statusActive": "AKTIF",
+  "statusResolved": "SELESAI",
+  "statusFalseAlarm": "ALARM PALSU",
+  "noHistory": "Tidak ada riwayat",
+  "notificationsTitle": "Notifikasi",
+  "notificationsSelected": "{count} Terpilih",
+  "@notificationsSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deselectAll": "Batal pilih semua",
+  "selectAll": "Pilih semua",
+  "deleteSelectedTooltip": "Hapus terpilih",
+  "selectNotificationsTooltip": "Pilih notifikasi",
+  "markAllAsReadTooltip": "Tandai semua dibaca",
+  "deleteAllTooltip": "Hapus semua",
+  "deleteNotificationTitle": "Hapus Notifikasi",
+  "deleteSelectedConfirm": "Apakah Anda yakin ingin menghapus {count} notifikasi terpilih?",
+  "@deleteSelectedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectedDeletedSuccess": "Notifikasi terpilih berhasil dihapus",
+  "allMarkedReadSuccess": "Semua notifikasi ditandai telah dibaca",
+  "deleteAllNotificationsTitle": "Hapus Semua Notifikasi",
+  "deleteAllNotificationsConfirm": "Apakah Anda yakin ingin menghapus semua riwayat notifikasi?",
+  "allNotificationsDeletedSuccess": "Semua notifikasi berhasil dihapus",
+  "notificationDeletedSuccess": "Notifikasi berhasil dihapus",
+  "timeJustNow": "Baru saja",
+  "timeMinutesAgo": "{count} menit lalu",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count} jam lalu",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYesterday": "Kemarin",
+  "timeDaysAgo": "{count} hari lalu",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noNotifications": "Tidak Ada Notifikasi",
+  "noNotificationsDesc": "Seluruh pemberitahuan masuk terkait SOS dan kontak darurat Anda akan ditampilkan di sini.",
+  "notificationListHeader": "Daftar Pemberitahuan",
+  "sortOldest": "Terlama",
+  "sortNewest": "Terbaru"
 }
+

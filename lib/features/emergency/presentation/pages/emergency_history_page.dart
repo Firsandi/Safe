@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/injection.dart';
 import '../../../../core/services/notification_local_service.dart';
+import 'package:safe/l10n/app_localizations.dart';
 
 class EmergencyHistoryPage extends StatefulWidget {
   final int initialTabIndex;
@@ -132,7 +133,7 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'Gagal memuat riwayat: ${e.toString()}';
+        _errorMessage = e.toString();
         _isLoading = false;
       });
     }
@@ -278,17 +279,17 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
       case 'active':
         bgColor = const Color(0xFFFEE2E2);
         textColor = const Color(0xFFEF4444);
-        label = 'AKTIF';
+        label = AppLocalizations.of(context)!.statusActive;
         break;
       case 'resolved':
         bgColor = const Color(0xFFD1FAE5);
         textColor = const Color(0xFF10B981);
-        label = 'SELESAI';
+        label = AppLocalizations.of(context)!.statusResolved;
         break;
       case 'false_alarm':
         bgColor = const Color(0xFFF3F4F6);
         textColor = const Color(0xFF6B7280);
-        label = 'ALARM PALSU';
+        label = AppLocalizations.of(context)!.statusFalseAlarm;
         break;
       default:
         bgColor = const Color(0xFFE5E7EB);
@@ -331,10 +332,10 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Riwayat Darurat', style: AppTextStyles.heading),
+                  Text(AppLocalizations.of(context)!.historySos, style: AppTextStyles.heading),
                   const SizedBox(height: 8),
                   Text(
-                    'Arsip riwayat pengiriman dan penerimaan sinyal SOS.',
+                    AppLocalizations.of(context)!.historySosDesc,
                     style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
                   ),
                 ],
@@ -352,9 +353,9 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
                 indicatorWeight: 3,
                 labelStyle: AppTextStyles.subHeading.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
                 unselectedLabelStyle: AppTextStyles.subHeading.copyWith(fontSize: 14),
-                tabs: const [
-                  Tab(text: 'SOS Saya'),
-                  Tab(text: 'SOS Diterima'),
+                tabs: [
+                  Tab(text: AppLocalizations.of(context)!.historyTabSent),
+                  Tab(text: AppLocalizations.of(context)!.historyTabReceived),
                 ],
               ),
             ),
@@ -377,12 +378,19 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
                               children: [
                                 const Icon(Icons.error_outline, color: AppColors.primaryRed, size: 48),
                                 const SizedBox(height: 16),
-                                Text(_errorMessage!, textAlign: TextAlign.center, style: AppTextStyles.subHeading),
+                                Text(
+                                  '${AppLocalizations.of(context)!.historyLoadFailed}: $_errorMessage',
+                                  textAlign: TextAlign.center,
+                                  style: AppTextStyles.subHeading,
+                                ),
                                 const SizedBox(height: 16),
                                 ElevatedButton(
                                   onPressed: _fetchHistory,
                                   style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF193855)),
-                                  child: const Text('Coba Lagi', style: TextStyle(color: Colors.white)),
+                                  child: Text(
+                                    AppLocalizations.of(context)!.retry,
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
                                 )
                               ],
                             ),
@@ -403,7 +411,7 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
 
   Widget _buildSentTab() {
     if (_displayedSentHistory.isEmpty) {
-      return _buildEmptyState('Anda belum pernah mengirim sinyal SOS.');
+      return _buildEmptyState(AppLocalizations.of(context)!.historyNoSent);
     }
 
     return RefreshIndicator(
@@ -454,7 +462,9 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          isAuto ? 'Deteksi Otomatis' : 'Pemicu Manual',
+                          isAuto
+                              ? AppLocalizations.of(context)!.triggerAuto
+                              : AppLocalizations.of(context)!.triggerManual,
                           style: AppTextStyles.subHeading.copyWith(
                             fontWeight: FontWeight.bold,
                             color: AppColors.textDark,
@@ -497,7 +507,7 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
 
   Widget _buildReceivedTab() {
     if (_displayedReceivedHistory.isEmpty) {
-      return _buildEmptyState('Belum ada sinyal SOS masuk dari kontak Anda.');
+      return _buildEmptyState(AppLocalizations.of(context)!.historyNoReceived);
     }
 
     return RefreshIndicator(
@@ -557,7 +567,7 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'No. HP: ${event['user_phone'] ?? '-'}',
+                  '${AppLocalizations.of(context)!.phoneLabelAbbr} ${event['user_phone'] ?? '-'}',
                   style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 13),
                 ),
                 const Divider(height: 24, color: AppColors.inputBorder),
@@ -573,7 +583,9 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          isAuto ? 'Deteksi Otomatis' : 'Pemicu Manual',
+                          isAuto
+                              ? AppLocalizations.of(context)!.triggerAuto
+                              : AppLocalizations.of(context)!.triggerManual,
                           style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 13),
                         ),
                       ],
@@ -622,7 +634,7 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Tidak ada riwayat',
+            AppLocalizations.of(context)!.noHistory,
             style: AppTextStyles.subHeading.copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.textDark,

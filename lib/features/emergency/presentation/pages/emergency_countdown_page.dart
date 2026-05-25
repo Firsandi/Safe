@@ -347,51 +347,7 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
           SafeArea(
             child: Column(
               children: [
-                // TOP BANNER (Smoother padding & modern layout)
-                Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryRed,
-                    borderRadius: BorderRadius.circular(32),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primaryRed.withOpacity(0.25),
-                        blurRadius: 15,
-                        offset: const Offset(0, 6),
-                      )
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.emergency_share, color: Colors.white, size: 20),
-                          const SizedBox(width: 10),
-                          Text(
-                            l10n.guardianLinkActive.toUpperCase(),
-                            style: AppTextStyles.inputLabel.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          _buildAvatarCircle('https://i.pravatar.cc/100?u=1', 'A'),
-                          const SizedBox(width: 6),
-                          _buildAvatarCircle('https://i.pravatar.cc/100?u=2', 'B'),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
                 
                 // ACCIDENT DETECTED HEADER
                 Text(
@@ -527,31 +483,6 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
     );
   }
 
-  Widget _buildAvatarCircle(String url, String fallbackChar) {
-    return Container(
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white.withOpacity(0.8), width: 1.5),
-        color: Colors.white.withOpacity(0.3),
-      ),
-      child: ClipOval(
-        child: Image.network(
-          url,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Center(
-              child: Text(
-                fallbackChar,
-                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
 
   Widget _buildSwipeToCancelSlider(AppLocalizations l10n) {
     const double sliderHeight = 90.0;

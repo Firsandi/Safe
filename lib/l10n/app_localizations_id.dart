@@ -417,4 +417,188 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get connectionIssuesDesc =>
       'Gagal mengirim SOS karena masalah jaringan. SOS Anda telah masuk antrean offline dan akan otomatis dikirim saat sinyal membaik.\n\nHarap hubungi nomor darurat atau kontak Anda secara manual jika memungkinkan.';
+
+  @override
+  String get profileDesc => 'Kelola data diri dan riwayat medis Anda.';
+
+  @override
+  String get editButtonLabel => 'Ubah';
+
+  @override
+  String get historySosDesc =>
+      'Arsip riwayat pengiriman dan penerimaan sinyal SOS.';
+
+  @override
+  String get historyTabSent => 'SOS Saya';
+
+  @override
+  String get historyTabReceived => 'SOS Diterima';
+
+  @override
+  String get historyNoSent => 'Anda belum pernah mengirim sinyal SOS.';
+
+  @override
+  String get historyNoReceived =>
+      'Belum ada sinyal SOS masuk dari kontak Anda.';
+
+  @override
+  String get triggerAuto => 'Deteksi Otomatis';
+
+  @override
+  String get triggerManual => 'Pemicu Manual';
+
+  @override
+  String get phoneLabelAbbr => 'No. HP:';
+
+  @override
+  String get historyLoadFailed => 'Gagal memuat riwayat';
+
+  @override
+  String get addContactTitle => 'Tambah Kontak Darurat';
+
+  @override
+  String get addContactDesc =>
+      'Cari berdasarkan nomor telepon atau email. Hanya pengguna yang sudah terdaftar yang dapat ditambahkan.';
+
+  @override
+  String get addContactInputLabel => 'NOMOR TELEPON / EMAIL';
+
+  @override
+  String get addContactInputHint => 'Contoh: 08123456789 atau email@safe.com';
+
+  @override
+  String get addContactSearchResults => 'HASIL PENCARIAN';
+
+  @override
+  String get addContactInitialHint =>
+      'Masukkan nomor telepon atau email untuk mencari';
+
+  @override
+  String get addContactNotFound => 'Pengguna tidak ditemukan';
+
+  @override
+  String get addContactNotFoundDesc =>
+      'Kontak ini belum terdaftar di aplikasi SAFE. Hanya pengguna terdaftar yang bisa ditambahkan.';
+
+  @override
+  String get addContactButton => 'Tambah';
+
+  @override
+  String get addContactConfirmTitle => 'Tambah Kontak';
+
+  @override
+  String addContactConfirmDesc(String name) {
+    return 'Tambahkan $name sebagai kontak darurat?';
+  }
+
+  @override
+  String addContactSuccess(String name) {
+    return 'Permintaan kontak berhasil dikirim ke $name!';
+  }
+
+  @override
+  String get addContactFailed => 'Gagal menambahkan kontak. Silakan coba lagi.';
+
+  @override
+  String get statusActive => 'AKTIF';
+
+  @override
+  String get statusResolved => 'SELESAI';
+
+  @override
+  String get statusFalseAlarm => 'ALARM PALSU';
+
+  @override
+  String get noHistory => 'Tidak ada riwayat';
+
+  @override
+  String get notificationsTitle => 'Notifikasi';
+
+  @override
+  String notificationsSelected(int count) {
+    return '$count Terpilih';
+  }
+
+  @override
+  String get deselectAll => 'Batal pilih semua';
+
+  @override
+  String get selectAll => 'Pilih semua';
+
+  @override
+  String get deleteSelectedTooltip => 'Hapus terpilih';
+
+  @override
+  String get selectNotificationsTooltip => 'Pilih notifikasi';
+
+  @override
+  String get markAllAsReadTooltip => 'Tandai semua dibaca';
+
+  @override
+  String get deleteAllTooltip => 'Hapus semua';
+
+  @override
+  String get deleteNotificationTitle => 'Hapus Notifikasi';
+
+  @override
+  String deleteSelectedConfirm(int count) {
+    return 'Apakah Anda yakin ingin menghapus $count notifikasi terpilih?';
+  }
+
+  @override
+  String get selectedDeletedSuccess => 'Notifikasi terpilih berhasil dihapus';
+
+  @override
+  String get allMarkedReadSuccess => 'Semua notifikasi ditandai telah dibaca';
+
+  @override
+  String get deleteAllNotificationsTitle => 'Hapus Semua Notifikasi';
+
+  @override
+  String get deleteAllNotificationsConfirm =>
+      'Apakah Anda yakin ingin menghapus semua riwayat notifikasi?';
+
+  @override
+  String get allNotificationsDeletedSuccess =>
+      'Semua notifikasi berhasil dihapus';
+
+  @override
+  String get notificationDeletedSuccess => 'Notifikasi berhasil dihapus';
+
+  @override
+  String get timeJustNow => 'Baru saja';
+
+  @override
+  String timeMinutesAgo(int count) {
+    return '$count menit lalu';
+  }
+
+  @override
+  String timeHoursAgo(int count) {
+    return '$count jam lalu';
+  }
+
+  @override
+  String get timeYesterday => 'Kemarin';
+
+  @override
+  String timeDaysAgo(int count) {
+    return '$count hari lalu';
+  }
+
+  @override
+  String get noNotifications => 'Tidak Ada Notifikasi';
+
+  @override
+  String get noNotificationsDesc =>
+      'Seluruh pemberitahuan masuk terkait SOS dan kontak darurat Anda akan ditampilkan di sini.';
+
+  @override
+  String get notificationListHeader => 'Daftar Pemberitahuan';
+
+  @override
+  String get sortOldest => 'Terlama';
+
+  @override
+  String get sortNewest => 'Terbaru';
 }
