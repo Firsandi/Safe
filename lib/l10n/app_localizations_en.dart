@@ -347,4 +347,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get languageSelect => 'Select your app language:';
+
+  @override
+  String helloUser(String name) {
+    return 'Hello, $name';
+  }
+
+  @override
+  String activeContactsCount(int count) {
+    return '$count active';
+  }
+
+  @override
+  String sosHistoryCount(int count) {
+    return '$count events';
+  }
+
+  @override
+  String get sosActiveBanner => 'SOS ACTIVE';
+
+  @override
+  String get sendingRealtimeLocation => 'Sending your real-time location...';
+
+  @override
+  String get turnOff => 'Turn Off';
+
+  @override
+  String get sosDisabledSuccess => 'SOS successfully disabled';
+
+  @override
+  String sosDisableFailed(String error) {
+    return 'Failed to disable SOS: $error';
+  }
+
+  @override
+  String get permissionRequiredTitle => 'Permissions Required';
+
+  @override
+  String get permissionRequiredDesc =>
+      'SAFE requires Location and Notification permissions to monitor your safety and send help in emergencies. Without these, the app cannot protect you.';
+
+  @override
+  String get allowPermissionsButton => 'Grant Permissions';
+
+  @override
+  String get openSettingsInstruction =>
+      'If permissions are not granted, please enable them manually in the App Settings.';
 }

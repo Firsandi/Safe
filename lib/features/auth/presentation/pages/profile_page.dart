@@ -674,16 +674,10 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // HEADER BAR (SAFE logo & edit pencil icon button)
+                  // HEADER BAR (edit pencil icon button)
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Image.asset(
-                        'assets/images/logo.png',
-                        height: 48,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.shield, color: AppColors.primaryRed, size: 32),
-                      ),
                       GestureDetector(
                         onTap: _showEditProfileBottomSheet,
                         child: Container(

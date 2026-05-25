@@ -127,5 +127,45 @@
   "enterFullName": "Enter full name",
   
   "languageTitle": "Select Language",
-  "languageSelect": "Select your app language:"
+  "languageSelect": "Select your app language:",
+  "helloUser": "Hello, {name}",
+  "@helloUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "activeContactsCount": "{count} active",
+  "@activeContactsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sosHistoryCount": "{count} events",
+  "@sosHistoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sosActiveBanner": "SOS ACTIVE",
+  "sendingRealtimeLocation": "Sending your real-time location...",
+  "turnOff": "Turn Off",
+  "sosDisabledSuccess": "SOS successfully disabled",
+  "sosDisableFailed": "Failed to disable SOS: {error}",
+  "@sosDisableFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "permissionRequiredTitle": "Permissions Required",
+  "permissionRequiredDesc": "SAFE requires Location and Notification permissions to monitor your safety and send help in emergencies. Without these, the app cannot protect you.",
+  "allowPermissionsButton": "Grant Permissions",
+  "openSettingsInstruction": "If permissions are not granted, please enable them manually in the App Settings."
 }

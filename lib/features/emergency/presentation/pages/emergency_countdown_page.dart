@@ -119,15 +119,80 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
           if (!mounted) return;
           showDialog(
             context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('ALERT SENT'),
-              content: const Text('Emergency services and contacts have been notified.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                  child: const Text('OK'),
+            barrierDismissible: false,
+            builder: (context) => Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              elevation: 10,
+              backgroundColor: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // A glowing red shield icon
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryRed.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.shield,
+                        color: AppColors.primaryRed,
+                        size: 48,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      AppLocalizations.of(context)!.alertSent.toUpperCase(),
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.heading.copyWith(
+                        color: AppColors.primaryRed,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      AppLocalizations.of(context)!.alertSentDesc,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.subHeading.copyWith(
+                        color: Colors.black87,
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryRed,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'OK',
+                          style: AppTextStyles.heading.copyWith(
+                            fontSize: 14,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           );
         }

@@ -751,6 +751,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select your app language:'**
   String get languageSelect;
+
+  /// No description provided for @helloUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello, {name}'**
+  String helloUser(String name);
+
+  /// No description provided for @activeContactsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active'**
+  String activeContactsCount(int count);
+
+  /// No description provided for @sosHistoryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} events'**
+  String sosHistoryCount(int count);
+
+  /// No description provided for @sosActiveBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS ACTIVE'**
+  String get sosActiveBanner;
+
+  /// No description provided for @sendingRealtimeLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending your real-time location...'**
+  String get sendingRealtimeLocation;
+
+  /// No description provided for @turnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn Off'**
+  String get turnOff;
+
+  /// No description provided for @sosDisabledSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS successfully disabled'**
+  String get sosDisabledSuccess;
+
+  /// No description provided for @sosDisableFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to disable SOS: {error}'**
+  String sosDisableFailed(String error);
+
+  /// No description provided for @permissionRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions Required'**
+  String get permissionRequiredTitle;
+
+  /// No description provided for @permissionRequiredDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'SAFE requires Location and Notification permissions to monitor your safety and send help in emergencies. Without these, the app cannot protect you.'**
+  String get permissionRequiredDesc;
+
+  /// No description provided for @allowPermissionsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant Permissions'**
+  String get allowPermissionsButton;
+
+  /// No description provided for @openSettingsInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'If permissions are not granted, please enable them manually in the App Settings.'**
+  String get openSettingsInstruction;
 }
 
 class _AppLocalizationsDelegate

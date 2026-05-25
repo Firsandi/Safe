@@ -180,10 +180,8 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
 
   Widget _buildHeader() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Image.asset('assets/images/logo.png', height: 48,
-          errorBuilder: (c, e, s) => const Icon(Icons.shield, color: AppColors.primaryRed, size: 32)),
         if (!_isSearching)
           IconButton(
             icon: const Icon(Icons.search, color: AppColors.textDark),
