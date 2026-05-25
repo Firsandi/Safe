@@ -41,9 +41,11 @@ class OfflineSyncService {
     _syncTimer?.cancel();
     _syncTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
       syncPending(context);
+      LocationService.updateLiveLocation(); // Live Location 24/7 feature
     });
     // Run an immediate check on startup
     syncPending(context);
+    LocationService.updateLiveLocation();
   }
 
   /// Stop the background sync loop

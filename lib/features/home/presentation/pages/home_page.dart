@@ -21,6 +21,7 @@ import 'package:safe/features/auth/presentation/pages/profile_page.dart';
 import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/core/services/notification_local_service.dart';
 import 'package:safe/features/home/presentation/pages/notification_page.dart';
+import 'package:safe/features/home/presentation/pages/location_page.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -403,7 +404,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           key: ValueKey('history_page_$_historyInitialTabIndex'),
         );
       case 3:
-        return _buildPlaceholderPage(AppLocalizations.of(context)!.locationTitle, Icons.location_on_outlined);
+        return const LocationPage();
       case 4:
         return ProfilePage(user: widget.user);
       default:

@@ -278,6 +278,33 @@
   "noNotificationsDesc": "Seluruh pemberitahuan masuk terkait SOS dan kontak darurat Anda akan ditampilkan di sini.",
   "notificationListHeader": "Daftar Pemberitahuan",
   "sortOldest": "Terlama",
-  "sortNewest": "Terbaru"
+  "sortNewest": "Terbaru",
+  "locationPageTitle": "Lokasi Langsung",
+  "locationPageSubtitle": "Pantau kontak darurat Anda",
+  "searchContactHint": "Cari kontak...",
+  "distanceCalculating": "Menghitung jarak",
+  "locationNotAvailable": "Lokasi tidak tersedia",
+  "unknownUpdateTime": "Waktu pembaruan tidak diketahui",
+  "justNow": "Baru saja",
+  "minutesAgo": "{count} menit lalu",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "positionLabel": "Posisi:",
+  "updatedLabel": "Diperbarui:",
+  "gpsFailed": "Gagal mendapatkan lokasi GPS",
+  "routeDownloadFailed": "Gagal mengunduh rute",
+  "emergencyHistoryTitle": "Riwayat SOS",
+  "sosHistoryReceivedSubtitle": "Sinyal darurat masuk",
+  "sosHistorySentSubtitle": "Sinyal darurat terkirim",
+  "contactPlaceholder": "Kontak darurat",
+  "openGoogleMaps": "Buka Google Maps",
+  "phoneNumberPrefix": "No. HP:",
+  "searchingLocation": "Mencari lokasi...",
+  "yourLocation": "Lokasi Anda"
 }
 

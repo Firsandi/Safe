@@ -1195,6 +1195,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Newest'**
   String get sortNewest;
+
+  /// No description provided for @locationPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Location'**
+  String get locationPageTitle;
+
+  /// No description provided for @locationPageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your emergency contacts'**
+  String get locationPageSubtitle;
+
+  /// No description provided for @searchContactHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search contacts...'**
+  String get searchContactHint;
+
+  /// No description provided for @distanceCalculating.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating distance'**
+  String get distanceCalculating;
+
+  /// No description provided for @locationNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Location not available'**
+  String get locationNotAvailable;
+
+  /// No description provided for @unknownUpdateTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown update time'**
+  String get unknownUpdateTime;
+
+  /// No description provided for @justNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get justNow;
+
+  /// No description provided for @minutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} minutes ago'**
+  String minutesAgo(int count);
+
+  /// No description provided for @positionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Position:'**
+  String get positionLabel;
+
+  /// No description provided for @updatedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated:'**
+  String get updatedLabel;
+
+  /// No description provided for @gpsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to get GPS location'**
+  String get gpsFailed;
+
+  /// No description provided for @routeDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to download route'**
+  String get routeDownloadFailed;
+
+  /// No description provided for @emergencyHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS History'**
+  String get emergencyHistoryTitle;
+
+  /// No description provided for @sosHistoryReceivedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming emergency signal'**
+  String get sosHistoryReceivedSubtitle;
+
+  /// No description provided for @sosHistorySentSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent emergency signal'**
+  String get sosHistorySentSubtitle;
+
+  /// No description provided for @contactPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency contact'**
+  String get contactPlaceholder;
+
+  /// No description provided for @openGoogleMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Google Maps'**
+  String get openGoogleMaps;
+
+  /// No description provided for @phoneNumberPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone:'**
+  String get phoneNumberPrefix;
+
+  /// No description provided for @searchingLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching location...'**
+  String get searchingLocation;
+
+  /// No description provided for @yourLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location'**
+  String get yourLocation;
 }
 
 class _AppLocalizationsDelegate

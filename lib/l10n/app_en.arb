@@ -278,6 +278,33 @@
   "noNotificationsDesc": "All incoming notifications related to SOS and emergency contacts will be shown here.",
   "notificationListHeader": "Notification List",
   "sortOldest": "Oldest",
-  "sortNewest": "Newest"
+  "sortNewest": "Newest",
+  "locationPageTitle": "Live Location",
+  "locationPageSubtitle": "Track your emergency contacts",
+  "searchContactHint": "Search contacts...",
+  "distanceCalculating": "Calculating distance",
+  "locationNotAvailable": "Location not available",
+  "unknownUpdateTime": "Unknown update time",
+  "justNow": "Just now",
+  "minutesAgo": "{count} minutes ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "positionLabel": "Position:",
+  "updatedLabel": "Updated:",
+  "gpsFailed": "Failed to get GPS location",
+  "routeDownloadFailed": "Failed to download route",
+  "emergencyHistoryTitle": "SOS History",
+  "sosHistoryReceivedSubtitle": "Incoming emergency signal",
+  "sosHistorySentSubtitle": "Sent emergency signal",
+  "contactPlaceholder": "Emergency contact",
+  "openGoogleMaps": "Open Google Maps",
+  "phoneNumberPrefix": "Phone:",
+  "searchingLocation": "Searching location...",
+  "yourLocation": "Your location"
 }
 

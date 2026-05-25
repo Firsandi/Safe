@@ -601,4 +601,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sortNewest => 'Newest';
+
+  @override
+  String get locationPageTitle => 'Live Location';
+
+  @override
+  String get locationPageSubtitle => 'Track your emergency contacts';
+
+  @override
+  String get searchContactHint => 'Search contacts...';
+
+  @override
+  String get distanceCalculating => 'Calculating distance';
+
+  @override
+  String get locationNotAvailable => 'Location not available';
+
+  @override
+  String get unknownUpdateTime => 'Unknown update time';
+
+  @override
+  String get justNow => 'Just now';
+
+  @override
+  String minutesAgo(int count) {
+    return '$count minutes ago';
+  }
+
+  @override
+  String get positionLabel => 'Position:';
+
+  @override
+  String get updatedLabel => 'Updated:';
+
+  @override
+  String get gpsFailed => 'Failed to get GPS location';
+
+  @override
+  String get routeDownloadFailed => 'Failed to download route';
+
+  @override
+  String get emergencyHistoryTitle => 'SOS History';
+
+  @override
+  String get sosHistoryReceivedSubtitle => 'Incoming emergency signal';
+
+  @override
+  String get sosHistorySentSubtitle => 'Sent emergency signal';
+
+  @override
+  String get contactPlaceholder => 'Emergency contact';
+
+  @override
+  String get openGoogleMaps => 'Open Google Maps';
+
+  @override
+  String get phoneNumberPrefix => 'Phone:';
+
+  @override
+  String get searchingLocation => 'Searching location...';
+
+  @override
+  String get yourLocation => 'Your location';
 }

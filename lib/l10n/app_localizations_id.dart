@@ -601,4 +601,66 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get sortNewest => 'Terbaru';
+
+  @override
+  String get locationPageTitle => 'Lokasi Langsung';
+
+  @override
+  String get locationPageSubtitle => 'Pantau kontak darurat Anda';
+
+  @override
+  String get searchContactHint => 'Cari kontak...';
+
+  @override
+  String get distanceCalculating => 'Menghitung jarak';
+
+  @override
+  String get locationNotAvailable => 'Lokasi tidak tersedia';
+
+  @override
+  String get unknownUpdateTime => 'Waktu pembaruan tidak diketahui';
+
+  @override
+  String get justNow => 'Baru saja';
+
+  @override
+  String minutesAgo(int count) {
+    return '$count menit lalu';
+  }
+
+  @override
+  String get positionLabel => 'Posisi:';
+
+  @override
+  String get updatedLabel => 'Diperbarui:';
+
+  @override
+  String get gpsFailed => 'Gagal mendapatkan lokasi GPS';
+
+  @override
+  String get routeDownloadFailed => 'Gagal mengunduh rute';
+
+  @override
+  String get emergencyHistoryTitle => 'Riwayat SOS';
+
+  @override
+  String get sosHistoryReceivedSubtitle => 'Sinyal darurat masuk';
+
+  @override
+  String get sosHistorySentSubtitle => 'Sinyal darurat terkirim';
+
+  @override
+  String get contactPlaceholder => 'Kontak darurat';
+
+  @override
+  String get openGoogleMaps => 'Buka Google Maps';
+
+  @override
+  String get phoneNumberPrefix => 'No. HP:';
+
+  @override
+  String get searchingLocation => 'Mencari lokasi...';
+
+  @override
+  String get yourLocation => 'Lokasi Anda';
 }

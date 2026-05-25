@@ -132,4 +132,27 @@ class LocationService {
     _positionStreamSubscription = null;
     saveActiveSosId(null);
   }
+
+  /// Updates live location (24/7) to the backend
+  static Future<void> updateLiveLocation() async {
+    final hasPermission = await requestPermission();
+    if (!hasPermission) return;
+
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 5),
+      );
+      final dio = sl<Dio>();
+      await dio.put(
+        '/api/location',
+        data: {
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+        },
+      );
+    } catch (_) {
+      // Quiet fail if unable to update
+    }
+  }
 }
