@@ -21,6 +21,8 @@ import 'package:safe/features/auth/presentation/pages/profile_page.dart';
 import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/core/services/notification_local_service.dart';
 import 'package:safe/features/home/presentation/pages/notification_page.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:geolocator/geolocator.dart';
 
 class HomePage extends StatefulWidget {
   final UserEntity user;
@@ -56,12 +58,20 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   int _contactsInitialTabIndex = 0;
   StreamSubscription<int>? _unreadNotificationsSubscription;
 
-
+  // Permissions check state
+  bool _hasLocationPermission = true;
+  bool _hasNotificationPermission = true;
+  bool _checkingPermissions = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _checkPermissionsState().then((_) {
+      if (mounted && (!_hasLocationPermission || !_hasNotificationPermission)) {
+        _requestPermissions();
+      }
+    });
 
     Future.delayed(const Duration(milliseconds: 200), () {
       if (mounted) setState(() => _isInit = true);
@@ -421,7 +431,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
 
   @override
   Widget build(BuildContext context) {
+    if (_checkingPermissions) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primaryRed),
+        ),
+      );
+    }
 
+    if (!_hasLocationPermission || !_hasNotificationPermission) {
+      return _buildPermissionRequestScreen();
+    }
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -834,6 +855,272 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     if (result == 'cancelled') {
       _crashDetection.startCooldown();
     }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermissionsState();
+    }
+  }
+
+  Future<void> _checkPermissionsState() async {
+    try {
+      // 1. Cek izin lokasi (tanpa mengharuskan GPS aktif)
+      final locPermission = await Geolocator.checkPermission();
+      final locGranted = locPermission == LocationPermission.always ||
+          locPermission == LocationPermission.whileInUse;
+
+      // 2. Cek izin notifikasi
+      final settings = await FirebaseMessaging.instance.getNotificationSettings();
+      final notifGranted = settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional;
+
+      if (mounted) {
+        setState(() {
+          _hasLocationPermission = locGranted;
+          _hasNotificationPermission = notifGranted;
+          _checkingPermissions = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _checkingPermissions = false);
+      }
+    }
+  }
+
+  Future<void> _requestPermissions() async {
+    // 1. Minta izin lokasi secara langsung via Geolocator
+    var locPermissionStatus = await Geolocator.checkPermission();
+    if (locPermissionStatus == LocationPermission.denied) {
+      locPermissionStatus = await Geolocator.requestPermission();
+    }
+    
+    // 2. Minta izin notifikasi
+    final messaging = FirebaseMessaging.instance;
+    final settings = await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+      criticalAlert: true,
+    );
+    final notifGranted = settings.authorizationStatus == AuthorizationStatus.authorized ||
+        settings.authorizationStatus == AuthorizationStatus.provisional;
+
+    // Jika ditolak secara permanen, arahkan ke pengaturan aplikasi
+    if (locPermissionStatus == LocationPermission.deniedForever) {
+      await Geolocator.openAppSettings();
+    } else if (!notifGranted) {
+      final currentSettings = await FirebaseMessaging.instance.getNotificationSettings();
+      if (currentSettings.authorizationStatus == AuthorizationStatus.denied) {
+        await Geolocator.openAppSettings();
+      }
+    }
+
+    await _checkPermissionsState();
+  }
+
+  Widget _buildPermissionRequestScreen() {
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(
+      backgroundColor: AppColors.backgroundLight,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Spacer(),
+              // Premium Concentric Circles with Shield Icon
+              Center(
+                child: SizedBox(
+                  height: 220,
+                  width: 220,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Outer circle 1
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.inputBorder.withOpacity(0.4), width: 1.5),
+                        ),
+                      ),
+                      // Outer circle 2
+                      Container(
+                        width: 170,
+                        height: 170,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.inputBorder.withOpacity(0.8), width: 1.5),
+                        ),
+                      ),
+                      // Glowing center circle
+                      Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryRed,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primaryRed.withOpacity(0.35),
+                              blurRadius: 30,
+                              spreadRadius: 8,
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.security_outlined,
+                            color: Colors.white,
+                            size: 52,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 36),
+              // Title
+              Text(
+                l10n.permissionRequiredTitle,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.heading.copyWith(
+                  color: AppColors.textDark,
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 14),
+              // Description
+              Text(
+                l10n.permissionRequiredDesc,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.subHeading.copyWith(
+                  color: AppColors.textGrey,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
+              // List of permissions missing
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                decoration: BoxDecoration(
+                  color: AppColors.inputBackground,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.inputBorder, width: 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _buildPermissionStatusRow(
+                      icon: Icons.location_on_outlined,
+                      title: l10n.locationTitle,
+                      isGranted: _hasLocationPermission,
+                    ),
+                    Divider(height: 28, color: AppColors.inputBorder.withOpacity(0.6)),
+                    _buildPermissionStatusRow(
+                      icon: Icons.notifications_none_outlined,
+                      title: l10n.notificationsTitle,
+                      isGranted: _hasNotificationPermission,
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              // Instruction
+              Text(
+                l10n.openSettingsInstruction,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.footer.copyWith(
+                  color: AppColors.textGrey,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Button
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _requestPermissions,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryRed,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    elevation: 3,
+                    shadowColor: AppColors.primaryRed.withOpacity(0.3),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        l10n.allowPermissionsButton,
+                        style: AppTextStyles.buttonPrimary,
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward_rounded, size: 20),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPermissionStatusRow({
+    required IconData icon,
+    required String title,
+    required bool isGranted,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isGranted ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: isGranted ? const Color(0xFF2E7D32) : AppColors.primaryRed,
+            size: 22,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Text(
+            title,
+            style: AppTextStyles.subHeading.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+              color: AppColors.textDark,
+            ),
+          ),
+        ),
+        Icon(
+          isGranted ? Icons.check_circle_rounded : Icons.cancel_rounded,
+          color: isGranted ? const Color(0xFF2E7D32) : AppColors.primaryRed,
+          size: 24,
+        ),
+      ],
+    );
   }
 }
 

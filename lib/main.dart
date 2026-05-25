@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:safe/core/utils/injection.dart' as di;
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/core/utils/session_manager.dart';
 import 'package:safe/core/localization/language_cubit.dart';
 import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/features/auth/presentation/pages/splash_page.dart';
-import 'package:safe/features/auth/presentation/pages/permission_request_page.dart';
 import 'package:safe/features/auth/data/models/user_model.dart';
 import 'package:safe/features/home/presentation/pages/home_page.dart';
 import 'package:safe/core/services/notification_manager.dart';
@@ -61,30 +59,7 @@ class _AppEntryState extends State<_AppEntry> {
   @override
   void initState() {
     super.initState();
-    _checkPermissionsAndSession();
-  }
-
-  Future<void> _checkPermissionsAndSession() async {
-    setState(() => _isChecking = true);
-    
-    // Check Location and Notification permissions
-    final hasLocation = await Permission.location.isGranted;
-    final hasNotification = await Permission.notification.isGranted;
-
-    if (!hasLocation || !hasNotification) {
-      if (mounted) {
-        setState(() {
-          _targetPage = PermissionRequestPage(
-            onGranted: _checkPermissionsAndSession,
-          );
-          _isChecking = false;
-        });
-      }
-      return;
-    }
-
-    // Permissions are granted, now check session
-    await _checkSession();
+    _checkSession();
   }
 
   Future<void> _checkSession() async {
