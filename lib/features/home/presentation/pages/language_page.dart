@@ -68,7 +68,7 @@ class LanguagePage extends StatelessWidget {
                           context: context,
                           flag: '🇮🇩',
                           title: 'Bahasa Indonesia',
-                          subtitle: 'Indonesian',
+                          subtitle: currentLang == 'id' ? 'Bahasa Indonesia' : 'Indonesian',
                           isSelected: currentLang == 'id',
                           onTap: () {
                             context.read<LanguageCubit>().changeLanguage('id');
@@ -80,7 +80,7 @@ class LanguagePage extends StatelessWidget {
                           context: context,
                           flag: '🇺🇸',
                           title: 'English',
-                          subtitle: 'Inggris',
+                          subtitle: currentLang == 'id' ? 'Inggris' : 'English',
                           isSelected: currentLang == 'en',
                           onTap: () {
                             context.read<LanguageCubit>().changeLanguage('en');
