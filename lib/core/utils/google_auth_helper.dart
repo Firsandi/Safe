@@ -7,6 +7,7 @@ import 'session_manager.dart';
 import '../../features/auth/data/models/user_model.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../theme/app_colors.dart';
+import '../services/notification_manager.dart';
 
 class GoogleAuthHelper {
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -90,6 +91,7 @@ class GoogleAuthHelper {
 
         final user = UserModel.fromJson(userMap);
         await SessionManager.saveSession(token: token, userData: userMap);
+        NotificationManager.uploadFcmToken();
 
         if (context.mounted) {
           Navigator.pushAndRemoveUntil(
