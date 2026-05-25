@@ -17,7 +17,6 @@ class EmergencyContactsPage extends StatefulWidget {
 }
 
 class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
-  bool _isSearching = false;
   final _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -100,12 +99,11 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
                   ),
                 ),
 
-                // Search Bar (visible only when searching)
-                if (_isSearching)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
-                    child: _buildSearchBar(),
-                  ),
+                // Search Bar (Always visible)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                  child: _buildSearchBar(),
+                ),
                 const SizedBox(height: 8),
 
                 // Custom TabBar
@@ -184,11 +182,6 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
       children: [
         Image.asset('assets/images/logo.png', height: 48,
           errorBuilder: (c, e, s) => const Icon(Icons.shield, color: AppColors.primaryRed, size: 32)),
-        if (!_isSearching)
-          IconButton(
-            icon: const Icon(Icons.search, color: AppColors.textDark),
-            onPressed: () => setState(() => _isSearching = true),
-          ),
       ],
     );
   }
@@ -209,7 +202,7 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
           Expanded(
             child: TextField(
               controller: _searchController,
-              autofocus: true,
+              autofocus: false,
               style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark, fontSize: 14),
               decoration: InputDecoration(
                 hintText: AppLocalizations.of(context)!.searchPlaceholder,
@@ -219,12 +212,16 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
               onChanged: (val) => setState(() => _searchQuery = val),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.close, color: AppColors.textGrey, size: 20),
-            onPressed: () {
-              setState(() { _isSearching = false; _searchQuery = ''; _searchController.clear(); });
-            },
-          ),
+          if (_searchQuery.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.close, color: AppColors.textGrey, size: 20),
+              onPressed: () {
+                setState(() {
+                  _searchQuery = '';
+                  _searchController.clear();
+                });
+              },
+            ),
         ],
       ),
     );

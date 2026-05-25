@@ -53,6 +53,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   int _sosHistoryCount = 0;
   int _unreadNotificationCount = 0;
   int _historyInitialTabIndex = 0;
+  StreamSubscription<int>? _unreadNotificationsSubscription;
 
   @override
   void initState() {
@@ -64,6 +65,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     _startSensorMonitoring();
     _loadStats();
     _loadUnreadNotificationCount();
+    _unreadNotificationsSubscription = NotificationLocalService.unreadCountStream.listen((count) {
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = count;
+        });
+      }
+    });
     _syncActiveSosState(); // Check and synchronize active SOS event
 
     // Register callback for background sync success
@@ -169,6 +177,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
 
   @override
   void dispose() {
+    _unreadNotificationsSubscription?.cancel();
     _accelerometerSub?.cancel();
     _gyroscopeSub?.cancel();
     OfflineSyncService.onSyncSuccess = null;

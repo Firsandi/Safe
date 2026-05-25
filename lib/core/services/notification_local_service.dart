@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:safe/core/utils/session_manager.dart';
 
@@ -67,6 +68,17 @@ class LocalNotification {
 }
 
 class NotificationLocalService {
+  static final StreamController<int> _unreadCountController = StreamController<int>.broadcast();
+
+  /// Stream that emits the current unread count whenever it changes
+  static Stream<int> get unreadCountStream => _unreadCountController.stream;
+
+  /// Helper to fetch and emit the latest unread count
+  static Future<void> _updateUnreadCount() async {
+    final count = await getUnreadCount();
+    _unreadCountController.add(count);
+  }
+
   static Future<String> _getStorageKey() async {
     final userData = await SessionManager.getUserData();
     final userId = userData != null ? userData['user_id'] : 'guest';
@@ -101,6 +113,7 @@ class NotificationLocalService {
       
       final dataStr = jsonEncode(notifications.map((n) => n.toJson()).toList());
       await prefs.setString(key, dataStr);
+      await _updateUnreadCount();
     } catch (_) {}
   }
 
@@ -116,6 +129,7 @@ class NotificationLocalService {
         notifications[index] = notifications[index].copyWith(isRead: true);
         final dataStr = jsonEncode(notifications.map((n) => n.toJson()).toList());
         await prefs.setString(key, dataStr);
+        await _updateUnreadCount();
       }
     } catch (_) {}
   }
@@ -130,6 +144,7 @@ class NotificationLocalService {
       final updated = notifications.map((n) => n.copyWith(isRead: true)).toList();
       final dataStr = jsonEncode(updated.map((n) => n.toJson()).toList());
       await prefs.setString(key, dataStr);
+      await _updateUnreadCount();
     } catch (_) {}
   }
 
@@ -150,6 +165,7 @@ class NotificationLocalService {
       
       final dataStr = jsonEncode(notifications.map((n) => n.toJson()).toList());
       await prefs.setString(key, dataStr);
+      await _updateUnreadCount();
     } catch (_) {}
   }
 
@@ -164,6 +180,7 @@ class NotificationLocalService {
       
       final dataStr = jsonEncode(notifications.map((n) => n.toJson()).toList());
       await prefs.setString(key, dataStr);
+      await _updateUnreadCount();
     } catch (_) {}
   }
 
@@ -173,6 +190,7 @@ class NotificationLocalService {
       final prefs = await SharedPreferences.getInstance();
       final key = await _getStorageKey();
       await prefs.remove(key);
+      await _updateUnreadCount();
     } catch (_) {}
   }
 }

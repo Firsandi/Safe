@@ -120,8 +120,9 @@ class NotificationManager {
       });
 
       // 6. Handle App Opened via Notification
-      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
         debugPrint('App opened via notification: ${message.messageId}');
+        await saveLocalNotificationRecord(message);
         stopAlarm();
       });
 
@@ -129,6 +130,17 @@ class NotificationManager {
       FirebaseMessaging.instance.onTokenRefresh.listen((token) {
         uploadFcmToken(token);
       });
+
+      // 8. Handle Initial Message (App launched from terminated state via notification click)
+      try {
+        final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+        if (initialMessage != null) {
+          debugPrint('App launched via initial message: ${initialMessage.messageId}');
+          await saveLocalNotificationRecord(initialMessage);
+        }
+      } catch (e) {
+        debugPrint('Failed to get initial message: $e');
+      }
 
     } catch (e) {
       debugPrint('Failed to initialize NotificationManager: $e');
