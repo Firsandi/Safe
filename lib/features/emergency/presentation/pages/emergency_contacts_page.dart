@@ -8,7 +8,6 @@ import '../bloc/emergency_cubit.dart';
 import 'add_contact_page.dart';
 import 'dart:convert';
 import 'package:safe/l10n/app_localizations.dart';
-import '../../../../core/services/notification_local_service.dart';
 
 class EmergencyContactsPage extends StatefulWidget {
   final int initialTabIndex;
@@ -21,7 +20,7 @@ class EmergencyContactsPage extends StatefulWidget {
 class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
-
+  bool _isSearching = false;
 
   String _getInitials(String name) {
     if (name.isEmpty) return '?';
@@ -59,33 +58,6 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
     ).toList();
   }
 
-  void _syncRequestsToNotifications(List<ContactEntity> requests) {
-    if (requests.isEmpty) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      try {
-        final notifications = await NotificationLocalService.loadNotifications();
-        final List<LocalNotification> newNotifs = [];
-        for (final req in requests) {
-          final notifId = 'contact_req_${req.id}';
-          final exists = notifications.any((n) => n.id == notifId);
-          if (!exists) {
-            newNotifs.add(LocalNotification(
-              id: notifId,
-              title: 'Permintaan Kontak Darurat',
-              body: '${req.name} ingin menambahkan Anda sebagai kontak darurat.',
-              type: 'contact_request',
-              timestamp: DateTime.now(),
-              isRead: false,
-            ));
-          }
-        }
-        if (newNotifs.isNotEmpty) {
-          await NotificationLocalService.saveNotifications(newNotifs);
-        }
-      } catch (_) {}
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<EmergencyCubit, EmergencyState>(
@@ -98,7 +70,6 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
           contacts = state.contacts;
           requests = state.requests;
           pendingCount = requests.length;
-          _syncRequestsToNotifications(requests);
         }
 
         return DefaultTabController(
@@ -109,11 +80,15 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 20),
+                // Header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                  child: _buildHeader(),
+                ),
 
                 // Title
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -223,6 +198,20 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
     );
   }
 
+  Widget _buildHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Image.asset('assets/images/logo.png', height: 48,
+          errorBuilder: (c, e, s) => const Icon(Icons.shield, color: AppColors.primaryRed, size: 32)),
+        if (!_isSearching)
+          IconButton(
+            icon: const Icon(Icons.search, color: AppColors.textDark),
+            onPressed: () => setState(() => _isSearching = true),
+          ),
+      ],
+    );
+  }
 
   Widget _buildSearchBar() {
     return Container(
