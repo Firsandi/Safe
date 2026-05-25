@@ -109,15 +109,18 @@ class _SosButtonState extends State<SosButton> with SingleTickerProviderStateMix
                       size: 60,
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      AppLocalizations.of(context)?.sosTap ?? 'HOLD TO ACTIVATE SOS',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.heading.copyWith(
-                        color: Colors.white,
-                        fontSize: 12, // slightly smaller to fit longer texts on a single or double line cleanly
-                        height: 1.4,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.0,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                      child: Text(
+                        AppLocalizations.of(context)?.sosTap ?? 'HOLD TO ACTIVATE SOS',
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.heading.copyWith(
+                          color: Colors.white,
+                          fontSize: 11,
+                          height: 1.3,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.8,
+                        ),
                       ),
                     ),
                   ],

@@ -393,4 +393,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get openSettingsInstruction =>
       'If permissions are not granted, please enable them manually in the App Settings.';
+
+  @override
+  String get severeShakeDetected => 'Severe Shake Detected';
+
+  @override
+  String get fallDetected => 'Fall Detected';
+
+  @override
+  String get crashImpactDetected => 'Crash & Impact Detected';
+
+  @override
+  String get severeImpactDetected => 'Severe Impact Detected';
+
+  @override
+  String get impactForceLabel => 'IMPACT FORCE';
+
+  @override
+  String get locationLabel => 'LOCATION';
+
+  @override
+  String get connectionIssuesTitle => 'Connection Issues';
+
+  @override
+  String get connectionIssuesDesc =>
+      'Failed to send SOS due to connection issues. Your SOS is saved in the offline queue and will sync automatically when your connection is restored.\n\nPlease contact emergency services or your contacts manually if possible.';
 }

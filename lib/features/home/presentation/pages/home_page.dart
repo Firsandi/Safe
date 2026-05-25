@@ -65,7 +65,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _checkPermissionsState();
+    _checkPermissionsState().then((_) {
+      if (mounted && (!_hasLocationPermission || !_hasNotificationPermission)) {
+        _requestPermissions();
+      }
+    });
     Future.delayed(const Duration(milliseconds: 200), () {
       if (mounted) setState(() => _isInit = true);
     });
@@ -219,8 +223,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             _shakeCount++;
             if (_shakeCount >= 4) {
               _shakeCount = 0;
+              if (!mounted) return;
               _triggerEmergencyFromSensor(
-                reason: "Guncangan Keras Terdeteksi",
+                reason: AppLocalizations.of(context)?.severeShakeDetected ?? "Severe Shake Detected",
                 force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
               );
             }
@@ -246,8 +251,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         if (_freefallDetected && _freefallTime != null) {
           if (now.difference(_freefallTime!) < const Duration(milliseconds: 1000)) {
             _freefallDetected = false;
+            if (!mounted) return;
             _triggerEmergencyFromSensor(
-              reason: "Jatuh Terdeteksi",
+              reason: AppLocalizations.of(context)?.fallDetected ?? "Fall Detected",
               force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
             );
             return;
@@ -256,8 +262,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
 
         // 2. Tumbling/Crash: high rotation rate (gyroscope) combined with high impact force
         if (_lastRotationRate > 7.0) {
+          if (!mounted) return;
           _triggerEmergencyFromSensor(
-            reason: "Tabrakan & Benturan Terdeteksi",
+            reason: AppLocalizations.of(context)?.crashImpactDetected ?? "Crash & Impact Detected",
             force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
           );
           return;
@@ -265,8 +272,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
 
         // 3. Direct Severe Impact: extremely high acceleration force (>3.5 G)
         if (magnitude > 35.0) {
+          if (!mounted) return;
           _triggerEmergencyFromSensor(
-            reason: "Benturan Keras Terdeteksi",
+            reason: AppLocalizations.of(context)?.severeImpactDetected ?? "Severe Impact Detected",
             force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
           );
           return;

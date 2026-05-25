@@ -167,5 +167,13 @@
   "permissionRequiredTitle": "Permissions Required",
   "permissionRequiredDesc": "SAFE requires Location and Notification permissions to monitor your safety and send help in emergencies. Without these, the app cannot protect you.",
   "allowPermissionsButton": "Grant Permissions",
-  "openSettingsInstruction": "If permissions are not granted, please enable them manually in the App Settings."
+  "openSettingsInstruction": "If permissions are not granted, please enable them manually in the App Settings.",
+  "severeShakeDetected": "Severe Shake Detected",
+  "fallDetected": "Fall Detected",
+  "crashImpactDetected": "Crash & Impact Detected",
+  "severeImpactDetected": "Severe Impact Detected",
+  "impactForceLabel": "IMPACT FORCE",
+  "locationLabel": "LOCATION",
+  "connectionIssuesTitle": "Connection Issues",
+  "connectionIssuesDesc": "Failed to send SOS due to connection issues. Your SOS is saved in the offline queue and will sync automatically when your connection is restored.\n\nPlease contact emergency services or your contacts manually if possible."
 }

@@ -392,4 +392,29 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get openSettingsInstruction =>
       'Jika izin tidak diberikan, silakan aktifkan secara manual di Pengaturan Aplikasi.';
+
+  @override
+  String get severeShakeDetected => 'Guncangan Keras Terdeteksi';
+
+  @override
+  String get fallDetected => 'Jatuh Terdeteksi';
+
+  @override
+  String get crashImpactDetected => 'Tabrakan & Benturan Terdeteksi';
+
+  @override
+  String get severeImpactDetected => 'Benturan Keras Terdeteksi';
+
+  @override
+  String get impactForceLabel => 'KEKUATAN BENTURAN';
+
+  @override
+  String get locationLabel => 'LOKASI';
+
+  @override
+  String get connectionIssuesTitle => 'Koneksi Terganggu';
+
+  @override
+  String get connectionIssuesDesc =>
+      'Gagal mengirim SOS karena masalah jaringan. SOS Anda telah masuk antrean offline dan akan otomatis dikirim saat sinyal membaik.\n\nHarap hubungi nomor darurat atau kontak Anda secara manual jika memungkinkan.';
 }

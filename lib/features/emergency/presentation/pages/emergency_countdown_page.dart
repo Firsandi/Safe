@@ -212,8 +212,6 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
 
         if (!mounted) return;
 
-        // Show a premium/informative offline alert dialog in the user's language preference
-        final isIndonesian = Localizations.localeOf(context).languageCode == 'id';
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -227,16 +225,14 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    isIndonesian ? 'Koneksi Terganggu' : 'Connection Issues',
+                    AppLocalizations.of(context)!.connectionIssuesTitle,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
             ),
             content: Text(
-              isIndonesian
-                  ? 'Gagal mengirim SOS karena masalah jaringan. SOS Anda telah masuk antrean offline dan akan otomatis dikirim saat sinyal membaik.\n\nHarap hubungi nomor darurat atau kontak Anda secara manual jika memungkinkan.'
-                  : 'Failed to send SOS due to connection issues. Your SOS is saved in the offline queue and will sync automatically when your connection is restored.\n\nPlease contact emergency services or your contacts manually if possible.',
+              AppLocalizations.of(context)!.connectionIssuesDesc,
               style: const TextStyle(fontSize: 14),
             ),
             actions: [
@@ -493,11 +489,11 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
                   child: Row(
                     children: [
                       Expanded(
-                        child: _buildDataCard(Icons.speed, 'IMPACT FORCE', widget.impactForce ?? '0.0 G', AppColors.primaryRed),
+                        child: _buildDataCard(Icons.speed, AppLocalizations.of(context)!.impactForceLabel, widget.impactForce ?? '0.0 G', AppColors.primaryRed),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
-                        child: _buildDataCard(Icons.location_on_outlined, 'LOCATION', 'NW-22 ST', Colors.blue),
+                        child: _buildDataCard(Icons.location_on_outlined, AppLocalizations.of(context)!.locationLabel, 'NW-22 ST', Colors.blue),
                       ),
                     ],
                   ),

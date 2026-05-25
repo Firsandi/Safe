@@ -823,6 +823,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'If permissions are not granted, please enable them manually in the App Settings.'**
   String get openSettingsInstruction;
+
+  /// No description provided for @severeShakeDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Severe Shake Detected'**
+  String get severeShakeDetected;
+
+  /// No description provided for @fallDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Fall Detected'**
+  String get fallDetected;
+
+  /// No description provided for @crashImpactDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash & Impact Detected'**
+  String get crashImpactDetected;
+
+  /// No description provided for @severeImpactDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Severe Impact Detected'**
+  String get severeImpactDetected;
+
+  /// No description provided for @impactForceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'IMPACT FORCE'**
+  String get impactForceLabel;
+
+  /// No description provided for @locationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'LOCATION'**
+  String get locationLabel;
+
+  /// No description provided for @connectionIssuesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection Issues'**
+  String get connectionIssuesTitle;
+
+  /// No description provided for @connectionIssuesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send SOS due to connection issues. Your SOS is saved in the offline queue and will sync automatically when your connection is restored.\n\nPlease contact emergency services or your contacts manually if possible.'**
+  String get connectionIssuesDesc;
 }
 
 class _AppLocalizationsDelegate
