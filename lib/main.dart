@@ -8,6 +8,7 @@ import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/features/auth/presentation/pages/splash_page.dart';
 import 'package:safe/features/auth/data/models/user_model.dart';
 import 'package:safe/features/home/presentation/pages/home_page.dart';
+import 'package:safe/core/services/navigation_service.dart';
 import 'package:safe/core/services/notification_manager.dart';
 
 void main() async {
@@ -28,6 +29,7 @@ class SafeApp extends StatelessWidget {
         builder: (context, locale) {
           return MaterialApp(
             title: 'SAFE App',
+            navigatorKey: NavigationService.navigatorKey,
             debugShowCheckedModeBanner: false,
             locale: locale,
             localizationsDelegates: AppLocalizations.localizationsDelegates,

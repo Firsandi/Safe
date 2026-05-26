@@ -33,8 +33,10 @@ class _SosRoutePageState extends State<SosRoutePage> {
   @override
   void initState() {
     super.initState();
-    _targetLat = (widget.sosEvent['initial_latitude'] ?? 0.0) as double;
-    _targetLng = (widget.sosEvent['initial_longitude'] ?? 0.0) as double;
+    _targetLat = double.tryParse(widget.sosEvent['initial_latitude']?.toString() ?? '') ??
+                 double.tryParse(widget.sosEvent['latitude']?.toString() ?? '') ?? 0.0;
+    _targetLng = double.tryParse(widget.sosEvent['initial_longitude']?.toString() ?? '') ??
+                 double.tryParse(widget.sosEvent['longitude']?.toString() ?? '') ?? 0.0;
 
     _initLocationAndRoute();
     _fetchAddressFromCoords(_targetLat, _targetLng);
@@ -333,7 +335,7 @@ class _SosRoutePageState extends State<SosRoutePage> {
                                   ],
                                 ),
                                 child: Text(
-                                  widget.sosEvent['user_name'] ?? l10n.contactPlaceholder,
+                                  widget.sosEvent['user_name'] ?? widget.sosEvent['name'] ?? l10n.contactPlaceholder,
                                   style: const TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold),
@@ -406,7 +408,7 @@ class _SosRoutePageState extends State<SosRoutePage> {
                 // Tombol Google Maps — KANAN BAWAH
                 Positioned(
                   right: 16,
-                  bottom: 24,
+                  bottom: 24 + MediaQuery.of(context).padding.bottom,
                   child: FloatingActionButton(
                     onPressed: _openGoogleMaps,
                     backgroundColor: const Color(0xFF193855),
@@ -426,10 +428,10 @@ class _SosRoutePageState extends State<SosRoutePage> {
   // ── Info Card (Desain Riwayat Darurat) ───────────────────────────────────
   Widget _buildRouteInfoCard(AppLocalizations l10n) {
     final event = widget.sosEvent;
-    final triggerType = event['trigger_type'] ?? 'manual';
+    final triggerType = event['trigger_type'] ?? event['trigger'] ?? 'manual';
     final isAuto = triggerType == 'auto';
-    final korbanName = event['user_name'] ?? l10n.contactPlaceholder;
-    final phone = event['user_phone'] ?? '-';
+    final korbanName = event['user_name'] ?? event['name'] ?? l10n.contactPlaceholder;
+    final phone = event['user_phone'] ?? event['phone'] ?? '-';
     
     return Container(
       padding: const EdgeInsets.all(16),

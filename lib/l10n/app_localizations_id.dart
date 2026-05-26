@@ -663,4 +663,36 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get yourLocation => 'Lokasi Anda';
+
+  @override
+  String get receiverEmergencyTitle => 'DARURAT';
+
+  @override
+  String get receiverEmergencySub => 'Bantuan segera dibutuhkan';
+
+  @override
+  String get receiverViewLocation => 'Lihat Lokasi';
+
+  @override
+  String get receiverCallNow => 'Hubungi Sekarang';
+
+  @override
+  String get receiverCalculatingDistance => 'Menghitung jarak...';
+
+  @override
+  String receiverDistanceText(Object distance) {
+    return '± $distance km dari Anda';
+  }
+
+  @override
+  String get receiverLocationUnreachable => 'Lokasi tidak terjangkau';
+
+  @override
+  String get receiverSearchingLocation => 'Mencari lokasi...';
+
+  @override
+  String get receiverSomeone => 'Seseorang';
+
+  @override
+  String get cancelSos => 'BATALKAN';
 }

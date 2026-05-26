@@ -3,6 +3,7 @@ import '../../domain/entities/contact_entity.dart';
 class ContactModel extends ContactEntity {
   const ContactModel({
     required super.id,
+    super.userId,
     required super.name,
     required super.phoneNumber,
     super.profileImage,
@@ -15,6 +16,7 @@ class ContactModel extends ContactEntity {
   factory ContactModel.fromJson(Map<String, dynamic> json) {
     return ContactModel(
       id: json['id'].toString(),
+      userId: json['user_id']?.toString(),
       name: json['name'],
       phoneNumber: json['phone_number'],
       profileImage: json['profile_image'],
@@ -28,6 +30,7 @@ class ContactModel extends ContactEntity {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'user_id': userId,
       'name': name,
       'phone_number': phoneNumber,
       'profile_image': profileImage,

@@ -88,12 +88,12 @@ class _LocationPageState extends State<LocationPage> {
   }
 
   bool _isSosActive(ContactEntity contact) {
-    return _activeSosHistory.any((sos) => sos['user_id'] == contact.id);
+    return _activeSosHistory.any((sos) => sos['user_id'] == contact.userId);
   }
 
   dynamic _getSosEvent(ContactEntity contact) {
     try {
-      return _activeSosHistory.firstWhere((sos) => sos['user_id'] == contact.id);
+      return _activeSosHistory.firstWhere((sos) => sos['user_id'] == contact.userId);
     } catch (_) {
       return null;
     }
@@ -107,13 +107,29 @@ class _LocationPageState extends State<LocationPage> {
   }
 
   LatLng? _getTargetLocation(ContactEntity contact) {
-    double? lat = _isSosActive(contact) ? (_getSosEvent(contact)?['initial_latitude'] ?? contact.lastLatitude) : contact.lastLatitude;
-    double? lng = _isSosActive(contact) ? (_getSosEvent(contact)?['initial_longitude'] ?? contact.lastLongitude) : contact.lastLongitude;
-    
-    if (lat == null || lng == null) {
-      return null;
+    final sosEvent = _getSosEvent(contact);
+    if (sosEvent != null) {
+      final trackingPoints = sosEvent['tracking_points'] as List?;
+      if (trackingPoints != null && trackingPoints.isNotEmpty) {
+        final lastPoint = trackingPoints.last;
+        final lat = double.tryParse(lastPoint['latitude']?.toString() ?? '');
+        final lng = double.tryParse(lastPoint['longitude']?.toString() ?? '');
+        if (lat != null && lng != null) {
+          return LatLng(lat, lng);
+        }
+      }
+      
+      final lat = double.tryParse(sosEvent['initial_latitude']?.toString() ?? '');
+      final lng = double.tryParse(sosEvent['initial_longitude']?.toString() ?? '');
+      if (lat != null && lng != null) {
+        return LatLng(lat, lng);
+      }
     }
-    return LatLng(lat, lng);
+    
+    if (contact.lastLatitude != null && contact.lastLongitude != null) {
+      return LatLng(contact.lastLatitude!, contact.lastLongitude!);
+    }
+    return null;
   }
 
   @override
@@ -333,9 +349,26 @@ class _LocationPageState extends State<LocationPage> {
       distanceStr = l10n.locationNotAvailable;
     }
 
+    DateTime? lastUpdate = contact.lastLocationUpdate;
+    if (isSos) {
+      final sosEvent = _getSosEvent(contact);
+      if (sosEvent != null) {
+        final trackingPoints = sosEvent['tracking_points'] as List?;
+        if (trackingPoints != null && trackingPoints.isNotEmpty) {
+          final lastPoint = trackingPoints.last;
+          if (lastPoint['recorded_at'] != null) {
+            lastUpdate = DateTime.tryParse(lastPoint['recorded_at'].toString())?.toLocal();
+          }
+        }
+        if (lastUpdate == null && sosEvent['created_at'] != null) {
+          lastUpdate = DateTime.tryParse(sosEvent['created_at'].toString())?.toLocal();
+        }
+      }
+    }
+
     String timeStr = l10n.unknownUpdateTime;
-    if (contact.lastLocationUpdate != null) {
-      final diff = DateTime.now().difference(contact.lastLocationUpdate!);
+    if (lastUpdate != null) {
+      final diff = DateTime.now().difference(lastUpdate);
       if (diff.inMinutes < 1) {
         timeStr = l10n.justNow;
       } else {

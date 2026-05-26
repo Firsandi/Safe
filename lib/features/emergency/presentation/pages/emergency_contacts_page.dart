@@ -20,7 +20,6 @@ class EmergencyContactsPage extends StatefulWidget {
 class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
-  bool _isSearching = false;
 
   String _getInitials(String name) {
     if (name.isEmpty) return '?';
@@ -80,15 +79,11 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                  child: _buildHeader(),
-                ),
+                const SizedBox(height: 20),
 
                 // Title
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -198,20 +193,6 @@ class _EmergencyContactsPageState extends State<EmergencyContactsPage> {
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Image.asset('assets/images/logo.png', height: 48,
-          errorBuilder: (c, e, s) => const Icon(Icons.shield, color: AppColors.primaryRed, size: 32)),
-        if (!_isSearching)
-          IconButton(
-            icon: const Icon(Icons.search, color: AppColors.textDark),
-            onPressed: () => setState(() => _isSearching = true),
-          ),
-      ],
-    );
-  }
 
   Widget _buildSearchBar() {
     return Container(

@@ -305,6 +305,16 @@
   "openGoogleMaps": "Buka Google Maps",
   "phoneNumberPrefix": "No. HP:",
   "searchingLocation": "Mencari lokasi...",
-  "yourLocation": "Lokasi Anda"
+  "yourLocation": "Lokasi Anda",
+  "receiverEmergencyTitle": "DARURAT",
+  "receiverEmergencySub": "Bantuan segera dibutuhkan",
+  "receiverViewLocation": "Lihat Lokasi",
+  "receiverCallNow": "Hubungi Sekarang",
+  "receiverCalculatingDistance": "Menghitung jarak...",
+  "receiverDistanceText": "± {distance} km dari Anda",
+  "receiverLocationUnreachable": "Lokasi tidak terjangkau",
+  "receiverSearchingLocation": "Mencari lokasi...",
+  "receiverSomeone": "Seseorang",
+  "cancelSos": "BATALKAN"
 }
 

@@ -4,6 +4,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:safe/core/services/navigation_service.dart';
+import 'package:safe/features/emergency/presentation/pages/sos_alert_receiver_page.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/core/utils/session_manager.dart';
 import 'package:safe/core/services/notification_local_service.dart';
@@ -15,7 +18,13 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('Handling a background message: ${message.messageId}');
   await NotificationManager.saveLocalNotificationRecord(message);
   if (message.data['type'] == 'sos_alert') {
+    // Initialize notification channels/plugin settings in background isolate
+    const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initSettings = InitializationSettings(android: androidInit);
+    await NotificationManager._localNotifications.initialize(initSettings);
+
     NotificationManager.startAlarm();
+    await NotificationManager._showLocalNotification(message);
   }
 }
 
@@ -109,6 +118,7 @@ class NotificationManager {
 
         if (message.data['type'] == 'sos_alert') {
           startAlarm();
+          showSosAlertOverlay(message.data);
         }
       });
 
@@ -117,6 +127,9 @@ class NotificationManager {
         debugPrint('App opened via notification: ${message.messageId}');
         await saveLocalNotificationRecord(message);
         stopAlarm();
+        if (message.data['type'] == 'sos_alert') {
+          showSosAlertOverlay(message.data);
+        }
       });
 
       // 7. Token Refresh listener
@@ -130,6 +143,10 @@ class NotificationManager {
         if (initialMessage != null) {
           debugPrint('App launched via initial message: ${initialMessage.messageId}');
           await saveLocalNotificationRecord(initialMessage);
+          stopAlarm();
+          if (initialMessage.data['type'] == 'sos_alert') {
+            showSosAlertOverlay(initialMessage.data);
+          }
         }
       } catch (e) {
         debugPrint('Failed to get initial message: $e');
@@ -161,15 +178,20 @@ class NotificationManager {
   /// Displays local notification on Android/iOS when app is in foreground
   static Future<void> _showLocalNotification(RemoteMessage message) async {
     final notification = message.notification;
-    if (notification == null) return;
+    
+    // Support data-only messages as well as notification messages
+    final title = notification?.title ?? message.data['title'] ?? 'Panggilan Darurat';
+    final body = notification?.body ?? message.data['body'] ?? 'Bantuan segera dibutuhkan';
 
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'emergency_channel_id',
       'Panggilan Darurat',
       channelDescription: 'Digunakan untuk mengirimkan notifikasi darurat SOS dengan prioritas tertinggi.',
       importance: Importance.max,
-      priority: Priority.high,
-      ticker: 'ticker',
+      priority: Priority.max,
+      fullScreenIntent: true,
+      category: AndroidNotificationCategory.alarm,
+      visibility: NotificationVisibility.public,
       playSound: true,
     );
 
@@ -178,10 +200,19 @@ class NotificationManager {
     );
 
     await _localNotifications.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
+      message.messageId.hashCode,
+      title,
+      body,
       details,
+    );
+  }
+
+  /// Displays the full screen incoming emergency alert page using global navigator
+  static void showSosAlertOverlay(Map<String, dynamic> data) {
+    NavigationService.navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (context) => SosAlertReceiverPage(sosEvent: data),
+      ),
     );
   }
 

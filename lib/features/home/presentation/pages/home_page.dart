@@ -22,6 +22,8 @@ import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/core/services/notification_local_service.dart';
 import 'package:safe/features/home/presentation/pages/notification_page.dart';
 import 'package:safe/features/home/presentation/pages/location_page.dart';
+import 'package:safe/features/home/presentation/pages/language_page.dart';
+import 'package:safe/features/home/presentation/pages/help_center_page.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -139,7 +141,221 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     }
   }
 
+  void _showSettingsBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 48,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    l10n.settings,
+                    style: AppTextStyles.heading.copyWith(fontSize: 18),
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F5FA),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.language, color: Color(0xFF193855)),
+                    ),
+                    title: Text(
+                      l10n.settingsLanguage,
+                      style: AppTextStyles.subHeading.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      l10n.settingsLanguageSub,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LanguagePage()),
+                      );
+                    },
+                  ),
+                  const Divider(height: 20),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F5FA),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.help_outline, color: Color(0xFF193855)),
+                    ),
+                    title: Text(
+                      l10n.settingsHelp,
+                      style: AppTextStyles.subHeading.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      l10n.settingsHelpSub,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const HelpCenterPage()),
+                      );
+                    },
+                  ),
+                  const Divider(height: 20),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEE2E2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.info_outline, color: AppColors.primaryRed),
+                    ),
+                    title: Text(
+                      Localizations.localeOf(context).languageCode == 'en'
+                          ? 'About SAFE'
+                          : 'Tentang SAFE',
+                      style: AppTextStyles.subHeading.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      Localizations.localeOf(context).languageCode == 'en'
+                          ? 'Application details and system info'
+                          : 'Detail aplikasi dan info sistem',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showAboutDialog(context);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 
+  void _showAboutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final isEn = Localizations.localeOf(context).languageCode == 'en';
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            isEn ? 'About SAFE' : 'Tentang SAFE',
+            style: AppTextStyles.heading.copyWith(fontSize: 18),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.shield_outlined,
+                size: 64,
+                color: AppColors.primaryRed,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'SAFE App',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Color(0xFF193855),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'v1.0.0 (Tactical Build)',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                isEn
+                    ? 'SAFE is a secure, real-time emergency monitoring system equipped with automated impact detection and offline cueing logic.'
+                    : 'SAFE adalah sistem pemantauan darurat real-time aman yang dilengkapi dengan deteksi benturan otomatis dan logika antrean offline.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[800],
+                  height: 1.4,
+                ),
+              ),
+              const Divider(height: 32),
+              Text(
+                '© 2026 SAFE Project. All Rights Reserved.',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey[500],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                isEn ? 'Close' : 'Tutup',
+                style: const TextStyle(
+                  color: Color(0xFF193855),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   Future<void> _syncActiveSosState() async {
     try {
@@ -412,22 +628,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     }
   }
 
-  Widget _buildPlaceholderPage(String title, IconData icon) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 64, color: AppColors.textGrey),
-          const SizedBox(height: 16),
-          Text(title, style: AppTextStyles.heading.copyWith(color: AppColors.textDark)),
-          const SizedBox(height: 8),
-          Text(AppLocalizations.of(context)!.notAvailableYet,
-            style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14)),
-        ],
-      ),
-    );
-  }
-
 
 
   @override
@@ -514,7 +714,10 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                     ),
                     onPressed: _navigateToNotifications,
                   ),
-                  IconButton(icon: const Icon(Icons.settings_outlined, color: AppColors.textDark), onPressed: () {}),
+                  IconButton(
+                    icon: const Icon(Icons.settings_outlined, color: AppColors.textDark),
+                    onPressed: () => _showSettingsBottomSheet(context),
+                  ),
                 ]),
               ],
             ),

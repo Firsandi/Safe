@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 
 class ContactEntity extends Equatable {
   final String id;
+  final String? userId;
   final String name;
   final String phoneNumber;
   final String? profileImage;
@@ -12,6 +13,7 @@ class ContactEntity extends Equatable {
 
   const ContactEntity({
     required this.id,
+    this.userId,
     required this.name,
     required this.phoneNumber,
     this.profileImage,
@@ -22,5 +24,5 @@ class ContactEntity extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, name, phoneNumber, profileImage, status, lastLatitude, lastLongitude, lastLocationUpdate];
+  List<Object?> get props => [id, userId, name, phoneNumber, profileImage, status, lastLatitude, lastLongitude, lastLocationUpdate];
 }

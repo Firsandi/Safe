@@ -663,4 +663,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get yourLocation => 'Your location';
+
+  @override
+  String get receiverEmergencyTitle => 'EMERGENCY';
+
+  @override
+  String get receiverEmergencySub => 'Immediate assistance required';
+
+  @override
+  String get receiverViewLocation => 'View Location';
+
+  @override
+  String get receiverCallNow => 'Call Now';
+
+  @override
+  String get receiverCalculatingDistance => 'Calculating distance...';
+
+  @override
+  String receiverDistanceText(Object distance) {
+    return '± $distance km from you';
+  }
+
+  @override
+  String get receiverLocationUnreachable => 'Location unreachable';
+
+  @override
+  String get receiverSearchingLocation => 'Searching location...';
+
+  @override
+  String get receiverSomeone => 'Someone';
+
+  @override
+  String get cancelSos => 'CANCEL';
 }

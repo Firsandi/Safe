@@ -1315,6 +1315,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your location'**
   String get yourLocation;
+
+  /// No description provided for @receiverEmergencyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'EMERGENCY'**
+  String get receiverEmergencyTitle;
+
+  /// No description provided for @receiverEmergencySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediate assistance required'**
+  String get receiverEmergencySub;
+
+  /// No description provided for @receiverViewLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'View Location'**
+  String get receiverViewLocation;
+
+  /// No description provided for @receiverCallNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Now'**
+  String get receiverCallNow;
+
+  /// No description provided for @receiverCalculatingDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating distance...'**
+  String get receiverCalculatingDistance;
+
+  /// No description provided for @receiverDistanceText.
+  ///
+  /// In en, this message translates to:
+  /// **'± {distance} km from you'**
+  String receiverDistanceText(Object distance);
+
+  /// No description provided for @receiverLocationUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Location unreachable'**
+  String get receiverLocationUnreachable;
+
+  /// No description provided for @receiverSearchingLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching location...'**
+  String get receiverSearchingLocation;
+
+  /// No description provided for @receiverSomeone.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone'**
+  String get receiverSomeone;
+
+  /// No description provided for @cancelSos.
+  ///
+  /// In en, this message translates to:
+  /// **'CANCEL'**
+  String get cancelSos;
 }
 
 class _AppLocalizationsDelegate

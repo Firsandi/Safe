@@ -305,6 +305,16 @@
   "openGoogleMaps": "Open Google Maps",
   "phoneNumberPrefix": "Phone:",
   "searchingLocation": "Searching location...",
-  "yourLocation": "Your location"
+  "yourLocation": "Your location",
+  "receiverEmergencyTitle": "EMERGENCY",
+  "receiverEmergencySub": "Immediate assistance required",
+  "receiverViewLocation": "View Location",
+  "receiverCallNow": "Call Now",
+  "receiverCalculatingDistance": "Calculating distance...",
+  "receiverDistanceText": "± {distance} km from you",
+  "receiverLocationUnreachable": "Location unreachable",
+  "receiverSearchingLocation": "Searching location...",
+  "receiverSomeone": "Someone",
+  "cancelSos": "CANCEL"
 }
 

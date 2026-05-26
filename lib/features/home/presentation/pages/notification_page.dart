@@ -453,7 +453,7 @@ class _NotificationPageState extends State<NotificationPage> {
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                notif.title,
+                                                _getLocalizedTitle(notif),
                                                 style: AppTextStyles.subHeading.copyWith(
                                                   fontWeight: notif.isRead ? FontWeight.bold : FontWeight.w800,
                                                   fontSize: 13,
@@ -462,7 +462,7 @@ class _NotificationPageState extends State<NotificationPage> {
                                               ),
                                               const SizedBox(height: 6),
                                               Text(
-                                                notif.body,
+                                                _getLocalizedBody(notif),
                                                 style: AppTextStyles.subHeading.copyWith(
                                                   fontSize: 12,
                                                   color: Colors.grey[700],
@@ -527,6 +527,133 @@ class _NotificationPageState extends State<NotificationPage> {
         ],
       ),
     );
+  }
+
+  String _getLocalizedTitle(LocalNotification notif) {
+    final lang = Localizations.localeOf(context).languageCode;
+    final isEn = lang == 'en';
+    final title = notif.title;
+    
+    if (isEn) {
+      if (title == 'EMERGENCY: BENTURAN/KECELAKAAN TERDETEKSI!') {
+        return 'EMERGENCY: IMPACT/ACCIDENT DETECTED!';
+      }
+      if (title == 'EMERGENCY: BUTUH BANTUAN SEGERA!') {
+        return 'EMERGENCY: NEED IMMEDIATE HELP!';
+      }
+      if (title == 'Permintaan Kontak Darurat') {
+        return 'Emergency Contact Request';
+      }
+      if (title == 'Permintaan Kontak Diterima' || title == 'Kontak Tersambung') {
+        return 'Emergency Contact Request Accepted';
+      }
+      if (title == 'Notifikasi Baru') {
+        return 'New Notification';
+      }
+    } else {
+      if (title == 'EMERGENCY: IMPACT/ACCIDENT DETECTED!') {
+        return 'EMERGENCY: BENTURAN/KECELAKAAN TERDETEKSI!';
+      }
+      if (title == 'EMERGENCY: NEED IMMEDIATE HELP!') {
+        return 'EMERGENCY: BUTUH BANTUAN SEGERA!';
+      }
+      if (title == 'Emergency Contact Request') {
+        return 'Permintaan Kontak Darurat';
+      }
+      if (title == 'Emergency Contact Request Accepted' || title == 'Contact Connected') {
+        return 'Permintaan Kontak Diterima';
+      }
+      if (title == 'New Notification') {
+        return 'Notifikasi Baru';
+      }
+    }
+    return title;
+  }
+
+  String _getLocalizedBody(LocalNotification notif) {
+    final lang = Localizations.localeOf(context).languageCode;
+    final isEn = lang == 'en';
+    final body = notif.body;
+
+    if (isEn) {
+      // 1. Translate SOS Alert Body (ID -> EN)
+      if (body.contains('mengalami keadaan darurat')) {
+        final regex = RegExp(r'^(.+) mengalami keadaan darurat \((.+)\)! Segera periksa lokasi\.$');
+        final match = regex.firstMatch(body);
+        if (match != null) {
+          final name = match.group(1);
+          var trigger = match.group(2);
+          if (trigger == 'Sensor Otomatis') {
+            trigger = 'Auto Sensor';
+          }
+          return '$name is experiencing an emergency ($trigger)! Check their location immediately.';
+        }
+      }
+
+      // 2. Translate Contact Request Body (ID -> EN)
+      if (body.contains('ingin menambahkan Anda sebagai kontak darurat')) {
+        final regex = RegExp(r'^(.+) ingin menambahkan Anda sebagai kontak darurat\.$');
+        final match = regex.firstMatch(body);
+        if (match != null) {
+          final name = match.group(1);
+          return '$name wants to add you as an emergency contact.';
+        }
+      }
+
+      // 3. Translate Contact Accepted Body (ID -> EN)
+      if (body.contains('telah menyetujui permintaan kontak darurat Anda')) {
+        final regex = RegExp(r'^(.+) telah menyetujui permintaan kontak darurat Anda\.$');
+        final match = regex.firstMatch(body);
+        if (match != null) {
+          final name = match.group(1);
+          return '$name accepted your emergency contact request.';
+        }
+      }
+
+      if (body == 'Anda menerima pesan darurat baru.') {
+        return 'You received a new emergency message.';
+      }
+    } else {
+      // 1. Translate SOS Alert Body (EN -> ID)
+      if (body.contains('is experiencing an emergency')) {
+        final regex = RegExp(r'^(.+) is experiencing an emergency \((.+)\)! Check their location immediately\.$');
+        final match = regex.firstMatch(body);
+        if (match != null) {
+          final name = match.group(1);
+          var trigger = match.group(2);
+          if (trigger == 'Auto Sensor') {
+            trigger = 'Sensor Otomatis';
+          }
+          return '$name mengalami keadaan darurat ($trigger)! Segera periksa lokasi.';
+        }
+      }
+
+      // 2. Translate Contact Request Body (EN -> ID)
+      if (body.contains('wants to add you as an emergency contact')) {
+        final regex = RegExp(r'^(.+) wants to add you as an emergency contact\.$');
+        final match = regex.firstMatch(body);
+        if (match != null) {
+          final name = match.group(1);
+          return '$name ingin menambahkan Anda sebagai kontak darurat.';
+        }
+      }
+
+      // 3. Translate Contact Accepted Body (EN -> ID)
+      if (body.contains('accepted your emergency contact request')) {
+        final regex = RegExp(r'^(.+) accepted your emergency contact request\.$');
+        final match = regex.firstMatch(body);
+        if (match != null) {
+          final name = match.group(1);
+          return '$name telah menyetujui permintaan kontak darurat Anda.';
+        }
+      }
+
+      if (body == 'You received a new emergency message.') {
+        return 'Anda menerima pesan darurat baru.';
+      }
+    }
+
+    return body;
   }
 
   Widget _buildSortHeader() {
