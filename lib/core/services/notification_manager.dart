@@ -1,12 +1,15 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/core/utils/session_manager.dart';
 import 'package:safe/core/services/notification_local_service.dart';
+import 'package:safe/main.dart';
+import 'package:safe/features/emergency/presentation/pages/sos_incoming_alert_page.dart';
 
 // Top-level background handler for FCM
 @pragma('vm:entry-point')
@@ -24,6 +27,7 @@ class NotificationManager {
   static final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
   static bool _isAlarmPlaying = false;
+  static Map<String, dynamic>? pendingSosData;
 
   static Future<void> saveLocalNotificationRecord(RemoteMessage message) async {
     try {
@@ -88,19 +92,31 @@ class NotificationManager {
       await _localNotifications.initialize(
         initSettings,
         onDidReceiveNotificationResponse: (details) {
-          // Stop alarm when user clicks/taps the notification
           stopAlarm();
+          if (details.payload != null) {
+            try {
+              final Map<String, dynamic> data = Map<String, dynamic>.from(
+                jsonDecode(details.payload!),
+              );
+              if (data['type'] == 'sos_alert') {
+                navigateToSosAlert(data);
+              }
+            } catch (e) {
+              debugPrint('Error parsing notification response: $e');
+            }
+          }
         },
       );
 
       // Create Android Notification Channel for Emergency
       const AndroidNotificationChannel channel = AndroidNotificationChannel(
-        'emergency_channel_id',
+        'emergency_channel_id_v2',
         'Panggilan Darurat',
         description:
             'Digunakan untuk mengirimkan notifikasi darurat SOS dengan prioritas tertinggi.',
         importance: Importance.max,
         playSound: true,
+        sound: RawResourceAndroidNotificationSound('alarm_sound'),
         enableVibration: true,
         enableLights: true,
         showBadge: true,
@@ -124,6 +140,7 @@ class NotificationManager {
 
         if (message.data['type'] == 'sos_alert') {
           startAlarm();
+          navigateToSosAlert(message.data);
         }
       });
 
@@ -134,6 +151,9 @@ class NotificationManager {
         debugPrint('App opened via notification: ${message.messageId}');
         await saveLocalNotificationRecord(message);
         stopAlarm();
+        if (message.data['type'] == 'sos_alert') {
+          navigateToSosAlert(message.data);
+        }
       });
 
       // 7. Token Refresh listener
@@ -150,6 +170,9 @@ class NotificationManager {
             'App launched via initial message: ${initialMessage.messageId}',
           );
           await saveLocalNotificationRecord(initialMessage);
+          if (initialMessage.data['type'] == 'sos_alert') {
+            navigateToSosAlert(initialMessage.data);
+          }
         }
       } catch (e) {
         debugPrint('Failed to get initial message: $e');
@@ -185,7 +208,7 @@ class NotificationManager {
 
     const AndroidNotificationDetails
     androidDetails = AndroidNotificationDetails(
-      'emergency_channel_id',
+      'emergency_channel_id_v2',
       'Panggilan Darurat',
       channelDescription:
           'Digunakan untuk mengirimkan notifikasi darurat SOS dengan prioritas tertinggi.',
@@ -193,6 +216,8 @@ class NotificationManager {
       priority: Priority.high,
       ticker: 'ticker',
       playSound: true,
+      sound: RawResourceAndroidNotificationSound('alarm_sound'),
+      visibility: NotificationVisibility.public,
     );
 
     const NotificationDetails details = NotificationDetails(
@@ -204,6 +229,7 @@ class NotificationManager {
       notification.title,
       notification.body,
       details,
+      payload: jsonEncode(message.data),
     );
   }
 
@@ -242,6 +268,21 @@ class NotificationManager {
       debugPrint('Alarm stopped successfully');
     } catch (e) {
       debugPrint('Failed to stop alarm: $e');
+    }
+  }
+
+  /// Navigates to SosIncomingAlertPage globally
+  static void navigateToSosAlert(Map<String, dynamic> data) {
+    final context = navigatorKey.currentContext;
+    if (context != null && navigatorKey.currentState != null) {
+      navigatorKey.currentState!.push(
+        MaterialPageRoute(
+          builder: (context) => SosIncomingAlertPage(sosData: data),
+        ),
+      );
+    } else {
+      pendingSosData = data;
+      debugPrint('Stashed pending SOS data since navigator is not ready');
     }
   }
 }
