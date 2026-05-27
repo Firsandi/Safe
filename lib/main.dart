@@ -8,7 +8,6 @@ import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/features/auth/presentation/pages/splash_page.dart';
 import 'package:safe/features/auth/data/models/user_model.dart';
 import 'package:safe/features/home/presentation/pages/home_page.dart';
-import 'package:safe/core/services/navigation_service.dart';
 import 'package:safe/core/services/notification_manager.dart';
 
 void main() async {
@@ -29,7 +28,7 @@ class SafeApp extends StatelessWidget {
         builder: (context, locale) {
           return MaterialApp(
             title: 'SAFE App',
-            navigatorKey: NavigationService.navigatorKey,
+            navigatorKey: navigatorKey,
             debugShowCheckedModeBanner: false,
             locale: locale,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -74,7 +73,7 @@ class _AppEntryState extends State<_AppEntry> {
       }
 
       final isLoggedIn = await SessionManager.isLoggedIn();
-      
+
       if (isLoggedIn) {
         final userData = await SessionManager.getUserData();
         if (userData != null) {
@@ -101,9 +100,7 @@ class _AppEntryState extends State<_AppEntry> {
       // Tampilkan layar loading singkat saat cek session
       return const Scaffold(
         backgroundColor: Colors.white,
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
     return _targetPage!;
