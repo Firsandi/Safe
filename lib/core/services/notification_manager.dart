@@ -83,11 +83,12 @@ class NotificationManager {
 
       // Create Android Notification Channel for Emergency
       const AndroidNotificationChannel channel = AndroidNotificationChannel(
-        'emergency_channel_id',
+        'emergency_channel_id_v2',
         'Panggilan Darurat',
         description: 'Digunakan untuk mengirimkan notifikasi darurat SOS dengan prioritas tertinggi.',
         importance: Importance.max,
         playSound: true,
+        sound: RawResourceAndroidNotificationSound('alarm_sound'),
         enableVibration: true,
         enableLights: true,
         showBadge: true,
@@ -164,13 +165,15 @@ class NotificationManager {
     if (notification == null) return;
 
     const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'emergency_channel_id',
+      'emergency_channel_id_v2',
       'Panggilan Darurat',
       channelDescription: 'Digunakan untuk mengirimkan notifikasi darurat SOS dengan prioritas tertinggi.',
       importance: Importance.max,
       priority: Priority.high,
       ticker: 'ticker',
       playSound: true,
+      sound: RawResourceAndroidNotificationSound('alarm_sound'),
+      visibility: NotificationVisibility.public,
     );
 
     const NotificationDetails details = NotificationDetails(
