@@ -9,6 +9,9 @@ import 'package:safe/features/auth/presentation/pages/splash_page.dart';
 import 'package:safe/features/auth/data/models/user_model.dart';
 import 'package:safe/features/home/presentation/pages/home_page.dart';
 import 'package:safe/core/services/notification_manager.dart';
+import 'package:safe/features/emergency/presentation/pages/sos_incoming_alert_page.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +31,7 @@ class SafeApp extends StatelessWidget {
         builder: (context, locale) {
           return MaterialApp(
             title: 'SAFE App',
+            navigatorKey: navigatorKey,
             debugShowCheckedModeBanner: false,
             locale: locale,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -89,6 +93,19 @@ class _AppEntryState extends State<_AppEntry> {
 
       if (mounted) {
         setState(() => _isChecking = false);
+        
+        // Check if there is a pending SOS alert to show
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (NotificationManager.pendingSosData != null) {
+            final data = NotificationManager.pendingSosData!;
+            NotificationManager.pendingSosData = null;
+            navigatorKey.currentState?.push(
+              MaterialPageRoute(
+                builder: (context) => SosIncomingAlertPage(sosData: data),
+              ),
+            );
+          }
+        });
       }
     }
   }
