@@ -8,11 +8,15 @@ import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/features/auth/domain/entities/user_entity.dart';
 import 'package:safe/core/utils/injection.dart';
+import 'package:safe/core/utils/google_auth_helper.dart';
 import 'package:safe/core/utils/session_manager.dart';
 import 'package:safe/features/auth/presentation/pages/login_page.dart';
 import 'package:safe/features/home/presentation/pages/language_page.dart';
 import 'package:safe/features/home/presentation/pages/help_center_page.dart';
 import 'package:safe/l10n/app_localizations.dart';
+import 'package:safe/core/services/location_service.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 
 class ProfilePage extends StatefulWidget {
   final UserEntity user;
@@ -143,6 +147,21 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _pickImage(StateSetter setSheetState, ImageSource source) async {
     final messenger = ScaffoldMessenger.of(context);
+    if (source == ImageSource.camera) {
+      final status = await Permission.camera.request();
+      if (!status.isGranted) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Izin kamera diperlukan untuk mengambil foto.'),
+              backgroundColor: AppColors.primaryRed,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+    }
     try {
       final picker = ImagePicker();
       final XFile? pickedFile = await picker.pickImage(
@@ -432,6 +451,8 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (confirm == true) {
+      LocationService.stopTrackingSos();
+      await GoogleAuthHelper.signOut();
       await SessionManager.clearSession();
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
@@ -672,25 +693,49 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // HEADER BAR (SAFE logo & edit pencil icon button)
+                  // HEADER BAR (Title & Edit Profile Button)
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Image.asset(
-                        'assets/images/logo.png',
-                        height: 48,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.shield, color: AppColors.primaryRed, size: 32),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)!.navProfile,
+                              style: AppTextStyles.heading,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              AppLocalizations.of(context)!.profileDesc,
+                              style: AppTextStyles.subHeading.copyWith(
+                                color: AppColors.textGrey,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      GestureDetector(
-                        onTap: _showEditProfileBottomSheet,
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            shape: BoxShape.circle,
+                      const SizedBox(width: 16),
+                      // Outlined or beautiful compact elevated edit button
+                      ElevatedButton.icon(
+                        onPressed: _showEditProfileBottomSheet,
+                        icon: const Icon(Icons.edit, size: 14, color: Colors.white),
+                        label: Text(
+                          AppLocalizations.of(context)!.editButtonLabel,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
                           ),
-                          child: const Icon(Icons.edit, color: Colors.black87, size: 20),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF193855),
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
                         ),
                       ),
                     ],

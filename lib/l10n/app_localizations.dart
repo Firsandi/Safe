@@ -751,6 +751,630 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select your app language:'**
   String get languageSelect;
+
+  /// No description provided for @helloUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Hello, {name}'**
+  String helloUser(String name);
+
+  /// No description provided for @activeContactsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active'**
+  String activeContactsCount(int count);
+
+  /// No description provided for @sosHistoryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} events'**
+  String sosHistoryCount(int count);
+
+  /// No description provided for @sosActiveBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS ACTIVE'**
+  String get sosActiveBanner;
+
+  /// No description provided for @sendingRealtimeLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending your real-time location...'**
+  String get sendingRealtimeLocation;
+
+  /// No description provided for @turnOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn Off'**
+  String get turnOff;
+
+  /// No description provided for @sosDisabledSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS successfully disabled'**
+  String get sosDisabledSuccess;
+
+  /// No description provided for @sosDisableFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to disable SOS: {error}'**
+  String sosDisableFailed(String error);
+
+  /// No description provided for @permissionRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions Required'**
+  String get permissionRequiredTitle;
+
+  /// No description provided for @permissionRequiredDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'SAFE requires Location and Notification permissions to monitor your safety and send help in emergencies. Without these, the app cannot protect you.'**
+  String get permissionRequiredDesc;
+
+  /// No description provided for @allowPermissionsButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant Permissions'**
+  String get allowPermissionsButton;
+
+  /// No description provided for @openSettingsInstruction.
+  ///
+  /// In en, this message translates to:
+  /// **'If permissions are not granted, please enable them manually in the App Settings.'**
+  String get openSettingsInstruction;
+
+  /// No description provided for @severeShakeDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Severe Shake Detected'**
+  String get severeShakeDetected;
+
+  /// No description provided for @fallDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Fall Detected'**
+  String get fallDetected;
+
+  /// No description provided for @crashImpactDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Crash & Impact Detected'**
+  String get crashImpactDetected;
+
+  /// No description provided for @severeImpactDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Severe Impact Detected'**
+  String get severeImpactDetected;
+
+  /// No description provided for @impactForceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'IMPACT FORCE'**
+  String get impactForceLabel;
+
+  /// No description provided for @locationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'LOCATION'**
+  String get locationLabel;
+
+  /// No description provided for @connectionIssuesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection Issues'**
+  String get connectionIssuesTitle;
+
+  /// No description provided for @connectionIssuesDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to send SOS due to connection issues. Your SOS is saved in the offline queue and will sync automatically when your connection is restored.\n\nPlease contact emergency services or your contacts manually if possible.'**
+  String get connectionIssuesDesc;
+
+  /// No description provided for @profileDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage your personal details and medical history.'**
+  String get profileDesc;
+
+  /// No description provided for @editButtonLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get editButtonLabel;
+
+  /// No description provided for @historySosDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive of sent and received SOS signals.'**
+  String get historySosDesc;
+
+  /// No description provided for @historyTabSent.
+  ///
+  /// In en, this message translates to:
+  /// **'My SOS'**
+  String get historyTabSent;
+
+  /// No description provided for @historyTabReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS Received'**
+  String get historyTabReceived;
+
+  /// No description provided for @historyNoSent.
+  ///
+  /// In en, this message translates to:
+  /// **'You have never sent an SOS signal.'**
+  String get historyNoSent;
+
+  /// No description provided for @historyNoReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'No incoming SOS signals from your contacts yet.'**
+  String get historyNoReceived;
+
+  /// No description provided for @triggerAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Detection'**
+  String get triggerAuto;
+
+  /// No description provided for @triggerManual.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual Trigger'**
+  String get triggerManual;
+
+  /// No description provided for @phoneLabelAbbr.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone:'**
+  String get phoneLabelAbbr;
+
+  /// No description provided for @historyLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load history'**
+  String get historyLoadFailed;
+
+  /// No description provided for @addContactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Emergency Contact'**
+  String get addContactTitle;
+
+  /// No description provided for @addContactDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by phone number or email. Only registered users can be added.'**
+  String get addContactDesc;
+
+  /// No description provided for @addContactInputLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'PHONE NUMBER / EMAIL'**
+  String get addContactInputLabel;
+
+  /// No description provided for @addContactInputHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. 08123456789 or email@safe.com'**
+  String get addContactInputHint;
+
+  /// No description provided for @addContactSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'SEARCH RESULTS'**
+  String get addContactSearchResults;
+
+  /// No description provided for @addContactInitialHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter phone number or email to search'**
+  String get addContactInitialHint;
+
+  /// No description provided for @addContactNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'User not found'**
+  String get addContactNotFound;
+
+  /// No description provided for @addContactNotFoundDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'This contact is not registered on SAFE yet. Only registered users can be added.'**
+  String get addContactNotFoundDesc;
+
+  /// No description provided for @addContactButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get addContactButton;
+
+  /// No description provided for @addContactConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Contact'**
+  String get addContactConfirmTitle;
+
+  /// No description provided for @addContactConfirmDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {name} as an emergency contact?'**
+  String addContactConfirmDesc(String name);
+
+  /// No description provided for @addContactSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact request successfully sent to {name}!'**
+  String addContactSuccess(String name);
+
+  /// No description provided for @addContactFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to add contact. Please try again.'**
+  String get addContactFailed;
+
+  /// No description provided for @statusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE'**
+  String get statusActive;
+
+  /// No description provided for @statusResolved.
+  ///
+  /// In en, this message translates to:
+  /// **'RESOLVED'**
+  String get statusResolved;
+
+  /// No description provided for @statusFalseAlarm.
+  ///
+  /// In en, this message translates to:
+  /// **'FALSE ALARM'**
+  String get statusFalseAlarm;
+
+  /// No description provided for @noHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'No history'**
+  String get noHistory;
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} Selected'**
+  String notificationsSelected(int count);
+
+  /// No description provided for @deselectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Deselect all'**
+  String get deselectAll;
+
+  /// No description provided for @selectAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Select all'**
+  String get selectAll;
+
+  /// No description provided for @deleteSelectedTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete selected'**
+  String get deleteSelectedTooltip;
+
+  /// No description provided for @selectNotificationsTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Select notifications'**
+  String get selectNotificationsTooltip;
+
+  /// No description provided for @markAllAsReadTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark all as read'**
+  String get markAllAsReadTooltip;
+
+  /// No description provided for @deleteAllTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete all'**
+  String get deleteAllTooltip;
+
+  /// No description provided for @deleteNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Notification'**
+  String get deleteNotificationTitle;
+
+  /// No description provided for @deleteSelectedConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete {count} selected notifications?'**
+  String deleteSelectedConfirm(int count);
+
+  /// No description provided for @selectedDeletedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected notifications successfully deleted'**
+  String get selectedDeletedSuccess;
+
+  /// No description provided for @allMarkedReadSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'All notifications marked as read'**
+  String get allMarkedReadSuccess;
+
+  /// No description provided for @deleteAllNotificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete All Notifications'**
+  String get deleteAllNotificationsTitle;
+
+  /// No description provided for @deleteAllNotificationsConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete all notification history?'**
+  String get deleteAllNotificationsConfirm;
+
+  /// No description provided for @allNotificationsDeletedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'All notifications successfully deleted'**
+  String get allNotificationsDeletedSuccess;
+
+  /// No description provided for @notificationDeletedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification successfully deleted'**
+  String get notificationDeletedSuccess;
+
+  /// No description provided for @timeJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get timeJustNow;
+
+  /// No description provided for @timeMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} minutes ago'**
+  String timeMinutesAgo(int count);
+
+  /// No description provided for @timeHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hours ago'**
+  String timeHoursAgo(int count);
+
+  /// No description provided for @timeYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get timeYesterday;
+
+  /// No description provided for @timeDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days ago'**
+  String timeDaysAgo(int count);
+
+  /// No description provided for @noNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'No Notifications'**
+  String get noNotifications;
+
+  /// No description provided for @noNotificationsDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'All incoming notifications related to SOS and emergency contacts will be shown here.'**
+  String get noNotificationsDesc;
+
+  /// No description provided for @notificationListHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification List'**
+  String get notificationListHeader;
+
+  /// No description provided for @sortOldest.
+  ///
+  /// In en, this message translates to:
+  /// **'Oldest'**
+  String get sortOldest;
+
+  /// No description provided for @sortNewest.
+  ///
+  /// In en, this message translates to:
+  /// **'Newest'**
+  String get sortNewest;
+
+  /// No description provided for @locationPageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Live Location'**
+  String get locationPageTitle;
+
+  /// No description provided for @locationPageSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your emergency contacts'**
+  String get locationPageSubtitle;
+
+  /// No description provided for @searchContactHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search contacts...'**
+  String get searchContactHint;
+
+  /// No description provided for @distanceCalculating.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating distance'**
+  String get distanceCalculating;
+
+  /// No description provided for @locationNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Location not available'**
+  String get locationNotAvailable;
+
+  /// No description provided for @unknownUpdateTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown update time'**
+  String get unknownUpdateTime;
+
+  /// No description provided for @justNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get justNow;
+
+  /// No description provided for @minutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} minutes ago'**
+  String minutesAgo(int count);
+
+  /// No description provided for @positionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Position:'**
+  String get positionLabel;
+
+  /// No description provided for @updatedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated:'**
+  String get updatedLabel;
+
+  /// No description provided for @gpsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to get GPS location'**
+  String get gpsFailed;
+
+  /// No description provided for @routeDownloadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to download route'**
+  String get routeDownloadFailed;
+
+  /// No description provided for @emergencyHistoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SOS History'**
+  String get emergencyHistoryTitle;
+
+  /// No description provided for @sosHistoryReceivedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Incoming emergency signal'**
+  String get sosHistoryReceivedSubtitle;
+
+  /// No description provided for @sosHistorySentSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent emergency signal'**
+  String get sosHistorySentSubtitle;
+
+  /// No description provided for @contactPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Emergency contact'**
+  String get contactPlaceholder;
+
+  /// No description provided for @openGoogleMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Google Maps'**
+  String get openGoogleMaps;
+
+  /// No description provided for @phoneNumberPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone:'**
+  String get phoneNumberPrefix;
+
+  /// No description provided for @searchingLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching location...'**
+  String get searchingLocation;
+
+  /// No description provided for @yourLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Your location'**
+  String get yourLocation;
+
+  /// No description provided for @receiverEmergencyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'EMERGENCY'**
+  String get receiverEmergencyTitle;
+
+  /// No description provided for @receiverEmergencySub.
+  ///
+  /// In en, this message translates to:
+  /// **'Immediate assistance required'**
+  String get receiverEmergencySub;
+
+  /// No description provided for @receiverViewLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'View Location'**
+  String get receiverViewLocation;
+
+  /// No description provided for @receiverCallNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Call Now'**
+  String get receiverCallNow;
+
+  /// No description provided for @receiverCalculatingDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating distance...'**
+  String get receiverCalculatingDistance;
+
+  /// No description provided for @receiverDistanceText.
+  ///
+  /// In en, this message translates to:
+  /// **'± {distance} km from you'**
+  String receiverDistanceText(Object distance);
+
+  /// No description provided for @receiverLocationUnreachable.
+  ///
+  /// In en, this message translates to:
+  /// **'Location unreachable'**
+  String get receiverLocationUnreachable;
+
+  /// No description provided for @receiverSearchingLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching location...'**
+  String get receiverSearchingLocation;
+
+  /// No description provided for @receiverSomeone.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone'**
+  String get receiverSomeone;
+
+  /// No description provided for @cancelSos.
+  ///
+  /// In en, this message translates to:
+  /// **'CANCEL'**
+  String get cancelSos;
 }
 
 class _AppLocalizationsDelegate

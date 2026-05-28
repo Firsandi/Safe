@@ -19,6 +19,13 @@ import 'package:safe/features/emergency/presentation/bloc/emergency_cubit.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/features/auth/presentation/pages/profile_page.dart';
 import 'package:safe/l10n/app_localizations.dart';
+import 'package:safe/core/services/notification_local_service.dart';
+import 'package:safe/features/home/presentation/pages/notification_page.dart';
+import 'package:safe/features/home/presentation/pages/location_page.dart';
+import 'package:safe/features/home/presentation/pages/language_page.dart';
+import 'package:safe/features/home/presentation/pages/help_center_page.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:geolocator/geolocator.dart';
 
 class HomePage extends StatefulWidget {
   final UserEntity user;
@@ -49,26 +56,332 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   // Real-time Statistics
   int _activeContactsCount = 0;
   int _sosHistoryCount = 0;
+  int _unreadNotificationCount = 0;
+  int _historyInitialTabIndex = 0;
+  int _contactsInitialTabIndex = 0;
+  StreamSubscription<int>? _unreadNotificationsSubscription;
+
+  // Permissions check state
+  bool _hasLocationPermission = true;
+  bool _hasNotificationPermission = true;
+  bool _checkingPermissions = true;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _checkPermissionsState().then((_) {
+      if (mounted && (!_hasLocationPermission || !_hasNotificationPermission)) {
+        _requestPermissions();
+      }
+    });
+
     Future.delayed(const Duration(milliseconds: 200), () {
       if (mounted) setState(() => _isInit = true);
     });
     _startSensorMonitoring();
     _loadStats();
+    _loadUnreadNotificationCount();
+    _syncNotificationsFromServer();
+    _unreadNotificationsSubscription = NotificationLocalService.unreadCountStream.listen((count) {
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = count;
+        });
+      }
+    });
+    _syncActiveSosState(); // Check and synchronize active SOS event
 
     // Register callback for background sync success
     OfflineSyncService.onSyncSuccess = () {
       if (mounted) {
         setState(() {});
         _loadStats();
+        _loadUnreadNotificationCount();
       }
     };
     // Start background sync loop
     OfflineSyncService.startSyncLoop(context);
+  }
+
+  Future<void> _loadUnreadNotificationCount() async {
+    try {
+      final count = await NotificationLocalService.getUnreadCount();
+      if (mounted) {
+        setState(() {
+          _unreadNotificationCount = count;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _navigateToNotifications() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const NotificationPage()),
+    );
+
+    _loadUnreadNotificationCount();
+
+    if (result != null && result is Map) {
+      final action = result['action'];
+      if (action == 'go_to_history') {
+        final tabIndex = result['tab'] ?? 0;
+        setState(() {
+          _currentIndex = 2; // Riwayat SOS
+          _historyInitialTabIndex = tabIndex;
+        });
+      } else if (action == 'go_to_contacts') {
+        final tabIndex = result['tab'] ?? 0;
+        setState(() {
+          _currentIndex = 1; // Kontak darurat
+          _contactsInitialTabIndex = tabIndex;
+        });
+      }
+    }
+  }
+
+  void _showSettingsBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 48,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    l10n.settings,
+                    style: AppTextStyles.heading.copyWith(fontSize: 18),
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F5FA),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.language, color: Color(0xFF193855)),
+                    ),
+                    title: Text(
+                      l10n.settingsLanguage,
+                      style: AppTextStyles.subHeading.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      l10n.settingsLanguageSub,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LanguagePage()),
+                      );
+                    },
+                  ),
+                  const Divider(height: 20),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F5FA),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.help_outline, color: Color(0xFF193855)),
+                    ),
+                    title: Text(
+                      l10n.settingsHelp,
+                      style: AppTextStyles.subHeading.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      l10n.settingsHelpSub,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const HelpCenterPage()),
+                      );
+                    },
+                  ),
+                  const Divider(height: 20),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEE2E2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.info_outline, color: AppColors.primaryRed),
+                    ),
+                    title: Text(
+                      Localizations.localeOf(context).languageCode == 'en'
+                          ? 'About SAFE'
+                          : 'Tentang SAFE',
+                      style: AppTextStyles.subHeading.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      Localizations.localeOf(context).languageCode == 'en'
+                          ? 'Application details and system info'
+                          : 'Detail aplikasi dan info sistem',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showAboutDialog(context);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAboutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final isEn = Localizations.localeOf(context).languageCode == 'en';
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            isEn ? 'About SAFE' : 'Tentang SAFE',
+            style: AppTextStyles.heading.copyWith(fontSize: 18),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.shield_outlined,
+                size: 64,
+                color: AppColors.primaryRed,
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'SAFE App',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: Color(0xFF193855),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'v1.0.0 (Tactical Build)',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                isEn
+                    ? 'SAFE is a secure, real-time emergency monitoring system equipped with automated impact detection and offline cueing logic.'
+                    : 'SAFE adalah sistem pemantauan darurat real-time aman yang dilengkapi dengan deteksi benturan otomatis dan logika antrean offline.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[800],
+                  height: 1.4,
+                ),
+              ),
+              const Divider(height: 32),
+              Text(
+                '© 2026 SAFE Project. All Rights Reserved.',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey[500],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                isEn ? 'Close' : 'Tutup',
+                style: const TextStyle(
+                  color: Color(0xFF193855),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _syncActiveSosState() async {
+    try {
+      final dio = sl<Dio>();
+      final response = await dio.get('/api/sos/active');
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        if (data['active'] == true && data['sos_id'] != null) {
+          final sosId = data['sos_id'].toString();
+          await LocationService.saveActiveSosId(sosId);
+          LocationService.startTrackingSos(sosId);
+        } else {
+          await LocationService.saveActiveSosId(null);
+          LocationService.stopTrackingSos();
+        }
+      }
+    } catch (e) {
+      // Offline fallback: load local persisted state
+      await LocationService.loadActiveSosId();
+      if (LocationService.activeSosId != null) {
+        LocationService.startTrackingSos(LocationService.activeSosId!);
+      }
+    }
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _loadStats() async {
@@ -96,8 +409,78 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     }
   }
 
+  Future<void> _syncNotificationsFromServer() async {
+    try {
+      final dio = sl<Dio>();
+      
+      // Parallel fetches for sync
+      final results = await Future.wait([
+        dio.get('/api/contacts/requests'),
+        dio.get('/api/sos/history/received'),
+      ]);
+      
+      final requestsData = results[0].data['requests'] as List?;
+      final receivedSosData = results[1].data as List?;
+      
+      final List<LocalNotification> newNotifs = [];
+
+      if (requestsData != null && requestsData.isNotEmpty) {
+        final notifications = await NotificationLocalService.loadNotifications();
+        for (final req in requestsData) {
+          final reqId = req['id']?.toString() ?? '';
+          if (reqId.isEmpty) continue;
+          final notifId = 'contact_req_$reqId';
+          final exists = notifications.any((n) => n.id == notifId);
+          if (!exists) {
+            newNotifs.add(LocalNotification(
+              id: notifId,
+              title: 'Permintaan Kontak Darurat',
+              body: '${req['name'] ?? 'Seseorang'} ingin menambahkan Anda sebagai kontak darurat.',
+              type: 'contact_request',
+              timestamp: DateTime.now(),
+              isRead: false,
+            ));
+          }
+        }
+      }
+      
+      if (receivedSosData != null && receivedSosData.isNotEmpty) {
+        final notifications = await NotificationLocalService.loadNotifications();
+        for (final item in receivedSosData) {
+          final sosId = item['sos_id']?.toString() ?? '';
+          if (sosId.isEmpty) continue;
+          final notifId = 'sos_event_$sosId';
+          final exists = notifications.any((n) => n.id == notifId);
+          if (!exists) {
+             final title = item['trigger_type'] == 'auto'
+                ? 'EMERGENCY: BENTURAN/KECELAKAAN TERDETEKSI!'
+                : 'EMERGENCY: BUTUH BANTUAN SEGERA!';
+            final name = item['user_name'] ?? item['name'] ?? 'Seseorang';
+            final triggerLabel = item['trigger_type'] == 'auto' ? 'Sensor Otomatis' : 'Manual';
+            
+            newNotifs.add(LocalNotification(
+              id: notifId,
+              title: title,
+              body: '$name mengalami keadaan darurat ($triggerLabel)! Segera periksa lokasi.',
+              type: 'sos_alert',
+              timestamp: DateTime.tryParse(item['created_at'] ?? '') ?? DateTime.now(),
+              isRead: false,
+              payload: Map<String, dynamic>.from(item),
+            ));
+          }
+        }
+      }
+
+      if (newNotifs.isNotEmpty) {
+        await NotificationLocalService.saveNotifications(newNotifs);
+      }
+    } catch (_) {}
+  }
+
   @override
   void dispose() {
+    _unreadNotificationsSubscription?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     _accelerometerSub?.cancel();
     _gyroscopeSub?.cancel();
     OfflineSyncService.onSyncSuccess = null;
@@ -139,8 +522,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             _shakeCount++;
             if (_shakeCount >= 4) {
               _shakeCount = 0;
+              if (!mounted) return;
               _triggerEmergencyFromSensor(
-                reason: "Guncangan Keras Terdeteksi",
+                reason: AppLocalizations.of(context)?.severeShakeDetected ?? "Severe Shake Detected",
                 force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
               );
             }
@@ -166,8 +550,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         if (_freefallDetected && _freefallTime != null) {
           if (now.difference(_freefallTime!) < const Duration(milliseconds: 1000)) {
             _freefallDetected = false;
+            if (!mounted) return;
             _triggerEmergencyFromSensor(
-              reason: "Jatuh Terdeteksi",
+              reason: AppLocalizations.of(context)?.fallDetected ?? "Fall Detected",
               force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
             );
             return;
@@ -176,8 +561,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
 
         // 2. Tumbling/Crash: high rotation rate (gyroscope) combined with high impact force
         if (_lastRotationRate > 7.0) {
+          if (!mounted) return;
           _triggerEmergencyFromSensor(
-            reason: "Tabrakan & Benturan Terdeteksi",
+            reason: AppLocalizations.of(context)?.crashImpactDetected ?? "Crash & Impact Detected",
             force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
           );
           return;
@@ -185,8 +571,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
 
         // 3. Direct Severe Impact: extremely high acceleration force (>3.5 G)
         if (magnitude > 35.0) {
+          if (!mounted) return;
           _triggerEmergencyFromSensor(
-            reason: "Benturan Keras Terdeteksi",
+            reason: AppLocalizations.of(context)?.severeImpactDetected ?? "Severe Impact Detected",
             force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
           );
           return;
@@ -222,12 +609,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       case 1:
         return BlocProvider(
           create: (_) => sl<EmergencyCubit>(),
-          child: const EmergencyContactsPage(),
+          child: EmergencyContactsPage(
+            initialTabIndex: _contactsInitialTabIndex,
+            key: ValueKey('contacts_page_$_contactsInitialTabIndex'),
+          ),
         );
       case 2:
-        return const EmergencyHistoryPage();
+        return EmergencyHistoryPage(
+          initialTabIndex: _historyInitialTabIndex,
+          key: ValueKey('history_page_$_historyInitialTabIndex'),
+        );
       case 3:
-        return _buildPlaceholderPage(AppLocalizations.of(context)!.locationTitle, Icons.location_on_outlined);
+        return const LocationPage();
       case 4:
         return ProfilePage(user: widget.user);
       default:
@@ -235,32 +628,37 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     }
   }
 
-  Widget _buildPlaceholderPage(String title, IconData icon) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 64, color: AppColors.textGrey),
-          const SizedBox(height: 16),
-          Text(title, style: AppTextStyles.heading.copyWith(color: AppColors.textDark)),
-          const SizedBox(height: 8),
-          Text(AppLocalizations.of(context)!.notAvailableYet,
-            style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14)),
-        ],
-      ),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
+    if (_checkingPermissions) {
+      return const Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primaryRed),
+        ),
+      );
+    }
+
+    if (!_hasLocationPermission || !_hasNotificationPermission) {
+      return _buildPermissionRequestScreen();
+    }
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       bottomNavigationBar: SafeNavbar(
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() => _currentIndex = index);
+          setState(() {
+            _currentIndex = index;
+            if (index == 2) {
+              _historyInitialTabIndex = 0; // reset to default tab
+            }
+          });
           if (index == 0) {
             _loadStats();
+            _loadUnreadNotificationCount();
           }
         },
       ),
@@ -282,8 +680,44 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 Image.asset('assets/images/logo.png', height: 50,
                   errorBuilder: (c, e, s) => const Icon(Icons.shield, color: AppColors.primaryRed, size: 34)),
                 Row(children: [
-                  IconButton(icon: const Icon(Icons.notifications_none, color: AppColors.textDark), onPressed: () {}),
-                  IconButton(icon: const Icon(Icons.settings_outlined, color: AppColors.textDark), onPressed: () {}),
+                  IconButton(
+                    icon: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        const Icon(Icons.notifications_none, color: AppColors.textDark),
+                        if (_unreadNotificationCount > 0)
+                          Positioned(
+                            right: -2,
+                            top: -2,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: AppColors.primaryRed,
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: const BoxConstraints(
+                                minWidth: 16,
+                                minHeight: 16,
+                              ),
+                              child: Text(
+                                '$_unreadNotificationCount',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    onPressed: _navigateToNotifications,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.settings_outlined, color: AppColors.textDark),
+                    onPressed: () => _showSettingsBottomSheet(context),
+                  ),
                 ]),
               ],
             ),
@@ -301,7 +735,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Halo, ${widget.user.name}',
+                    AppLocalizations.of(context)!.helloUser(widget.user.name),
                     style: AppTextStyles.heading.copyWith(
                       color: AppColors.primaryRed,
                       fontSize: 24,
@@ -322,7 +756,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                         const BreathingDot(),
                         const SizedBox(width: 8),
                         Text(
-                          'Sensor Aktif — memantau',
+                          AppLocalizations.of(context)!.sensorActive,
                           style: AppTextStyles.inputLabel.copyWith(
                             color: AppColors.textGrey,
                             fontWeight: FontWeight.bold,
@@ -359,8 +793,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 children: [
                   Expanded(
                     child: _buildMenuCard(
-                      title: 'Kontak darurat',
-                      subtitle: '$_activeContactsCount aktif',
+                      title: AppLocalizations.of(context)!.emergencyContactsTitle,
+                      subtitle: AppLocalizations.of(context)!.activeContactsCount(_activeContactsCount),
                       subtitleColor: AppColors.primaryRed,
                       icon: Icons.contact_phone_outlined,
                       iconBgColor: const Color(0xFFEDF4FE),
@@ -373,14 +807,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                   const SizedBox(width: 16),
                   Expanded(
                     child: _buildMenuCard(
-                      title: 'Riwayat SOS',
-                      subtitle: '$_sosHistoryCount kejadian',
+                      title: AppLocalizations.of(context)!.historySos,
+                      subtitle: AppLocalizations.of(context)!.sosHistoryCount(_sosHistoryCount),
                       subtitleColor: AppColors.textDark,
                       icon: Icons.history,
                       iconBgColor: AppColors.primaryRed.withOpacity(0.1),
                       iconColor: AppColors.primaryRed,
                       onTap: () {
-                        setState(() => _currentIndex = 2);
+                        setState(() {
+                          _currentIndex = 2;
+                          _historyInitialTabIndex = 0; // reset to default tab
+                        });
                       },
                     ),
                   ),
@@ -401,52 +838,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 decoration: BoxDecoration(
                   color: Colors.blueGrey[800],
                   borderRadius: BorderRadius.circular(16),
-                ),
-                child: Stack(
-                  children: [
-                    // Mock Map Pattern via CustomPaint
-                    Positioned.fill(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: CustomPaint(
-                          painter: const MockMapPainter(),
-                        ),
-                      ),
-                    ),
-                    // Location Badge Overlay
-                    Positioned(
-                      bottom: 16,
-                      left: 16,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.location_on_outlined, color: AppColors.textDark, size: 16),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Sumbersari, Jember',
-                              style: AppTextStyles.subHeading.copyWith(
-                                color: AppColors.textDark,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ],
+                ),
+                child: const ClipRRect(
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                  child: CustomPaint(
+                    painter: MockMapPainter(),
+                  ),
                 ),
               ),
             ),
@@ -560,7 +964,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'SOS AKTIF',
+                  AppLocalizations.of(context)!.sosActiveBanner,
                   style: AppTextStyles.subHeading.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -569,7 +973,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Mengirimkan lokasi real-time Anda...',
+                  AppLocalizations.of(context)!.sendingRealtimeLocation,
                   style: AppTextStyles.subHeading.copyWith(
                     color: Colors.white.withOpacity(0.9),
                     fontSize: 12,
@@ -588,7 +992,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
             child: Text(
-              'Matikan',
+              AppLocalizations.of(context)!.turnOff,
               style: AppTextStyles.subHeading.copyWith(
                 color: const Color(0xFFEF4444),
                 fontWeight: FontWeight.bold,
@@ -627,9 +1031,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         _loadStats();
         
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('SOS berhasil dinonaktifkan'),
-            backgroundColor: Color(0xFF10B981),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.sosDisabledSuccess),
+            backgroundColor: const Color(0xFF10B981),
           ),
         );
       }
@@ -638,7 +1042,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Gagal menonaktifkan SOS: ${e.toString()}'),
+            content: Text(AppLocalizations.of(context)!.sosDisableFailed(e.toString())),
             backgroundColor: AppColors.primaryRed,
           ),
         );
@@ -655,6 +1059,272 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     if (result == 'cancelled') {
       _crashDetection.startCooldown();
     }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkPermissionsState();
+    }
+  }
+
+  Future<void> _checkPermissionsState() async {
+    try {
+      // 1. Cek izin lokasi (tanpa mengharuskan GPS aktif)
+      final locPermission = await Geolocator.checkPermission();
+      final locGranted = locPermission == LocationPermission.always ||
+          locPermission == LocationPermission.whileInUse;
+
+      // 2. Cek izin notifikasi
+      final settings = await FirebaseMessaging.instance.getNotificationSettings();
+      final notifGranted = settings.authorizationStatus == AuthorizationStatus.authorized ||
+          settings.authorizationStatus == AuthorizationStatus.provisional;
+
+      if (mounted) {
+        setState(() {
+          _hasLocationPermission = locGranted;
+          _hasNotificationPermission = notifGranted;
+          _checkingPermissions = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _checkingPermissions = false);
+      }
+    }
+  }
+
+  Future<void> _requestPermissions() async {
+    // 1. Minta izin lokasi secara langsung via Geolocator
+    var locPermissionStatus = await Geolocator.checkPermission();
+    if (locPermissionStatus == LocationPermission.denied) {
+      locPermissionStatus = await Geolocator.requestPermission();
+    }
+    
+    // 2. Minta izin notifikasi
+    final messaging = FirebaseMessaging.instance;
+    final settings = await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+      criticalAlert: true,
+    );
+    final notifGranted = settings.authorizationStatus == AuthorizationStatus.authorized ||
+        settings.authorizationStatus == AuthorizationStatus.provisional;
+
+    // Jika ditolak secara permanen, arahkan ke pengaturan aplikasi
+    if (locPermissionStatus == LocationPermission.deniedForever) {
+      await Geolocator.openAppSettings();
+    } else if (!notifGranted) {
+      final currentSettings = await FirebaseMessaging.instance.getNotificationSettings();
+      if (currentSettings.authorizationStatus == AuthorizationStatus.denied) {
+        await Geolocator.openAppSettings();
+      }
+    }
+
+    await _checkPermissionsState();
+  }
+
+  Widget _buildPermissionRequestScreen() {
+    final l10n = AppLocalizations.of(context)!;
+    return Scaffold(
+      backgroundColor: AppColors.backgroundLight,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Spacer(),
+              // Premium Concentric Circles with Shield Icon
+              Center(
+                child: SizedBox(
+                  height: 220,
+                  width: 220,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Outer circle 1
+                      Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.inputBorder.withOpacity(0.4), width: 1.5),
+                        ),
+                      ),
+                      // Outer circle 2
+                      Container(
+                        width: 170,
+                        height: 170,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.inputBorder.withOpacity(0.8), width: 1.5),
+                        ),
+                      ),
+                      // Glowing center circle
+                      Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryRed,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primaryRed.withOpacity(0.35),
+                              blurRadius: 30,
+                              spreadRadius: 8,
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.security_outlined,
+                            color: Colors.white,
+                            size: 52,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 36),
+              // Title
+              Text(
+                l10n.permissionRequiredTitle,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.heading.copyWith(
+                  color: AppColors.textDark,
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 14),
+              // Description
+              Text(
+                l10n.permissionRequiredDesc,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.subHeading.copyWith(
+                  color: AppColors.textGrey,
+                  fontSize: 14,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
+              // List of permissions missing
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                decoration: BoxDecoration(
+                  color: AppColors.inputBackground,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.inputBorder, width: 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _buildPermissionStatusRow(
+                      icon: Icons.location_on_outlined,
+                      title: l10n.locationTitle,
+                      isGranted: _hasLocationPermission,
+                    ),
+                    Divider(height: 28, color: AppColors.inputBorder.withOpacity(0.6)),
+                    _buildPermissionStatusRow(
+                      icon: Icons.notifications_none_outlined,
+                      title: l10n.notificationsTitle,
+                      isGranted: _hasNotificationPermission,
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              // Instruction
+              Text(
+                l10n.openSettingsInstruction,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.footer.copyWith(
+                  color: AppColors.textGrey,
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Button
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: _requestPermissions,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryRed,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    elevation: 3,
+                    shadowColor: AppColors.primaryRed.withOpacity(0.3),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        l10n.allowPermissionsButton,
+                        style: AppTextStyles.buttonPrimary,
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.arrow_forward_rounded, size: 20),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPermissionStatusRow({
+    required IconData icon,
+    required String title,
+    required bool isGranted,
+  }) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isGranted ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            icon,
+            color: isGranted ? const Color(0xFF2E7D32) : AppColors.primaryRed,
+            size: 22,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Text(
+            title,
+            style: AppTextStyles.subHeading.copyWith(
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+              color: AppColors.textDark,
+            ),
+          ),
+        ),
+        Icon(
+          isGranted ? Icons.check_circle_rounded : Icons.cancel_rounded,
+          color: isGranted ? const Color(0xFF2E7D32) : AppColors.primaryRed,
+          size: 24,
+        ),
+      ],
+    );
   }
 }
 

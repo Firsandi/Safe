@@ -8,6 +8,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/injection.dart';
 import '../../domain/entities/contact_entity.dart';
 import '../bloc/emergency_cubit.dart';
+import 'package:safe/l10n/app_localizations.dart';
 
 class AddContactPage extends StatefulWidget {
   const AddContactPage({super.key});
@@ -53,12 +54,6 @@ class _AddContactPageState extends State<AddContactPage> {
           icon: const Icon(Icons.arrow_back, color: AppColors.textDark),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Image.asset(
-          'assets/images/logo.png',
-          height: 48,
-          errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.shield, color: AppColors.primaryRed, size: 32),
-        ),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,10 +64,10 @@ class _AddContactPageState extends State<AddContactPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Tambah Kontak Darurat', style: AppTextStyles.heading),
+                Text(AppLocalizations.of(context)!.addContactTitle, style: AppTextStyles.heading),
                 const SizedBox(height: 8),
                 Text(
-                  'Cari berdasarkan nomor telepon atau email. Hanya pengguna yang sudah terdaftar yang dapat ditambahkan.',
+                  AppLocalizations.of(context)!.addContactDesc,
                   style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
                 ),
               ],
@@ -86,7 +81,7 @@ class _AddContactPageState extends State<AddContactPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('NOMOR TELEPON / EMAIL', style: AppTextStyles.inputLabel),
+                Text(AppLocalizations.of(context)!.addContactInputLabel, style: AppTextStyles.inputLabel),
                 const SizedBox(height: 8),
                 Row(
                   children: [
@@ -110,7 +105,7 @@ class _AddContactPageState extends State<AddContactPage> {
                           },
                           onSubmitted: (_) => _onSearch(),
                           decoration: InputDecoration(
-                            hintText: 'Contoh: 08123456789 atau email@safe.com',
+                            hintText: AppLocalizations.of(context)!.addContactInputHint,
                             hintStyle: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -148,7 +143,7 @@ class _AddContactPageState extends State<AddContactPage> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Text(
-                      'HASIL PENCARIAN',
+                      AppLocalizations.of(context)!.addContactSearchResults,
                       style: AppTextStyles.inputLabel.copyWith(
                         color: AppColors.inputIconGrey,
                         fontSize: 10,
@@ -189,6 +184,7 @@ class _AddContactPageState extends State<AddContactPage> {
   }
 
   Widget _buildInitialHint() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -196,7 +192,7 @@ class _AddContactPageState extends State<AddContactPage> {
           Icon(Icons.search, size: 48, color: AppColors.textGrey.withOpacity(0.3)),
           const SizedBox(height: 16),
           Text(
-            'Masukkan nomor telepon atau email untuk mencari',
+            l10n.addContactInitialHint,
             style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
           ),
         ],
@@ -205,6 +201,7 @@ class _AddContactPageState extends State<AddContactPage> {
   }
 
   Widget _buildNotFoundState() {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -219,7 +216,7 @@ class _AddContactPageState extends State<AddContactPage> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Pengguna tidak ditemukan',
+            l10n.addContactNotFound,
             style: AppTextStyles.subHeading.copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.textDark,
@@ -230,7 +227,7 @@ class _AddContactPageState extends State<AddContactPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
-              'Kontak ini belum terdaftar di aplikasi SAFE. Hanya pengguna terdaftar yang bisa ditambahkan.',
+              l10n.addContactNotFoundDesc,
               textAlign: TextAlign.center,
               style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 13),
             ),
@@ -318,7 +315,13 @@ class _AddContactPageState extends State<AddContactPage> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            user.status.isNotEmpty ? user.status : 'Tambah',
+                            user.status.isNotEmpty
+                                ? (user.status == 'Tersambung'
+                                    ? AppLocalizations.of(context)!.connected
+                                    : (user.status == 'Menunggu Konfirmasi'
+                                        ? AppLocalizations.of(context)!.pending
+                                        : user.status))
+                                : AppLocalizations.of(context)!.addContactButton,
                             style: AppTextStyles.subHeading.copyWith(
                               color: isAlreadyAdded ? Colors.grey[600] : Colors.white,
                               fontSize: 12,
@@ -339,19 +342,20 @@ class _AddContactPageState extends State<AddContactPage> {
   }
 
   void _confirmAddContact(ContactEntity user) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Tambah Kontak', style: AppTextStyles.heading.copyWith(fontSize: 18)),
+        title: Text(l10n.addContactConfirmTitle, style: AppTextStyles.heading.copyWith(fontSize: 18)),
         content: Text(
-          'Tambahkan ${user.name} sebagai kontak darurat?',
+          l10n.addContactConfirmDesc(user.name),
           style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text('Batal', style: TextStyle(color: AppColors.textGrey)),
+            child: Text(l10n.cancel, style: TextStyle(color: AppColors.textGrey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -362,7 +366,7 @@ class _AddContactPageState extends State<AddContactPage> {
               Navigator.pop(dialogContext); // close confirm dialog
               _addContactRemote(user); // perform API call
             },
-            child: const Text('Tambah', style: TextStyle(color: Colors.white)),
+            child: Text(l10n.addContactButton, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -396,7 +400,7 @@ class _AddContactPageState extends State<AddContactPage> {
           Navigator.pop(context); // Go back to emergency page
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Permintaan kontak berhasil dikirim ke ${user.name}!'),
+              content: Text(AppLocalizations.of(context)!.addContactSuccess(user.name)),
               backgroundColor: const Color(0xFF22C55E),
               behavior: SnackBarBehavior.floating,
             ),
@@ -422,8 +426,8 @@ class _AddContactPageState extends State<AddContactPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Gagal menambahkan kontak. Silakan coba lagi.'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.addContactFailed),
             backgroundColor: AppColors.primaryRed,
             behavior: SnackBarBehavior.floating,
           ),

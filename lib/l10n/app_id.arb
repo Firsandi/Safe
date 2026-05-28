@@ -127,5 +127,194 @@
   "enterFullName": "Masukkan nama lengkap",
   
   "languageTitle": "Pilih Bahasa",
-  "languageSelect": "Pilih bahasa aplikasi Anda:"
+  "languageSelect": "Pilih bahasa aplikasi Anda:",
+  "helloUser": "Halo, {name}",
+  "@helloUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "activeContactsCount": "{count} aktif",
+  "@activeContactsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sosHistoryCount": "{count} kejadian",
+  "@sosHistoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sosActiveBanner": "SOS AKTIF",
+  "sendingRealtimeLocation": "Mengirimkan lokasi real-time Anda...",
+  "turnOff": "Matikan",
+  "sosDisabledSuccess": "SOS berhasil dinonaktifkan",
+  "sosDisableFailed": "Gagal menonaktifkan SOS: {error}",
+  "@sosDisableFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "permissionRequiredTitle": "Izin Aplikasi Diperlukan",
+  "permissionRequiredDesc": "SAFE memerlukan izin Lokasi dan Notifikasi untuk memantau keselamatan Anda dan mengirimkan bantuan saat darurat. Tanpa izin ini, aplikasi tidak dapat melindungi Anda.",
+  "allowPermissionsButton": "Berikan Izin",
+  "openSettingsInstruction": "Jika izin tidak diberikan, silakan aktifkan secara manual di Pengaturan Aplikasi.",
+  "severeShakeDetected": "Guncangan Keras Terdeteksi",
+  "fallDetected": "Jatuh Terdeteksi",
+  "crashImpactDetected": "Tabrakan & Benturan Terdeteksi",
+  "severeImpactDetected": "Benturan Keras Terdeteksi",
+  "impactForceLabel": "KEKUATAN BENTURAN",
+  "locationLabel": "LOKASI",
+  "connectionIssuesTitle": "Koneksi Terganggu",
+  "connectionIssuesDesc": "Gagal mengirim SOS karena masalah jaringan. SOS Anda telah masuk antrean offline dan akan otomatis dikirim saat sinyal membaik.\n\nHarap hubungi nomor darurat atau kontak Anda secara manual jika memungkinkan.",
+  "profileDesc": "Kelola data diri dan riwayat medis Anda.",
+  "editButtonLabel": "Ubah",
+  "historySosDesc": "Arsip riwayat pengiriman dan penerimaan sinyal SOS.",
+  "historyTabSent": "SOS Saya",
+  "historyTabReceived": "SOS Diterima",
+  "historyNoSent": "Anda belum pernah mengirim sinyal SOS.",
+  "historyNoReceived": "Belum ada sinyal SOS masuk dari kontak Anda.",
+  "triggerAuto": "Deteksi Otomatis",
+  "triggerManual": "Pemicu Manual",
+  "phoneLabelAbbr": "No. HP:",
+  "historyLoadFailed": "Gagal memuat riwayat",
+  "addContactTitle": "Tambah Kontak Darurat",
+  "addContactDesc": "Cari berdasarkan nomor telepon atau email. Hanya pengguna yang sudah terdaftar yang dapat ditambahkan.",
+  "addContactInputLabel": "NOMOR TELEPON / EMAIL",
+  "addContactInputHint": "Contoh: 08123456789 atau email@safe.com",
+  "addContactSearchResults": "HASIL PENCARIAN",
+  "addContactInitialHint": "Masukkan nomor telepon atau email untuk mencari",
+  "addContactNotFound": "Pengguna tidak ditemukan",
+  "addContactNotFoundDesc": "Kontak ini belum terdaftar di aplikasi SAFE. Hanya pengguna terdaftar yang bisa ditambahkan.",
+  "addContactButton": "Tambah",
+  "addContactConfirmTitle": "Tambah Kontak",
+  "addContactConfirmDesc": "Tambahkan {name} sebagai kontak darurat?",
+  "@addContactConfirmDesc": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addContactSuccess": "Permintaan kontak berhasil dikirim ke {name}!",
+  "@addContactSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addContactFailed": "Gagal menambahkan kontak. Silakan coba lagi.",
+  "statusActive": "AKTIF",
+  "statusResolved": "SELESAI",
+  "statusFalseAlarm": "ALARM PALSU",
+  "noHistory": "Tidak ada riwayat",
+  "notificationsTitle": "Notifikasi",
+  "notificationsSelected": "{count} Terpilih",
+  "@notificationsSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deselectAll": "Batal pilih semua",
+  "selectAll": "Pilih semua",
+  "deleteSelectedTooltip": "Hapus terpilih",
+  "selectNotificationsTooltip": "Pilih notifikasi",
+  "markAllAsReadTooltip": "Tandai semua dibaca",
+  "deleteAllTooltip": "Hapus semua",
+  "deleteNotificationTitle": "Hapus Notifikasi",
+  "deleteSelectedConfirm": "Apakah Anda yakin ingin menghapus {count} notifikasi terpilih?",
+  "@deleteSelectedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectedDeletedSuccess": "Notifikasi terpilih berhasil dihapus",
+  "allMarkedReadSuccess": "Semua notifikasi ditandai telah dibaca",
+  "deleteAllNotificationsTitle": "Hapus Semua Notifikasi",
+  "deleteAllNotificationsConfirm": "Apakah Anda yakin ingin menghapus semua riwayat notifikasi?",
+  "allNotificationsDeletedSuccess": "Semua notifikasi berhasil dihapus",
+  "notificationDeletedSuccess": "Notifikasi berhasil dihapus",
+  "timeJustNow": "Baru saja",
+  "timeMinutesAgo": "{count} menit lalu",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count} jam lalu",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYesterday": "Kemarin",
+  "timeDaysAgo": "{count} hari lalu",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noNotifications": "Tidak Ada Notifikasi",
+  "noNotificationsDesc": "Seluruh pemberitahuan masuk terkait SOS dan kontak darurat Anda akan ditampilkan di sini.",
+  "notificationListHeader": "Daftar Pemberitahuan",
+  "sortOldest": "Terlama",
+  "sortNewest": "Terbaru",
+  "locationPageTitle": "Lokasi Langsung",
+  "locationPageSubtitle": "Pantau kontak darurat Anda",
+  "searchContactHint": "Cari kontak...",
+  "distanceCalculating": "Menghitung jarak",
+  "locationNotAvailable": "Lokasi tidak tersedia",
+  "unknownUpdateTime": "Waktu pembaruan tidak diketahui",
+  "justNow": "Baru saja",
+  "minutesAgo": "{count} menit lalu",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "positionLabel": "Posisi:",
+  "updatedLabel": "Diperbarui:",
+  "gpsFailed": "Gagal mendapatkan lokasi GPS",
+  "routeDownloadFailed": "Gagal mengunduh rute",
+  "emergencyHistoryTitle": "Riwayat SOS",
+  "sosHistoryReceivedSubtitle": "Sinyal darurat masuk",
+  "sosHistorySentSubtitle": "Sinyal darurat terkirim",
+  "contactPlaceholder": "Kontak darurat",
+  "openGoogleMaps": "Buka Google Maps",
+  "phoneNumberPrefix": "No. HP:",
+  "searchingLocation": "Mencari lokasi...",
+  "yourLocation": "Lokasi Anda",
+  "receiverEmergencyTitle": "DARURAT",
+  "receiverEmergencySub": "Bantuan segera dibutuhkan",
+  "receiverViewLocation": "Lihat Lokasi",
+  "receiverCallNow": "Hubungi Sekarang",
+  "receiverCalculatingDistance": "Menghitung jarak...",
+  "receiverDistanceText": "± {distance} km dari Anda",
+  "receiverLocationUnreachable": "Lokasi tidak terjangkau",
+  "receiverSearchingLocation": "Mencari lokasi...",
+  "receiverSomeone": "Seseorang",
+  "cancelSos": "BATALKAN"
 }
+

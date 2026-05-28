@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_state.dart';
 import 'package:safe/core/utils/injection.dart';
+import 'package:safe/features/auth/presentation/pages/login_page.dart';
+import 'package:safe/features/auth/presentation/pages/otp_verification_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -235,12 +236,19 @@ class _RegisterPageState extends State<RegisterPage> {
             if (state is AuthSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Registrasi Berhasil! Silakan Login.'), 
+                  content: Text('Registrasi berhasil. Cek email untuk kode OTP.'),
                   backgroundColor: Colors.green,
                   behavior: SnackBarBehavior.floating,
                 ),
               );
-              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => OtpVerificationPage(
+                    email: _emailController.text.trim(),
+                  ),
+                ),
+              );
             } else if (state is AuthError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -396,6 +404,11 @@ class _RegisterPageState extends State<RegisterPage> {
               _isPasswordVisible = !_isPasswordVisible;
             });
           },
+          validator: (value) {
+            if (value == null || value.isEmpty) return 'Wajib diisi';
+            if (value.length < 8) return 'Kata sandi minimal 8 karakter';
+            return null;
+          },
         ),
         const SizedBox(height: 16),
         
@@ -441,52 +454,6 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ),
         ),
-        const SizedBox(height: 24),
-
-        // OR DIVIDER
-        Row(
-          children: [
-            Expanded(child: Divider(color: AppColors.inputBorder)),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                'ATAU',
-                style: AppTextStyles.inputLabel.copyWith(color: AppColors.inputIconGrey),
-              ),
-            ),
-            Expanded(child: Divider(color: AppColors.inputBorder)),
-          ],
-        ),
-        const SizedBox(height: 24),
-
-        // GOOGLE REGISTER BUTTON
-        SizedBox(
-          width: double.infinity,
-          height: 54,
-          child: OutlinedButton(
-            style: OutlinedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: AppColors.textDark,
-              side: const BorderSide(color: AppColors.inputBorder),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(27),
-              ),
-              elevation: 1,
-              shadowColor: Colors.black.withOpacity(0.15),
-            ),
-            onPressed: () {
-              // TODO: Implement Google Sign Up
-            },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset('assets/images/google_logo.png', height: 20, width: 20),
-                const SizedBox(width: 12),
-                Text('Daftar dengan Google', style: AppTextStyles.buttonSecondary),
-              ],
-            ),
-          ),
-        ),
         const SizedBox(height: 32),
 
 
@@ -499,7 +466,13 @@ class _RegisterPageState extends State<RegisterPage> {
               style: AppTextStyles.subHeading.copyWith(fontSize: 14, color: AppColors.textGrey),
             ),
             GestureDetector(
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+                );
+              },
               child: Text(
                 'Masuk',
                 style: AppTextStyles.subHeading.copyWith(

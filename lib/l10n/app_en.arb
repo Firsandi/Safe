@@ -127,5 +127,194 @@
   "enterFullName": "Enter full name",
   
   "languageTitle": "Select Language",
-  "languageSelect": "Select your app language:"
+  "languageSelect": "Select your app language:",
+  "helloUser": "Hello, {name}",
+  "@helloUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "activeContactsCount": "{count} active",
+  "@activeContactsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sosHistoryCount": "{count} events",
+  "@sosHistoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sosActiveBanner": "SOS ACTIVE",
+  "sendingRealtimeLocation": "Sending your real-time location...",
+  "turnOff": "Turn Off",
+  "sosDisabledSuccess": "SOS successfully disabled",
+  "sosDisableFailed": "Failed to disable SOS: {error}",
+  "@sosDisableFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "permissionRequiredTitle": "Permissions Required",
+  "permissionRequiredDesc": "SAFE requires Location and Notification permissions to monitor your safety and send help in emergencies. Without these, the app cannot protect you.",
+  "allowPermissionsButton": "Grant Permissions",
+  "openSettingsInstruction": "If permissions are not granted, please enable them manually in the App Settings.",
+  "severeShakeDetected": "Severe Shake Detected",
+  "fallDetected": "Fall Detected",
+  "crashImpactDetected": "Crash & Impact Detected",
+  "severeImpactDetected": "Severe Impact Detected",
+  "impactForceLabel": "IMPACT FORCE",
+  "locationLabel": "LOCATION",
+  "connectionIssuesTitle": "Connection Issues",
+  "connectionIssuesDesc": "Failed to send SOS due to connection issues. Your SOS is saved in the offline queue and will sync automatically when your connection is restored.\n\nPlease contact emergency services or your contacts manually if possible.",
+  "profileDesc": "Manage your personal details and medical history.",
+  "editButtonLabel": "Edit",
+  "historySosDesc": "Archive of sent and received SOS signals.",
+  "historyTabSent": "My SOS",
+  "historyTabReceived": "SOS Received",
+  "historyNoSent": "You have never sent an SOS signal.",
+  "historyNoReceived": "No incoming SOS signals from your contacts yet.",
+  "triggerAuto": "Auto Detection",
+  "triggerManual": "Manual Trigger",
+  "phoneLabelAbbr": "Phone:",
+  "historyLoadFailed": "Failed to load history",
+  "addContactTitle": "Add Emergency Contact",
+  "addContactDesc": "Search by phone number or email. Only registered users can be added.",
+  "addContactInputLabel": "PHONE NUMBER / EMAIL",
+  "addContactInputHint": "e.g. 08123456789 or email@safe.com",
+  "addContactSearchResults": "SEARCH RESULTS",
+  "addContactInitialHint": "Enter phone number or email to search",
+  "addContactNotFound": "User not found",
+  "addContactNotFoundDesc": "This contact is not registered on SAFE yet. Only registered users can be added.",
+  "addContactButton": "Add",
+  "addContactConfirmTitle": "Add Contact",
+  "addContactConfirmDesc": "Add {name} as an emergency contact?",
+  "@addContactConfirmDesc": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addContactSuccess": "Contact request successfully sent to {name}!",
+  "@addContactSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addContactFailed": "Failed to add contact. Please try again.",
+  "statusActive": "ACTIVE",
+  "statusResolved": "RESOLVED",
+  "statusFalseAlarm": "FALSE ALARM",
+  "noHistory": "No history",
+  "notificationsTitle": "Notifications",
+  "notificationsSelected": "{count} Selected",
+  "@notificationsSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deselectAll": "Deselect all",
+  "selectAll": "Select all",
+  "deleteSelectedTooltip": "Delete selected",
+  "selectNotificationsTooltip": "Select notifications",
+  "markAllAsReadTooltip": "Mark all as read",
+  "deleteAllTooltip": "Delete all",
+  "deleteNotificationTitle": "Delete Notification",
+  "deleteSelectedConfirm": "Are you sure you want to delete {count} selected notifications?",
+  "@deleteSelectedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectedDeletedSuccess": "Selected notifications successfully deleted",
+  "allMarkedReadSuccess": "All notifications marked as read",
+  "deleteAllNotificationsTitle": "Delete All Notifications",
+  "deleteAllNotificationsConfirm": "Are you sure you want to delete all notification history?",
+  "allNotificationsDeletedSuccess": "All notifications successfully deleted",
+  "notificationDeletedSuccess": "Notification successfully deleted",
+  "timeJustNow": "Just now",
+  "timeMinutesAgo": "{count} minutes ago",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count} hours ago",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYesterday": "Yesterday",
+  "timeDaysAgo": "{count} days ago",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noNotifications": "No Notifications",
+  "noNotificationsDesc": "All incoming notifications related to SOS and emergency contacts will be shown here.",
+  "notificationListHeader": "Notification List",
+  "sortOldest": "Oldest",
+  "sortNewest": "Newest",
+  "locationPageTitle": "Live Location",
+  "locationPageSubtitle": "Track your emergency contacts",
+  "searchContactHint": "Search contacts...",
+  "distanceCalculating": "Calculating distance",
+  "locationNotAvailable": "Location not available",
+  "unknownUpdateTime": "Unknown update time",
+  "justNow": "Just now",
+  "minutesAgo": "{count} minutes ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "positionLabel": "Position:",
+  "updatedLabel": "Updated:",
+  "gpsFailed": "Failed to get GPS location",
+  "routeDownloadFailed": "Failed to download route",
+  "emergencyHistoryTitle": "SOS History",
+  "sosHistoryReceivedSubtitle": "Incoming emergency signal",
+  "sosHistorySentSubtitle": "Sent emergency signal",
+  "contactPlaceholder": "Emergency contact",
+  "openGoogleMaps": "Open Google Maps",
+  "phoneNumberPrefix": "Phone:",
+  "searchingLocation": "Searching location...",
+  "yourLocation": "Your location",
+  "receiverEmergencyTitle": "EMERGENCY",
+  "receiverEmergencySub": "Immediate assistance required",
+  "receiverViewLocation": "View Location",
+  "receiverCallNow": "Call Now",
+  "receiverCalculatingDistance": "Calculating distance...",
+  "receiverDistanceText": "± {distance} km from you",
+  "receiverLocationUnreachable": "Location unreachable",
+  "receiverSearchingLocation": "Searching location...",
+  "receiverSomeone": "Someone",
+  "cancelSos": "CANCEL"
 }
+

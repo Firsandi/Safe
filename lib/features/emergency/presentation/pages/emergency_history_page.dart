@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
+import 'package:safe/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/utils/injection.dart';
+import 'sos_route_page.dart';
+import 'sos_sent_map_page.dart';
+import '../../../../core/services/notification_local_service.dart';
 
 class EmergencyHistoryPage extends StatefulWidget {
-  const EmergencyHistoryPage({super.key});
+  final int initialTabIndex;
+  const EmergencyHistoryPage({super.key, this.initialTabIndex = 0});
 
   @override
   State<EmergencyHistoryPage> createState() => _EmergencyHistoryPageState();
@@ -19,7 +24,7 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
 
   // Pagination Configuration & States
   final int _pageSize = 10;
-  
+
   // Sent SOS Pagination
   int _sentPage = 1;
   bool _hasMoreSent = true;
@@ -42,7 +47,7 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
   void initState() {
     super.initState();
     _fetchHistory();
-    
+
     // Attach listeners for infinite scroll
     _sentScrollController.addListener(_onSentScroll);
     _receivedScrollController.addListener(_onReceivedScroll);
@@ -58,13 +63,15 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
   }
 
   void _onSentScroll() {
-    if (_sentScrollController.position.pixels >= _sentScrollController.position.maxScrollExtent - 200) {
+    if (_sentScrollController.position.pixels >=
+        _sentScrollController.position.maxScrollExtent - 200) {
       _loadMoreSent();
     }
   }
 
   void _onReceivedScroll() {
-    if (_receivedScrollController.position.pixels >= _receivedScrollController.position.maxScrollExtent - 200) {
+    if (_receivedScrollController.position.pixels >=
+        _receivedScrollController.position.maxScrollExtent - 200) {
       _loadMoreReceived();
     }
   }
@@ -84,11 +91,17 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
 
     try {
       final dio = sl<Dio>();
-      
+
       // Fetch initial pages in parallel
       final results = await Future.wait([
-        dio.get('/api/sos/history/sent', queryParameters: {'page': 1, 'limit': _pageSize}),
-        dio.get('/api/sos/history/received', queryParameters: {'page': 1, 'limit': _pageSize}),
+        dio.get(
+          '/api/sos/history/sent',
+          queryParameters: {'page': 1, 'limit': _pageSize},
+        ),
+        dio.get(
+          '/api/sos/history/received',
+          queryParameters: {'page': 1, 'limit': _pageSize},
+        ),
       ]);
 
       final rawSent = results[0].data ?? [];
@@ -115,7 +128,9 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
           // Server ignored page parameters (returned all). Fallback to client-side progressive pagination.
           _isReceivedServerPaged = false;
           _allReceivedHistory = rawReceived;
-          _displayedReceivedHistory = _allReceivedHistory.take(_pageSize).toList();
+          _displayedReceivedHistory = _allReceivedHistory
+              .take(_pageSize)
+              .toList();
           _hasMoreReceived = _allReceivedHistory.length > _pageSize;
         } else {
           // Server supports query parameters.
@@ -126,13 +141,55 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
 
         _isLoading = false;
       });
+      _syncReceivedSosToNotifications(rawReceived);
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'Gagal memuat riwayat: ${e.toString()}';
+        _errorMessage = e.toString();
         _isLoading = false;
       });
     }
+  }
+
+  void _syncReceivedSosToNotifications(List<dynamic> receivedList) async {
+    if (receivedList.isEmpty) return;
+    try {
+      final notifications = await NotificationLocalService.loadNotifications();
+      final List<LocalNotification> newNotifs = [];
+      for (final item in receivedList) {
+        final sosId = item['sos_id']?.toString() ?? '';
+        if (sosId.isEmpty) continue;
+
+        final notifId = 'sos_event_$sosId';
+        final exists = notifications.any((n) => n.id == notifId);
+        if (!exists) {
+          final title = item['trigger_type'] == 'auto'
+              ? 'EMERGENCY: BENTURAN/KECELAKAAN TERDETEKSI!'
+              : 'EMERGENCY: BUTUH BANTUAN SEGERA!';
+          final name = item['user_name'] ?? item['name'] ?? 'Seseorang';
+          final triggerLabel = item['trigger_type'] == 'auto'
+              ? 'Sensor Otomatis'
+              : 'Manual';
+
+          newNotifs.add(
+            LocalNotification(
+              id: notifId,
+              title: title,
+              body:
+                  '$name mengalami keadaan darurat ($triggerLabel)! Segera periksa lokasi.',
+              type: 'sos_alert',
+              timestamp:
+                  DateTime.tryParse(item['created_at'] ?? '') ?? DateTime.now(),
+              isRead: false,
+              payload: Map<String, dynamic>.from(item),
+            ),
+          );
+        }
+      }
+      if (newNotifs.isNotEmpty) {
+        await NotificationLocalService.saveNotifications(newNotifs);
+      }
+    } catch (_) {}
   }
 
   Future<void> _loadMoreSent() async {
@@ -146,9 +203,12 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
       if (_isSentServerPaged) {
         final dio = sl<Dio>();
         final nextPage = _sentPage + 1;
-        final res = await dio.get('/api/sos/history/sent', queryParameters: {'page': nextPage, 'limit': _pageSize});
+        final res = await dio.get(
+          '/api/sos/history/sent',
+          queryParameters: {'page': nextPage, 'limit': _pageSize},
+        );
         final newItems = res.data ?? [];
-        
+
         if (!mounted) return;
         setState(() {
           _sentPage = nextPage;
@@ -157,10 +217,15 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
         });
       } else {
         // Client-side pagination: load from locally stored list
-        await Future.delayed(const Duration(milliseconds: 200)); // Smooth loading feel
+        await Future.delayed(
+          const Duration(milliseconds: 200),
+        ); // Smooth loading feel
         final currentLen = _displayedSentHistory.length;
-        final nextItems = _allSentHistory.skip(currentLen).take(_pageSize).toList();
-        
+        final nextItems = _allSentHistory
+            .skip(currentLen)
+            .take(_pageSize)
+            .toList();
+
         if (!mounted) return;
         setState(() {
           _displayedSentHistory.addAll(nextItems);
@@ -189,9 +254,12 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
       if (_isReceivedServerPaged) {
         final dio = sl<Dio>();
         final nextPage = _receivedPage + 1;
-        final res = await dio.get('/api/sos/history/received', queryParameters: {'page': nextPage, 'limit': _pageSize});
+        final res = await dio.get(
+          '/api/sos/history/received',
+          queryParameters: {'page': nextPage, 'limit': _pageSize},
+        );
         final newItems = res.data ?? [];
-        
+
         if (!mounted) return;
         setState(() {
           _receivedPage = nextPage;
@@ -200,14 +268,20 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
         });
       } else {
         // Client-side pagination: load from locally stored list
-        await Future.delayed(const Duration(milliseconds: 200)); // Smooth loading feel
+        await Future.delayed(
+          const Duration(milliseconds: 200),
+        ); // Smooth loading feel
         final currentLen = _displayedReceivedHistory.length;
-        final nextItems = _allReceivedHistory.skip(currentLen).take(_pageSize).toList();
-        
+        final nextItems = _allReceivedHistory
+            .skip(currentLen)
+            .take(_pageSize)
+            .toList();
+
         if (!mounted) return;
         setState(() {
           _displayedReceivedHistory.addAll(nextItems);
-          _hasMoreReceived = _displayedReceivedHistory.length < _allReceivedHistory.length;
+          _hasMoreReceived =
+              _displayedReceivedHistory.length < _allReceivedHistory.length;
         });
       }
     } catch (_) {
@@ -225,7 +299,8 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
     if (dateStr == null) return '-';
     try {
       final dateTime = DateTime.parse(dateStr).toLocal();
-      return DateFormat('dd MMM yyyy, HH:mm').format(dateTime);
+      final locale = Localizations.localeOf(context).toLanguageTag();
+      return DateFormat('dd MMM yyyy, HH:mm', locale).format(dateTime);
     } catch (_) {
       return dateStr;
     }
@@ -240,17 +315,17 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
       case 'active':
         bgColor = const Color(0xFFFEE2E2);
         textColor = const Color(0xFFEF4444);
-        label = 'AKTIF';
+        label = AppLocalizations.of(context)!.statusActive;
         break;
       case 'resolved':
         bgColor = const Color(0xFFD1FAE5);
         textColor = const Color(0xFF10B981);
-        label = 'SELESAI';
+        label = AppLocalizations.of(context)!.statusResolved;
         break;
       case 'false_alarm':
         bgColor = const Color(0xFFF3F4F6);
         textColor = const Color(0xFF6B7280);
-        label = 'ALARM PALSU';
+        label = AppLocalizations.of(context)!.statusFalseAlarm;
         break;
       default:
         bgColor = const Color(0xFFE5E7EB);
@@ -277,26 +352,35 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return DefaultTabController(
       length: 2,
+      initialIndex: widget.initialTabIndex,
       child: Scaffold(
         backgroundColor: AppColors.backgroundLight,
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            
+
             // Title
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Riwayat Darurat', style: AppTextStyles.heading),
+                  Text(
+                    l10n.emergencyHistoryTitle,
+                    style: AppTextStyles.heading,
+                  ),
                   const SizedBox(height: 8),
                   Text(
-                    'Arsip riwayat pengiriman dan penerimaan sinyal SOS.',
-                    style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
+                    l10n.historySosDesc,
+                    style: AppTextStyles.subHeading.copyWith(
+                      color: AppColors.textGrey,
+                      fontSize: 14,
+                    ),
                   ),
                 ],
               ),
@@ -311,11 +395,16 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
                 indicatorColor: const Color(0xFF193855),
                 indicatorSize: TabBarIndicatorSize.tab,
                 indicatorWeight: 3,
-                labelStyle: AppTextStyles.subHeading.copyWith(fontWeight: FontWeight.bold, fontSize: 14),
-                unselectedLabelStyle: AppTextStyles.subHeading.copyWith(fontSize: 14),
-                tabs: const [
-                  Tab(text: 'SOS Saya'),
-                  Tab(text: 'SOS Diterima'),
+                labelStyle: AppTextStyles.subHeading.copyWith(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+                unselectedLabelStyle: AppTextStyles.subHeading.copyWith(
+                  fontSize: 14,
+                ),
+                tabs: [
+                  Tab(text: l10n.historyTabSent),
+                  Tab(text: l10n.historyTabReceived),
                 ],
               ),
             ),
@@ -325,36 +414,50 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
             Expanded(
               child: _isLoading
                   ? ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 8,
+                      ),
                       itemCount: 4,
-                      itemBuilder: (context, index) => const BreathingSkeletonCard(),
+                      itemBuilder: (context, index) =>
+                          const BreathingSkeletonCard(),
                     )
                   : _errorMessage != null
-                      ? Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24.0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.error_outline, color: AppColors.primaryRed, size: 48),
-                                const SizedBox(height: 16),
-                                Text(_errorMessage!, textAlign: TextAlign.center, style: AppTextStyles.subHeading),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: _fetchHistory,
-                                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF193855)),
-                                  child: const Text('Coba Lagi', style: TextStyle(color: Colors.white)),
-                                )
-                              ],
-                            ),
-                          ),
-                        )
-                      : TabBarView(
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            _buildSentTab(),
-                            _buildReceivedTab(),
+                            const Icon(
+                              Icons.error_outline,
+                              color: AppColors.primaryRed,
+                              size: 48,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              '${l10n.historyLoadFailed}: $_errorMessage',
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.subHeading,
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _fetchHistory,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF193855),
+                              ),
+                              child: Text(
+                                l10n.retry,
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
                           ],
                         ),
+                      ),
+                    )
+                  : TabBarView(
+                      children: [_buildSentTab(), _buildReceivedTab()],
+                    ),
             ),
           ],
         ),
@@ -363,8 +466,9 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
   }
 
   Widget _buildSentTab() {
+    final l10n = AppLocalizations.of(context)!;
     if (_displayedSentHistory.isEmpty) {
-      return _buildEmptyState('Anda belum pernah mengirim sinyal SOS.');
+      return _buildEmptyState(l10n.historyNoSent);
     }
 
     return RefreshIndicator(
@@ -382,7 +486,10 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
                 child: SizedBox(
                   width: 24,
                   height: 24,
-                  child: CircularProgressIndicator(color: AppColors.primaryRed, strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryRed,
+                    strokeWidth: 2,
+                  ),
                 ),
               ),
             );
@@ -392,63 +499,90 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
           final triggerType = event['trigger_type'] ?? 'manual';
           final isAuto = triggerType == 'auto';
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.inputBorder),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          isAuto ? Icons.sensors : Icons.touch_app_outlined,
-                          color: isAuto ? AppColors.primaryRed : const Color(0xFF193855),
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          isAuto ? 'Deteksi Otomatis' : 'Pemicu Manual',
-                          style: AppTextStyles.subHeading.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
+          return InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SosSentMapPage(sosEvent: event),
+                ),
+              );
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.inputBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            isAuto ? Icons.sensors : Icons.touch_app_outlined,
+                            color: isAuto
+                                ? AppColors.primaryRed
+                                : const Color(0xFF193855),
+                            size: 20,
                           ),
+                          const SizedBox(width: 8),
+                          Text(
+                            isAuto ? l10n.triggerAuto : l10n.triggerManual,
+                            style: AppTextStyles.subHeading.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                      _buildStatusBadge(event['status'] ?? 'active'),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.access_time,
+                        size: 14,
+                        color: AppColors.textGrey,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _formatDateTime(event['created_at']),
+                        style: AppTextStyles.subHeading.copyWith(
+                          color: AppColors.textGrey,
+                          fontSize: 13,
                         ),
-                      ],
-                    ),
-                    _buildStatusBadge(event['status'] ?? 'active'),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    const Icon(Icons.access_time, size: 14, color: AppColors.textGrey),
-                    const SizedBox(width: 6),
-                    Text(
-                      _formatDateTime(event['created_at']),
-                      style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 13),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textGrey),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${event['initial_latitude'] ?? 0.0}, ${event['initial_longitude'] ?? 0.0}',
-                      style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 13),
-                    ),
-                  ],
-                ),
-              ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 14,
+                        color: AppColors.textGrey,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${event['initial_latitude'] ?? 0.0}, ${event['initial_longitude'] ?? 0.0}',
+                        style: AppTextStyles.subHeading.copyWith(
+                          color: AppColors.textGrey,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -457,8 +591,9 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
   }
 
   Widget _buildReceivedTab() {
+    final l10n = AppLocalizations.of(context)!;
     if (_displayedReceivedHistory.isEmpty) {
-      return _buildEmptyState('Belum ada sinyal SOS masuk dari kontak Anda.');
+      return _buildEmptyState(l10n.historyNoReceived);
     }
 
     return RefreshIndicator(
@@ -467,7 +602,8 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
         controller: _receivedScrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-        itemCount: _displayedReceivedHistory.length + (_isLoadingMoreReceived ? 1 : 0),
+        itemCount:
+            _displayedReceivedHistory.length + (_isLoadingMoreReceived ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == _displayedReceivedHistory.length) {
             return const Padding(
@@ -476,7 +612,10 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
                 child: SizedBox(
                   width: 24,
                   height: 24,
-                  child: CircularProgressIndicator(color: AppColors.primaryRed, strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryRed,
+                    strokeWidth: 2,
+                  ),
                 ),
               ),
             );
@@ -486,77 +625,117 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
           final triggerType = event['trigger_type'] ?? 'manual';
           final isAuto = triggerType == 'auto';
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.inputBorder),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.person_outline, color: Color(0xFF193855), size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          event['user_name'] ?? 'Kontak',
-                          style: AppTextStyles.subHeading.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textDark,
+          return InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SosRoutePage(sosEvent: event),
+                ),
+              );
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.inputBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.person_outline,
+                              color: Color(0xFF193855),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                event['user_name'] ?? l10n.contactPlaceholder,
+                                style: AppTextStyles.subHeading.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textDark,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _buildStatusBadge(event['status'] ?? 'active'),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${l10n.phoneLabelAbbr} ${event['user_phone'] ?? '-'}',
+                    style: AppTextStyles.subHeading.copyWith(
+                      color: AppColors.textGrey,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const Divider(height: 24, color: AppColors.inputBorder),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            isAuto ? Icons.sensors : Icons.touch_app_outlined,
+                            color: isAuto
+                                ? AppColors.primaryRed
+                                : const Color(0xFF193855),
+                            size: 16,
                           ),
+                          const SizedBox(width: 6),
+                          Text(
+                            isAuto ? l10n.triggerAuto : l10n.triggerManual,
+                            style: AppTextStyles.subHeading.copyWith(
+                              color: AppColors.textGrey,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        _formatDateTime(event['created_at']),
+                        style: AppTextStyles.subHeading.copyWith(
+                          color: AppColors.textGrey,
+                          fontSize: 12,
                         ),
-                      ],
-                    ),
-                    _buildStatusBadge(event['status'] ?? 'active'),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'No. HP: ${event['user_phone'] ?? '-'}',
-                  style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 13),
-                ),
-                const Divider(height: 24, color: AppColors.inputBorder),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          isAuto ? Icons.sensors : Icons.touch_app_outlined,
-                          color: isAuto ? AppColors.primaryRed : const Color(0xFF193855),
-                          size: 16,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 14,
+                        color: AppColors.textGrey,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${event['initial_latitude'] ?? 0.0}, ${event['initial_longitude'] ?? 0.0}',
+                        style: AppTextStyles.subHeading.copyWith(
+                          color: AppColors.textGrey,
+                          fontSize: 13,
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          isAuto ? 'Deteksi Otomatis' : 'Pemicu Manual',
-                          style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 13),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      _formatDateTime(event['created_at']),
-                      style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 12),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textGrey),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${event['initial_latitude'] ?? 0.0}, ${event['initial_longitude'] ?? 0.0}',
-                      style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 13),
-                    ),
-                  ],
-                ),
-              ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -583,7 +762,7 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Tidak ada riwayat',
+            AppLocalizations.of(context)!.noHistory,
             style: AppTextStyles.subHeading.copyWith(
               fontWeight: FontWeight.bold,
               color: AppColors.textDark,
@@ -628,9 +807,10 @@ class _BreathingSkeletonCardState extends State<BreathingSkeletonCard>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _animation = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 0.4,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override

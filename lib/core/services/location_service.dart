@@ -1,11 +1,49 @@
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:safe/core/utils/session_manager.dart';
 import '../utils/injection.dart';
 
 class LocationService {
   static StreamSubscription<Position>? _positionStreamSubscription;
   static String? activeSosId;
+
+  /// Loads the persisted active SOS ID from local storage
+  static Future<void> loadActiveSosId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userData = await SessionManager.getUserData();
+      final userId = userData != null ? userData['user_id'] : null;
+      if (userId != null) {
+        activeSosId = prefs.getString('active_sos_id_$userId');
+      } else {
+        activeSosId = null;
+      }
+    } catch (_) {}
+  }
+
+  /// Saves or clears the active SOS ID in local storage and memory
+  static Future<void> saveActiveSosId(String? id) async {
+    activeSosId = id;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userData = await SessionManager.getUserData();
+      final userId = userData != null ? userData['user_id'] : null;
+      if (userId != null) {
+        if (id == null) {
+          await prefs.remove('active_sos_id_$userId');
+        } else {
+          await prefs.setString('active_sos_id_$userId', id);
+        }
+      } else {
+        // Fallback for global clear
+        if (id == null) {
+          await prefs.remove('active_sos_id');
+        }
+      }
+    } catch (_) {}
+  }
 
   /// Requests location permission and returns whether it is granted
   static Future<bool> requestPermission() async {
@@ -53,14 +91,14 @@ class LocationService {
   }
 
   /// Starts streaming real-time location and posting updates to the backend for an active SOS
-  static void startTrackingSos(String sosId) async {
+  static Future<void> startTrackingSos(String sosId) async {
     // Cancel existing if any
     stopTrackingSos();
 
     final hasPermission = await requestPermission();
     if (!hasPermission) return;
 
-    activeSosId = sosId;
+    await saveActiveSosId(sosId);
 
     const LocationSettings locationSettings = LocationSettings(
       accuracy: LocationAccuracy.high,
@@ -92,6 +130,29 @@ class LocationService {
   static void stopTrackingSos() {
     _positionStreamSubscription?.cancel();
     _positionStreamSubscription = null;
-    activeSosId = null;
+    saveActiveSosId(null);
+  }
+
+  /// Updates live location (24/7) to the backend
+  static Future<void> updateLiveLocation() async {
+    final hasPermission = await requestPermission();
+    if (!hasPermission) return;
+
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 5),
+      );
+      final dio = sl<Dio>();
+      await dio.put(
+        '/api/location',
+        data: {
+          'latitude': position.latitude,
+          'longitude': position.longitude,
+        },
+      );
+    } catch (_) {
+      // Quiet fail if unable to update
+    }
   }
 }
