@@ -6,6 +6,8 @@ import 'package:safe/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_state.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/core/utils/google_auth_helper.dart';
+import 'package:safe/features/auth/presentation/pages/login_page.dart';
+import 'package:safe/features/auth/presentation/pages/otp_verification_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -235,12 +237,19 @@ class _RegisterPageState extends State<RegisterPage> {
             if (state is AuthSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Registrasi Berhasil! Silakan Login.'), 
+                  content: Text('Registrasi berhasil. Cek email untuk kode OTP.'),
                   backgroundColor: Colors.green,
                   behavior: SnackBarBehavior.floating,
                 ),
               );
-              Navigator.pop(context);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => OtpVerificationPage(
+                    email: _emailController.text.trim(),
+                  ),
+                ),
+              );
             } else if (state is AuthError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -502,7 +511,13 @@ class _RegisterPageState extends State<RegisterPage> {
               style: AppTextStyles.subHeading.copyWith(fontSize: 14, color: AppColors.textGrey),
             ),
             GestureDetector(
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginPage()),
+                  (route) => false,
+                );
+              },
               child: Text(
                 'Masuk',
                 style: AppTextStyles.subHeading.copyWith(

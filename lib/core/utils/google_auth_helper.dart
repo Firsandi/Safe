@@ -14,14 +14,30 @@ class GoogleAuthHelper {
     scopes: ['email', 'profile'],
   );
 
+  static Future<void> signOut() async {
+    try {
+      await _googleSignIn.signOut();
+    } catch (e) {
+      debugPrint('Google Sign-Out failed: $e');
+    }
+  }
+
   /// Triggers Google Authentication
   static Future<void> signIn(BuildContext context) async {
     try {
+      await _googleSignIn.signOut();
+      
       // 1. Try real Google Sign-In on the device
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser != null) {
         final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
         final String? idToken = googleAuth.idToken;
+        if (idToken == null || idToken.isEmpty) {
+          throw PlatformException(
+            code: 'missing_id_token',
+            message: 'Token Google tidak tersedia. Periksa konfigurasi OAuth/SHA-1 aplikasi.',
+          );
+        }
         
         // Authenticated successfully with a real device account
         if (context.mounted) {
@@ -77,7 +93,7 @@ class GoogleAuthHelper {
     try {
       // Send a single POST request to the custom Google Auth endpoint on Go Backend
       final response = await dio.post('/api/auth/google', data: {
-        'id_token': idToken ?? 'simulated_token',
+        'id_token': idToken,
         'email': email,
         'name': name,
       });
@@ -103,8 +119,9 @@ class GoogleAuthHelper {
       }
     } catch (e) {
       if (context.mounted) Navigator.pop(context); // Close loading indicator
+      await signOut();
       
-      String errorMsg = 'Gagal melakukan autentikasi Google ke backend.';
+      String errorMsg = 'Gagal masuk dengan Google untuk $email.';
       if (e is DioException) {
         errorMsg += ' Keterangan: ${e.response?.data?["error"] ?? e.message}';
       }

@@ -8,8 +8,8 @@ import 'package:dio/dio.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/core/utils/session_manager.dart';
 import 'package:safe/core/services/notification_local_service.dart';
-import 'package:safe/main.dart';
 import 'package:safe/features/emergency/presentation/pages/sos_incoming_alert_page.dart';
+import 'package:safe/core/services/navigation_service.dart';
 
 // Top-level background handler for FCM
 @pragma('vm:entry-point')
@@ -18,33 +18,30 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('Handling a background message: ${message.messageId}');
   await NotificationManager.saveLocalNotificationRecord(message);
   if (message.data['type'] == 'sos_alert') {
+    // Initialize notification channels/plugin settings in background isolate
+    const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initSettings = InitializationSettings(android: androidInit);
+    await NotificationManager._localNotifications.initialize(initSettings);
+
     NotificationManager.startAlarm();
+    await NotificationManager._showLocalNotification(message);
   }
 }
 
 class NotificationManager {
   static final AudioPlayer _audioPlayer = AudioPlayer();
-  static final FlutterLocalNotificationsPlugin _localNotifications =
-      FlutterLocalNotificationsPlugin();
+  static final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
   static bool _isAlarmPlaying = false;
   static Map<String, dynamic>? pendingSosData;
 
   static Future<void> saveLocalNotificationRecord(RemoteMessage message) async {
     try {
-      final title =
-          message.notification?.title ??
-          message.data['title'] ??
-          'Notifikasi Baru';
-      final body =
-          message.notification?.body ??
-          message.data['body'] ??
-          'Anda menerima pesan darurat baru.';
+      final title = message.notification?.title ?? message.data['title'] ?? 'Notifikasi Baru';
+      final body = message.notification?.body ?? message.data['body'] ?? 'Anda menerima pesan darurat baru.';
       final type = message.data['type'] ?? 'general';
 
       final localNotif = LocalNotification(
-        id:
-            message.messageId ??
-            DateTime.now().millisecondsSinceEpoch.toString(),
+        id: message.messageId ?? DateTime.now().millisecondsSinceEpoch.toString(),
         title: title,
         body: body,
         type: type,
@@ -65,9 +62,7 @@ class NotificationManager {
       await Firebase.initializeApp();
 
       // 2. Setup Background Handler
-      FirebaseMessaging.onBackgroundMessage(
-        _firebaseMessagingBackgroundHandler,
-      );
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
       // 3. Request permissions (including Critical Alerts for iOS)
       final messaging = FirebaseMessaging.instance;
@@ -82,8 +77,7 @@ class NotificationManager {
       );
 
       // 4. Initialize Local Notifications for Android Channels
-      const AndroidInitializationSettings androidInit =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
+      const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
 
       const InitializationSettings initSettings = InitializationSettings(
         android: androidInit,
@@ -112,8 +106,7 @@ class NotificationManager {
       const AndroidNotificationChannel channel = AndroidNotificationChannel(
         'emergency_channel_id_v2',
         'Panggilan Darurat',
-        description:
-            'Digunakan untuk mengirimkan notifikasi darurat SOS dengan prioritas tertinggi.',
+        description: 'Digunakan untuk mengirimkan notifikasi darurat SOS dengan prioritas tertinggi.',
         importance: Importance.max,
         playSound: true,
         sound: RawResourceAndroidNotificationSound('alarm_sound'),
@@ -123,9 +116,7 @@ class NotificationManager {
       );
 
       await _localNotifications
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >()
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(channel);
 
       // 5. Handle Foreground Messages
@@ -145,9 +136,7 @@ class NotificationManager {
       });
 
       // 6. Handle App Opened via Notification
-      FirebaseMessaging.onMessageOpenedApp.listen((
-        RemoteMessage message,
-      ) async {
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
         debugPrint('App opened via notification: ${message.messageId}');
         await saveLocalNotificationRecord(message);
         stopAlarm();
@@ -163,13 +152,11 @@ class NotificationManager {
 
       // 8. Handle Initial Message (App launched from terminated state via notification click)
       try {
-        final initialMessage = await FirebaseMessaging.instance
-            .getInitialMessage();
+        final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
         if (initialMessage != null) {
-          debugPrint(
-            'App launched via initial message: ${initialMessage.messageId}',
-          );
+          debugPrint('App launched via initial message: ${initialMessage.messageId}');
           await saveLocalNotificationRecord(initialMessage);
+          stopAlarm();
           if (initialMessage.data['type'] == 'sos_alert') {
             navigateToSosAlert(initialMessage.data);
           }
@@ -188,8 +175,7 @@ class NotificationManager {
       final isLoggedIn = await SessionManager.isLoggedIn();
       if (!isLoggedIn) return;
 
-      final token =
-          explicitToken ?? await FirebaseMessaging.instance.getToken();
+      final token = explicitToken ?? await FirebaseMessaging.instance.getToken();
       if (token != null) {
         debugPrint('FCM Token: $token');
         final dio = sl<Dio>();
@@ -204,20 +190,22 @@ class NotificationManager {
   /// Displays local notification on Android/iOS when app is in foreground
   static Future<void> _showLocalNotification(RemoteMessage message) async {
     final notification = message.notification;
-    if (notification == null) return;
 
-    const AndroidNotificationDetails
-    androidDetails = AndroidNotificationDetails(
+    // Support data-only messages as well as notification messages
+    final title = notification?.title ?? message.data['title'] ?? 'Panggilan Darurat';
+    final body = notification?.body ?? message.data['body'] ?? 'Bantuan segera dibutuhkan';
+
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'emergency_channel_id_v2',
       'Panggilan Darurat',
-      channelDescription:
-          'Digunakan untuk mengirimkan notifikasi darurat SOS dengan prioritas tertinggi.',
+      channelDescription: 'Digunakan untuk mengirimkan notifikasi darurat SOS dengan prioritas tertinggi.',
       importance: Importance.max,
-      priority: Priority.high,
-      ticker: 'ticker',
+      priority: Priority.max,
+      fullScreenIntent: true,
+      category: AndroidNotificationCategory.alarm,
+      visibility: NotificationVisibility.public,
       playSound: true,
       sound: RawResourceAndroidNotificationSound('alarm_sound'),
-      visibility: NotificationVisibility.public,
     );
 
     const NotificationDetails details = NotificationDetails(
@@ -225,12 +213,27 @@ class NotificationManager {
     );
 
     await _localNotifications.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
+      message.messageId.hashCode,
+      title,
+      body,
       details,
       payload: jsonEncode(message.data),
     );
+  }
+
+  /// Navigates to SosIncomingAlertPage globally
+  static void navigateToSosAlert(Map<String, dynamic> data) {
+    final context = NavigationService.navigatorKey.currentContext;
+    if (context != null && NavigationService.navigatorKey.currentState != null) {
+      NavigationService.navigatorKey.currentState!.push(
+        MaterialPageRoute(
+          builder: (context) => SosIncomingAlertPage(sosData: data),
+        ),
+      );
+    } else {
+      pendingSosData = data;
+      debugPrint('Stashed pending SOS data since navigator is not ready');
+    }
   }
 
   /// Starts playing the physical alarm sound at maximum volume in a loop
@@ -246,11 +249,7 @@ class NotificationManager {
         await _audioPlayer.play(AssetSource('raw/alarm_sound.mp3'));
       } catch (_) {
         // Fallback to high-quality remote watch alarm sound for reliable out-of-the-box testing
-        await _audioPlayer.play(
-          UrlSource(
-            'https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg',
-          ),
-        );
+        await _audioPlayer.play(UrlSource('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg'));
       }
       debugPrint('Alarm started playing successfully');
     } catch (e) {
@@ -268,21 +267,6 @@ class NotificationManager {
       debugPrint('Alarm stopped successfully');
     } catch (e) {
       debugPrint('Failed to stop alarm: $e');
-    }
-  }
-
-  /// Navigates to SosIncomingAlertPage globally
-  static void navigateToSosAlert(Map<String, dynamic> data) {
-    final context = navigatorKey.currentContext;
-    if (context != null && navigatorKey.currentState != null) {
-      navigatorKey.currentState!.push(
-        MaterialPageRoute(
-          builder: (context) => SosIncomingAlertPage(sosData: data),
-        ),
-      );
-    } else {
-      pendingSosData = data;
-      debugPrint('Stashed pending SOS data since navigator is not ready');
     }
   }
 }

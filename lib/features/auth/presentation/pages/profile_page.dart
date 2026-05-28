@@ -8,6 +8,7 @@ import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/features/auth/domain/entities/user_entity.dart';
 import 'package:safe/core/utils/injection.dart';
+import 'package:safe/core/utils/google_auth_helper.dart';
 import 'package:safe/core/utils/session_manager.dart';
 import 'package:safe/features/auth/presentation/pages/login_page.dart';
 import 'package:safe/features/home/presentation/pages/language_page.dart';
@@ -451,6 +452,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     if (confirm == true) {
       LocationService.stopTrackingSos();
+      await GoogleAuthHelper.signOut();
       await SessionManager.clearSession();
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
