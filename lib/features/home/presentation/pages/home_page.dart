@@ -18,6 +18,8 @@ import 'package:safe/features/auth/domain/entities/user_entity.dart';
 import 'package:safe/features/emergency/presentation/bloc/emergency_cubit.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/features/auth/presentation/pages/profile_page.dart';
+import 'package:safe/core/utils/session_manager.dart';
+import 'package:safe/features/auth/data/models/user_model.dart';
 import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/core/services/notification_local_service.dart';
 import 'package:safe/features/home/presentation/pages/notification_page.dart';
@@ -42,6 +44,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> with TickerProviderStateMixin, WidgetsBindingObserver {
+  late UserEntity _currentUser;
   int _currentIndex = 0;
   bool _isInit = false;
   final CrashDetectionService _crashDetection = CrashDetectionService();
@@ -78,6 +81,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   @override
   void initState() {
     super.initState();
+    _currentUser = widget.user;
+    _loadUserFromSession();
     WidgetsBinding.instance.addObserver(this);
     _checkPermissionsState().then((_) {
       if (mounted && (!_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission)) {
@@ -119,6 +124,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       if (mounted) {
         setState(() {
           _unreadNotificationCount = count;
+        });
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _loadUserFromSession() async {
+    try {
+      final userData = await SessionManager.getUserData();
+      if (userData != null && mounted) {
+        setState(() {
+          _currentUser = UserModel.fromJson(userData);
         });
       }
     } catch (_) {}
@@ -426,11 +442,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       final results = await Future.wait([
         dio.get('/api/contacts/requests'),
         dio.get('/api/sos/history/received'),
+        dio.get('/api/contacts'),
       ]);
       
       final requestsData = results[0].data['requests'] as List?;
       final receivedSosData = results[1].data as List?;
+      final contactsData = results[2].data['contacts'] as List?;
       
+      if (contactsData != null) {
+        await NotificationLocalService.syncConnectionTimestamps(contactsData);
+      }
+      
+      final connectionTimestamps = await NotificationLocalService.getConnectionTimestamps();
       final List<LocalNotification> newNotifs = [];
 
       if (requestsData != null && requestsData.isNotEmpty) {
@@ -456,10 +479,29 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       if (receivedSosData != null && receivedSosData.isNotEmpty) {
         final notifications = await NotificationLocalService.loadNotifications();
         for (final item in receivedSosData) {
+          final status = item['status']?.toString() ?? '';
+          if (status != 'active') continue; // Skip resolved/past SOS events to prevent notification flooding
+          
           final sosId = item['sos_id']?.toString() ?? '';
           if (sosId.isEmpty) continue;
+          
+          // Check if event occurred after becoming friends
+          final contactUserId = item['user_id']?.toString() ?? '';
+          final connectionTimeStr = connectionTimestamps[contactUserId];
+          if (connectionTimeStr != null) {
+            final connectionTime = DateTime.parse(connectionTimeStr);
+            final eventTime = DateTime.tryParse(item['created_at'] ?? '') ?? DateTime.now();
+            if (eventTime.isBefore(connectionTime)) {
+              // The event occurred before we became friends
+              continue;
+            }
+          } else {
+            // If contact is not in our active contacts list, skip
+            continue;
+          }
+          
           final notifId = 'sos_event_$sosId';
-          final exists = notifications.any((n) => n.id == notifId);
+          final exists = notifications.any((n) => n.id == notifId || (n.payload != null && n.payload!['sos_id']?.toString() == sosId));
           if (!exists) {
              final title = item['trigger_type'] == 'auto'
                 ? 'EMERGENCY: BENTURAN/KECELAKAAN TERDETEKSI!'
@@ -631,7 +673,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       case 3:
         return const LocationPage();
       case 4:
-        return ProfilePage(user: widget.user);
+        return ProfilePage(user: _currentUser);
       default:
         return _buildHomeContent();
     }
@@ -665,6 +707,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               _historyInitialTabIndex = 0; // reset to default tab
             }
           });
+          _loadUserFromSession();
           if (index == 0) {
             _loadStats();
             _loadUnreadNotificationCount();
@@ -744,35 +787,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    AppLocalizations.of(context)!.helloUser(widget.user.name),
+                    AppLocalizations.of(context)!.helloUser(_currentUser.name),
                     style: AppTextStyles.heading.copyWith(
                       color: AppColors.primaryRed,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.inputBorder),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const BreathingDot(),
-                        const SizedBox(width: 8),
-                        Text(
-                          AppLocalizations.of(context)!.sensorActive,
-                          style: AppTextStyles.inputLabel.copyWith(
-                            color: AppColors.textGrey,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
                     ),
                   ),
                 ],

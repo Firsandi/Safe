@@ -10,12 +10,14 @@ import 'package:safe/features/auth/domain/entities/user_entity.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/core/utils/google_auth_helper.dart';
 import 'package:safe/core/utils/session_manager.dart';
+import 'package:safe/features/auth/data/models/user_model.dart';
 import 'package:safe/features/auth/presentation/pages/login_page.dart';
 import 'package:safe/features/home/presentation/pages/language_page.dart';
 import 'package:safe/features/home/presentation/pages/help_center_page.dart';
 import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/core/services/location_service.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 
 class ProfilePage extends StatefulWidget {
@@ -169,6 +171,37 @@ class _ProfilePageState extends State<ProfilePage> {
     _phoneController = TextEditingController(text: _currentPhone);
     _medicalNotesController = TextEditingController();
     _fetchMedicalProfile();
+    _loadSessionUser();
+  }
+
+  @override
+  void didUpdateWidget(ProfilePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.user != oldWidget.user) {
+      setState(() {
+        _currentName = widget.user.name;
+        _currentPhone = widget.user.phoneNumber;
+        _currentProfileImage = widget.user.profileImage ?? '';
+        _nameController.text = _currentName;
+        _phoneController.text = _currentPhone;
+      });
+    }
+  }
+
+  Future<void> _loadSessionUser() async {
+    try {
+      final userData = await SessionManager.getUserData();
+      if (userData != null && mounted) {
+        final user = UserModel.fromJson(userData);
+        setState(() {
+          _currentName = user.name;
+          _currentPhone = user.phoneNumber;
+          _currentProfileImage = user.profileImage ?? '';
+          _nameController.text = _currentName;
+          _phoneController.text = _currentPhone;
+        });
+      }
+    } catch (_) {}
   }
 
   @override
@@ -241,7 +274,16 @@ class _ProfilePageState extends State<ProfilePage> {
               toolbarTitle: 'Potong Foto Profil',
               toolbarColor: const Color(0xFF193855),
               toolbarWidgetColor: Colors.white,
-              statusBarColor: const Color(0xFF193855),
+              statusBarLight: false, // Light icons on dark status bar
+              navBarLight: true,
+              activeControlsWidgetColor: const Color(0xFFEF4444), // Crimson red accent color for controls
+              backgroundColor: const Color(0xFF0F172A), // Slate-900 root view background
+              cropFrameColor: const Color(0xFFEF4444), // Crimson red crop frame
+              cropGridColor: const Color(0x4DEF4444), // Soft crimson red crop grid guidelines
+              dimmedLayerColor: const Color(0xCC0B0F19), // Dark dimmed background outside bounds
+              cropFrameStrokeWidth: 2,
+              cropGridStrokeWidth: 1,
+              showCropGrid: true,
               initAspectRatio: CropAspectRatioPreset.square,
               lockAspectRatio: true,
               aspectRatioPresets: [CropAspectRatioPreset.square],
@@ -250,6 +292,8 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             IOSUiSettings(
               title: 'Potong Foto Profil',
+              doneButtonTitle: 'Selesai',
+              cancelButtonTitle: 'Batal',
               aspectRatioLockEnabled: true,
               resetAspectRatioEnabled: false,
               aspectRatioPresets: [CropAspectRatioPreset.square],
@@ -490,6 +534,125 @@ class _ProfilePageState extends State<ProfilePage> {
         setSheetState(() {}); // Reset loading indicator in sheet if still open
       } catch (_) {}
     }
+  }
+
+  void _showQrCodeDialog() {
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          backgroundColor: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Title & Close Button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      isEn ? 'My QR Code' : 'Kode QR Saya',
+                      style: AppTextStyles.heading.copyWith(fontSize: 18),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 20, color: Colors.grey),
+                      onPressed: () => Navigator.pop(dialogContext),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                
+                // Profile & Name Header
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 24,
+                      backgroundImage: _currentProfileImage.isNotEmpty
+                          ? MemoryImage(base64Decode(_currentProfileImage))
+                          : null,
+                      backgroundColor: const Color(0xFF193855),
+                      child: _currentProfileImage.isEmpty
+                          ? Text(
+                              _getInitials(_currentName),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          : null,
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _currentName,
+                            style: AppTextStyles.subHeading.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDark,
+                              fontSize: 15,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            _currentPhone,
+                            style: AppTextStyles.subHeading.copyWith(
+                              color: AppColors.textGrey,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 28),
+                
+                // QR Code Container
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF8FAFC),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: QrImageView(
+                    data: widget.user.userId,
+                    version: QrVersions.auto,
+                    size: 200.0,
+                    gapless: false,
+                    foregroundColor: const Color(0xFF193855),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                
+                // Instructions Info Text
+                Text(
+                  isEn
+                      ? 'Ask your friend to scan this QR code on their device to add you as an emergency contact.'
+                      : 'Minta teman Anda memindai kode QR ini di perangkat mereka untuk menambahkan Anda sebagai kontak darurat.',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.subHeading.copyWith(
+                    color: AppColors.textGrey,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _logout() async {
@@ -1065,6 +1228,32 @@ class _ProfilePageState extends State<ProfilePage> {
                               MaterialPageRoute(builder: (context) => const HelpCenterPage()),
                             );
                           },
+                        ),
+                        Divider(height: 1, indent: 64, endIndent: 16, color: Colors.grey[200]),
+                        // Kode QR row
+                        ListTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.qr_code, color: Colors.black87, size: 20),
+                          ),
+                          title: Text(
+                            Localizations.localeOf(context).languageCode == 'en'
+                                ? 'My QR Code'
+                                : 'Kode QR Kontak',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                          subtitle: Text(
+                            Localizations.localeOf(context).languageCode == 'en'
+                                ? 'Show your QR code to add contact'
+                                : 'Tampilkan kode QR untuk tambah kontak',
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                          trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+                          onTap: _showQrCodeDialog,
                         ),
                       ],
                     ),

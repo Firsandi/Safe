@@ -9,6 +9,8 @@ import '../../../../core/utils/injection.dart';
 import '../../domain/entities/contact_entity.dart';
 import '../bloc/emergency_cubit.dart';
 import 'package:safe/l10n/app_localizations.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'qr_scanner_page.dart';
 
 class AddContactPage extends StatefulWidget {
   const AddContactPage({super.key});
@@ -41,6 +43,45 @@ class _AddContactPageState extends State<AddContactPage> {
     if (query.isEmpty) return;
     setState(() => _hasSearched = true);
     context.read<EmergencyCubit>().searchUsers(query);
+  }
+
+  Future<void> _openQrScanner() async {
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final status = await Permission.camera.request();
+    
+    if (status.isGranted) {
+      if (!mounted) return;
+      final String? scannedUserId = await Navigator.push<String>(
+        context,
+        MaterialPageRoute(builder: (context) => const QrScannerPage()),
+      );
+      
+      if (scannedUserId != null && scannedUserId.isNotEmpty) {
+        final contactName = isEn ? 'Contact' : 'Teman';
+        _addContactRemote(
+          ContactEntity(
+            id: scannedUserId,
+            name: contactName,
+            phoneNumber: '',
+            status: '',
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isEn
+                  ? 'Camera permission is required to scan QR codes.'
+                  : 'Izin kamera diperlukan untuk memindai kode QR.',
+            ),
+            backgroundColor: AppColors.primaryRed,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -110,6 +151,10 @@ class _AddContactPageState extends State<AddContactPage> {
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                             prefixIcon: const Icon(Icons.contact_mail_outlined, color: AppColors.inputIconGrey, size: 22),
+                            suffixIcon: IconButton(
+                              icon: const Icon(Icons.qr_code_scanner, color: Color(0xFF193855)),
+                              onPressed: _openQrScanner,
+                            ),
                           ),
                         ),
                       ),
