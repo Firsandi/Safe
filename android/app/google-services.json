@@ -50,6 +50,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "915655284757-51ufrsqchql03u5khrjoup17u8aebidh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pbm.safe",
+            "certificate_hash": "36fb81e134b61f82ef10a6cb67e24f2924dc9c0f"
+          }
+        },
+        {
           "client_id": "915655284757-9gqpkheg3j4p02pfa9qcg0lldh305fhk.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
