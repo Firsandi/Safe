@@ -26,6 +26,8 @@ import 'package:safe/features/home/presentation/pages/language_page.dart';
 import 'package:safe/features/home/presentation/pages/help_center_page.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:safe/core/services/notification_manager.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class HomePage extends StatefulWidget {
   final UserEntity user;
@@ -64,6 +66,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   // Permissions check state
   bool _hasLocationPermission = true;
   bool _hasNotificationPermission = true;
+  bool _hasOverlayPermission = true;
   bool _checkingPermissions = true;
 
   @override
@@ -71,7 +74,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _checkPermissionsState().then((_) {
-      if (mounted && (!_hasLocationPermission || !_hasNotificationPermission)) {
+      if (mounted && (!_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission)) {
         _requestPermissions();
       }
     });
@@ -641,7 +644,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       );
     }
 
-    if (!_hasLocationPermission || !_hasNotificationPermission) {
+    if (!_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission) {
       return _buildPermissionRequestScreen();
     }
 
@@ -1080,10 +1083,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       final notifGranted = settings.authorizationStatus == AuthorizationStatus.authorized ||
           settings.authorizationStatus == AuthorizationStatus.provisional;
 
+      // 3. Cek izin overlay (draw over other apps)
+      final overlayGranted = await Permission.systemAlertWindow.isGranted;
+
       if (mounted) {
         setState(() {
           _hasLocationPermission = locGranted;
           _hasNotificationPermission = notifGranted;
+          _hasOverlayPermission = overlayGranted;
           _checkingPermissions = false;
         });
       }
@@ -1112,6 +1119,17 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     final notifGranted = settings.authorizationStatus == AuthorizationStatus.authorized ||
         settings.authorizationStatus == AuthorizationStatus.provisional;
 
+    // Jika notifikasi diizinkan setelah login, langsung unggah token ke backend
+    if (notifGranted) {
+      await NotificationManager.uploadFcmToken();
+    }
+
+    // 3. Minta izin overlay (draw over other apps)
+    var overlayStatus = await Permission.systemAlertWindow.status;
+    if (!overlayStatus.isGranted) {
+      overlayStatus = await Permission.systemAlertWindow.request();
+    }
+
     // Jika ditolak secara permanen, arahkan ke pengaturan aplikasi
     if (locPermissionStatus == LocationPermission.deniedForever) {
       await Geolocator.openAppSettings();
@@ -1120,6 +1138,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       if (currentSettings.authorizationStatus == AuthorizationStatus.denied) {
         await Geolocator.openAppSettings();
       }
+    } else if (overlayStatus.isPermanentlyDenied) {
+      await openAppSettings();
     }
 
     await _checkPermissionsState();
@@ -1237,6 +1257,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                       icon: Icons.notifications_none_outlined,
                       title: l10n.notificationsTitle,
                       isGranted: _hasNotificationPermission,
+                    ),
+                    Divider(height: 28, color: AppColors.inputBorder.withOpacity(0.6)),
+                    _buildPermissionStatusRow(
+                      icon: Icons.layers_outlined,
+                      title: Localizations.localeOf(context).languageCode == 'en'
+                          ? 'Display Over Other Apps'
+                          : 'Tampilkan di Atas Aplikasi Lain',
+                      isGranted: _hasOverlayPermission,
                     ),
                   ],
                 ),

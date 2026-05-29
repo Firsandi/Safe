@@ -64,7 +64,8 @@ class NotificationManager {
       // 2. Setup Background Handler
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-      // 3. Request permissions (including Critical Alerts for iOS)
+      // 3. Request permissions (Commented out here, now requested after login on HomePage)
+      /*
       final messaging = FirebaseMessaging.instance;
       await messaging.requestPermission(
         alert: true,
@@ -75,6 +76,7 @@ class NotificationManager {
         provisional: false,
         sound: true,
       );
+      */
 
       // 4. Initialize Local Notifications for Android Channels
       const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');

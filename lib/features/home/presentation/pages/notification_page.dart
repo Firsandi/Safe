@@ -3,6 +3,9 @@ import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/core/services/notification_local_service.dart';
 import 'package:safe/l10n/app_localizations.dart';
+import 'package:safe/core/utils/injection.dart';
+import 'package:dio/dio.dart';
+
 
 class NotificationPage extends StatefulWidget {
   const NotificationPage({super.key});
@@ -101,6 +104,10 @@ class _NotificationPageState extends State<NotificationPage> {
 
   Future<void> _loadNotifications() async {
     setState(() => _isLoading = true);
+    
+    // First, sync with the server to get any new notifications instantly
+    await _syncNotificationsFromServer();
+
     var list = await NotificationLocalService.loadNotifications();
     _sortNotifications(list);
 
@@ -111,6 +118,77 @@ class _NotificationPageState extends State<NotificationPage> {
       });
     }
   }
+
+  Future<void> _syncNotificationsFromServer() async {
+    try {
+      final dio = sl<Dio>();
+      
+      // Parallel fetches for sync
+      final results = await Future.wait([
+        dio.get('/api/contacts/requests'),
+        dio.get('/api/sos/history/received'),
+      ]);
+      
+      final requestsData = results[0].data['requests'] as List?;
+      final receivedSosData = results[1].data as List?;
+      
+      final List<LocalNotification> newNotifs = [];
+
+      if (requestsData != null && requestsData.isNotEmpty) {
+        final notifications = await NotificationLocalService.loadNotifications();
+        for (final req in requestsData) {
+          final reqId = req['id']?.toString() ?? '';
+          if (reqId.isEmpty) continue;
+          final notifId = 'contact_req_$reqId';
+          final exists = notifications.any((n) => n.id == notifId);
+          if (!exists) {
+            newNotifs.add(LocalNotification(
+              id: notifId,
+              title: 'Permintaan Kontak Darurat',
+              body: '${req['name'] ?? 'Seseorang'} ingin menambahkan Anda sebagai kontak darurat.',
+              type: 'contact_request',
+              timestamp: DateTime.now(),
+              isRead: false,
+            ));
+          }
+        }
+      }
+      
+      if (receivedSosData != null && receivedSosData.isNotEmpty) {
+        final notifications = await NotificationLocalService.loadNotifications();
+        for (final item in receivedSosData) {
+          final sosId = item['sos_id']?.toString() ?? '';
+          if (sosId.isEmpty) continue;
+          final notifId = 'sos_event_$sosId';
+          final exists = notifications.any((n) => n.id == notifId);
+          if (!exists) {
+             final title = item['trigger_type'] == 'auto'
+                ? 'EMERGENCY: BENTURAN/KECELAKAAN TERDETEKSI!'
+                : 'EMERGENCY: BUTUH BANTUAN SEGERA!';
+            final name = item['user_name'] ?? item['name'] ?? 'Seseorang';
+            final triggerLabel = item['trigger_type'] == 'auto' ? 'Sensor Otomatis' : 'Manual';
+            
+            newNotifs.add(LocalNotification(
+              id: notifId,
+              title: title,
+              body: '$name mengalami keadaan darurat ($triggerLabel)! Segera periksa lokasi.',
+              type: 'sos_alert',
+              timestamp: DateTime.tryParse(item['created_at'] ?? '') ?? DateTime.now(),
+              isRead: false,
+              payload: Map<String, dynamic>.from(item),
+            ));
+          }
+        }
+      }
+
+      if (newNotifs.isNotEmpty) {
+        await NotificationLocalService.saveNotifications(newNotifs);
+      }
+    } catch (_) {
+      // Quietly ignore network failures and load local notifications
+    }
+  }
+
 
   Future<void> _markAllAsRead() async {
     await NotificationLocalService.markAllAsRead();
