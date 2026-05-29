@@ -38,7 +38,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   final List<String> _bloodTypes = ['A', 'B', 'AB', 'O', 'A+', 'B+', 'AB+', 'O+', 'A-', 'B-', 'AB-', 'O-'];
 
-  final List<String> _diseaseSuggestions = [
+  final List<String> _diseaseSuggestionsID = [
     'Tidak Ada Riwayat Penyakit',
     'Asma Bronkial',
     'Diabetes Melitus Tipe 1',
@@ -94,6 +94,68 @@ class _ProfilePageState extends State<ProfilePage> {
     'Psoriasis (Penyakit Kulit)',
     'Eksim / Dermatitis Atopik',
   ];
+
+  final List<String> _diseaseSuggestionsEN = [
+    'No Medical History',
+    'Bronchial Asthma',
+    'Type 1 Diabetes Mellitus',
+    'Type 2 Diabetes Mellitus',
+    'Hypertension (High Blood Pressure)',
+    'Hypotension (Low Blood Pressure)',
+    'Peanut Allergy',
+    'Seafood Allergy (Shrimp, Crab, Squid)',
+    'Penicillin Allergy',
+    'Paracetamol Allergy',
+    'Sulfa Antibiotics Allergy',
+    'Amoxicillin Antibiotics Allergy',
+    'Dust & Mite Allergy',
+    'Cow\'s Milk Allergy (Lactose)',
+    'Egg Allergy',
+    'Wheat / Gluten Allergy',
+    'Coronary Heart Disease',
+    'Epilepsy',
+    'Hemophilia (Blood Clotting Disorder)',
+    'Anemia',
+    'Gout Arthritis',
+    'Chronic Kidney Disease',
+    'Tuberculosis (Pulmonary TB)',
+    'GERD (Acid Reflux)',
+    'Gastritis',
+    'Vertigo',
+    'Chronic Migraine',
+    'Cancer (Oncology)',
+    'Benign Tumor',
+    'Stroke (Ischemic/Hemorrhagic)',
+    'Lupus Autoimmune Disease (SLE)',
+    'Rheumatoid Arthritis Autoimmune Disease',
+    'Chronic Obstructive Pulmonary Disease (COPD)',
+    'Hepatitis A',
+    'Hepatitis B',
+    'Hepatitis C',
+    'High Cholesterol (Hypercholesterolemia)',
+    'Chronic Sinusitis',
+    'Osteoarthritis',
+    'Congestive Heart Failure',
+    'Bee Sting / Insect Allergy',
+    'Aspirin Allergy',
+    'Cold Allergy (Cold Urticaria)',
+    'Typhus (Typhoid Fever)',
+    'DHF (Dengue Hemorrhagic Fever)',
+    'Malaria',
+    'Lymph Nodes (Lymphadenopathy)',
+    'Goiter (Hypothyroidism/Hyperthyroidism)',
+    'Parkinson\'s Disease',
+    'Alzheimer\'s Dementia',
+    'Schizophrenia / Mental Disorder',
+    'Chronic Insomnia',
+    'Psoriasis (Skin Disease)',
+    'Eczema / Atopic Dermatitis',
+  ];
+
+  List<String> get _diseaseSuggestions {
+    final languageCode = Localizations.localeOf(context).languageCode;
+    return languageCode == 'en' ? _diseaseSuggestionsEN : _diseaseSuggestionsID;
+  }
 
   bool _isLoading = false;
 
