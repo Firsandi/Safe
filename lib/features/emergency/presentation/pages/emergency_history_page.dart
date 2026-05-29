@@ -21,6 +21,8 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
   // Loading and Error States
   bool _isLoading = true;
   String? _errorMessage;
+  bool _hasSentError = false;
+  bool _hasReceivedError = false;
 
   // Pagination Configuration & States
   final int _pageSize = 10;
@@ -81,6 +83,8 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _hasSentError = false;
+      _hasReceivedError = false;
       _sentPage = 1;
       _receivedPage = 1;
       _hasMoreSent = true;
@@ -92,56 +96,114 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
     try {
       final dio = sl<Dio>();
 
-      // Fetch initial pages in parallel
+      // Fetch initial pages and contacts list in parallel, catching errors individually so one failure doesn't break the entire UI
       final results = await Future.wait([
         dio.get(
           '/api/sos/history/sent',
           queryParameters: {'page': 1, 'limit': _pageSize},
-        ),
+        ).catchError((e) {
+          debugPrint('Error fetching sent history: $e');
+          return Response(
+            requestOptions: RequestOptions(path: '/api/sos/history/sent'),
+            data: <dynamic>[],
+            statusCode: 500,
+          );
+        }),
         dio.get(
           '/api/sos/history/received',
           queryParameters: {'page': 1, 'limit': _pageSize},
-        ),
+        ).catchError((e) {
+          debugPrint('Error fetching received history: $e');
+          return Response(
+            requestOptions: RequestOptions(path: '/api/sos/history/received'),
+            data: <dynamic>[],
+            statusCode: 500,
+          );
+        }),
+        dio.get('/api/contacts').catchError((e) {
+          debugPrint('Error fetching contacts: $e');
+          return Response(
+            requestOptions: RequestOptions(path: '/api/contacts'),
+            data: {'contacts': <dynamic>[]},
+            statusCode: 500,
+          );
+        }),
       ]);
 
-      final rawSent = results[0].data ?? [];
-      final rawReceived = results[1].data ?? [];
+      final sentRes = results[0];
+      final receivedRes = results[1];
+      final contactsRes = results[2];
+
+      final sentFailed = sentRes.statusCode == 500;
+      final receivedFailed = receivedRes.statusCode == 500;
+
+      // If both endpoints failed completely, we throw an error to show the general error screen
+      if (sentFailed && receivedFailed) {
+        throw Exception("Gagal memuat riwayat dari server.");
+      }
+
+      final rawSent = sentRes.data ?? [];
+      final rawReceived = receivedRes.data ?? [];
+      final rawContacts = contactsRes.statusCode == 200 && contactsRes.data != null
+          ? contactsRes.data['contacts'] as List?
+          : null;
+
+      if (rawContacts != null) {
+        await NotificationLocalService.syncConnectionTimestamps(rawContacts);
+      }
 
       if (!mounted) return;
       setState(() {
+        _hasSentError = sentFailed;
+        _hasReceivedError = receivedFailed;
+
         // 1. Sent History Pagination setup
         if (rawSent.length > _pageSize) {
-          // Server ignored page parameters (returned all). Fallback to client-side progressive pagination.
           _isSentServerPaged = false;
           _allSentHistory = rawSent;
           _displayedSentHistory = _allSentHistory.take(_pageSize).toList();
           _hasMoreSent = _allSentHistory.length > _pageSize;
         } else {
-          // Server supports query parameters.
           _isSentServerPaged = true;
           _displayedSentHistory = List.from(rawSent);
-          _hasMoreSent = rawSent.length == _pageSize;
+          _hasMoreSent = rawSent.length == _pageSize && !sentFailed;
         }
 
         // 2. Received History Pagination setup
         if (rawReceived.length > _pageSize) {
-          // Server ignored page parameters (returned all). Fallback to client-side progressive pagination.
           _isReceivedServerPaged = false;
           _allReceivedHistory = rawReceived;
-          _displayedReceivedHistory = _allReceivedHistory
-              .take(_pageSize)
-              .toList();
+          _displayedReceivedHistory = _allReceivedHistory.take(_pageSize).toList();
           _hasMoreReceived = _allReceivedHistory.length > _pageSize;
         } else {
-          // Server supports query parameters.
           _isReceivedServerPaged = true;
           _displayedReceivedHistory = List.from(rawReceived);
-          _hasMoreReceived = rawReceived.length == _pageSize;
+          _hasMoreReceived = rawReceived.length == _pageSize && !receivedFailed;
         }
 
         _isLoading = false;
       });
+
       _syncReceivedSosToNotifications(rawReceived);
+
+      // If one of the tabs failed to load, show a SnackBar to alert the user
+      if (sentFailed || receivedFailed) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  sentFailed
+                      ? 'Gagal memuat riwayat terkirim.'
+                      : 'Gagal memuat riwayat diterima.',
+                ),
+                backgroundColor: AppColors.primaryRed,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -154,14 +216,33 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
   void _syncReceivedSosToNotifications(List<dynamic> receivedList) async {
     if (receivedList.isEmpty) return;
     try {
+      final connectionTimestamps = await NotificationLocalService.getConnectionTimestamps();
       final notifications = await NotificationLocalService.loadNotifications();
       final List<LocalNotification> newNotifs = [];
       for (final item in receivedList) {
+        final status = item['status']?.toString() ?? '';
+        if (status != 'active') continue; // Skip resolved/past SOS events to prevent notification flooding
+        
         final sosId = item['sos_id']?.toString() ?? '';
         if (sosId.isEmpty) continue;
 
+        // Check if event occurred after becoming friends
+        final contactUserId = item['user_id']?.toString() ?? '';
+        final connectionTimeStr = connectionTimestamps[contactUserId];
+        if (connectionTimeStr != null) {
+          final connectionTime = DateTime.parse(connectionTimeStr);
+          final eventTime = DateTime.tryParse(item['created_at'] ?? '') ?? DateTime.now();
+          if (eventTime.isBefore(connectionTime)) {
+            // The event occurred before we became friends
+            continue;
+          }
+        } else {
+          // If contact is not in our active contacts list, skip
+          continue;
+        }
+
         final notifId = 'sos_event_$sosId';
-        final exists = notifications.any((n) => n.id == notifId);
+        final exists = notifications.any((n) => n.id == notifId || (n.payload != null && n.payload!['sos_id']?.toString() == sosId));
         if (!exists) {
           final title = item['trigger_type'] == 'auto'
               ? 'EMERGENCY: BENTURAN/KECELAKAAN TERDETEKSI!'
@@ -467,6 +548,9 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
 
   Widget _buildSentTab() {
     final l10n = AppLocalizations.of(context)!;
+    if (_hasSentError && _displayedSentHistory.isEmpty) {
+      return _buildErrorState(l10n.historyLoadFailed);
+    }
     if (_displayedSentHistory.isEmpty) {
       return _buildEmptyState(l10n.historyNoSent);
     }
@@ -592,6 +676,9 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
 
   Widget _buildReceivedTab() {
     final l10n = AppLocalizations.of(context)!;
+    if (_hasReceivedError && _displayedReceivedHistory.isEmpty) {
+      return _buildErrorState(l10n.historyLoadFailed);
+    }
     if (_displayedReceivedHistory.isEmpty) {
       return _buildEmptyState(l10n.historyNoReceived);
     }
@@ -782,6 +869,41 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              color: AppColors.primaryRed,
+              size: 48,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: AppTextStyles.subHeading,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _fetchHistory,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF193855),
+              ),
+              child: Text(
+                AppLocalizations.of(context)!.retry,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

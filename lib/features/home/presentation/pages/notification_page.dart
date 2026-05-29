@@ -127,11 +127,18 @@ class _NotificationPageState extends State<NotificationPage> {
       final results = await Future.wait([
         dio.get('/api/contacts/requests'),
         dio.get('/api/sos/history/received'),
+        dio.get('/api/contacts'),
       ]);
       
       final requestsData = results[0].data['requests'] as List?;
       final receivedSosData = results[1].data as List?;
+      final contactsData = results[2].data['contacts'] as List?;
       
+      if (contactsData != null) {
+        await NotificationLocalService.syncConnectionTimestamps(contactsData);
+      }
+      
+      final connectionTimestamps = await NotificationLocalService.getConnectionTimestamps();
       final List<LocalNotification> newNotifs = [];
 
       if (requestsData != null && requestsData.isNotEmpty) {
@@ -157,10 +164,29 @@ class _NotificationPageState extends State<NotificationPage> {
       if (receivedSosData != null && receivedSosData.isNotEmpty) {
         final notifications = await NotificationLocalService.loadNotifications();
         for (final item in receivedSosData) {
+          final status = item['status']?.toString() ?? '';
+          if (status != 'active') continue; // Skip resolved/past SOS events to prevent notification flooding
+          
           final sosId = item['sos_id']?.toString() ?? '';
           if (sosId.isEmpty) continue;
+          
+          // Check if event occurred after becoming friends
+          final contactUserId = item['user_id']?.toString() ?? '';
+          final connectionTimeStr = connectionTimestamps[contactUserId];
+          if (connectionTimeStr != null) {
+            final connectionTime = DateTime.parse(connectionTimeStr);
+            final eventTime = DateTime.tryParse(item['created_at'] ?? '') ?? DateTime.now();
+            if (eventTime.isBefore(connectionTime)) {
+              // The event occurred before we became friends
+              continue;
+            }
+          } else {
+            // If contact is not in our active contacts list, skip
+            continue;
+          }
+          
           final notifId = 'sos_event_$sosId';
-          final exists = notifications.any((n) => n.id == notifId);
+          final exists = notifications.any((n) => n.id == notifId || (n.payload != null && n.payload!['sos_id']?.toString() == sosId));
           if (!exists) {
              final title = item['trigger_type'] == 'auto'
                 ? 'EMERGENCY: BENTURAN/KECELAKAAN TERDETEKSI!'

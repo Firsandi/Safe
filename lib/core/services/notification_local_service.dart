@@ -79,6 +79,48 @@ class NotificationLocalService {
     _unreadCountController.add(count);
   }
 
+  /// Returns the connection timestamp mapping: user_id -> ISO string timestamp
+  static Future<Map<String, String>> getConnectionTimestamps() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userData = await SessionManager.getUserData();
+      final userId = userData != null ? userData['user_id'] : 'guest';
+      final key = 'contact_connection_timestamps_$userId';
+      final dataStr = prefs.getString(key);
+      if (dataStr == null) return {};
+      return Map<String, String>.from(jsonDecode(dataStr));
+    } catch (_) {
+      return {};
+    }
+  }
+
+  /// Updates and saves the connection timestamps using the current contact list from server
+  static Future<void> syncConnectionTimestamps(List<dynamic> contacts) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userData = await SessionManager.getUserData();
+      final userId = userData != null ? userData['user_id'] : 'guest';
+      final key = 'contact_connection_timestamps_$userId';
+      
+      final currentMap = await getConnectionTimestamps();
+      bool changed = false;
+      final nowStr = DateTime.now().toIso8601String();
+      
+      for (final contact in contacts) {
+        final contactId = contact['user_id']?.toString() ?? '';
+        if (contactId.isEmpty) continue;
+        if (!currentMap.containsKey(contactId)) {
+          currentMap[contactId] = nowStr;
+          changed = true;
+        }
+      }
+      
+      if (changed) {
+        await prefs.setString(key, jsonEncode(currentMap));
+      }
+    } catch (_) {}
+  }
+
   static Future<String> _getStorageKey() async {
     final userData = await SessionManager.getUserData();
     final userId = userData != null ? userData['user_id'] : 'guest';
