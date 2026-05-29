@@ -14,6 +14,10 @@ abstract class AuthRemoteDataSource {
     String? bloodType,
     String? medicalNotes,
   });
+
+  Future<void> forgotPassword(String email);
+  Future<void> verifyResetOtp(String email, String otp);
+  Future<void> resetPassword(String email, String otp, String newPassword);
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -71,4 +75,54 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw ServerException('Gagal mendaftar. Periksa koneksi internet Anda.');
     }
   }
+
+  @override
+  Future<void> forgotPassword(String email) async {
+    try {
+      await dio.post(
+        '/api/forgot-password',
+        data: {'email': email},
+      );
+    } on DioException catch (e) {
+      throw ServerException(DioErrorHandler.getMessage(e));
+    } catch (e) {
+      throw ServerException('Gagal memproses permintaan lupa password.');
+    }
+  }
+
+  @override
+  Future<void> verifyResetOtp(String email, String otp) async {
+    try {
+      await dio.post(
+        '/api/verify-reset-otp',
+        data: {
+          'email': email,
+          'otp': otp,
+        },
+      );
+    } on DioException catch (e) {
+      throw ServerException(DioErrorHandler.getMessage(e));
+    } catch (e) {
+      throw ServerException('Gagal memverifikasi OTP.');
+    }
+  }
+
+  @override
+  Future<void> resetPassword(String email, String otp, String newPassword) async {
+    try {
+      await dio.post(
+        '/api/reset-password',
+        data: {
+          'email': email,
+          'otp': otp,
+          'new_password': newPassword,
+        },
+      );
+    } on DioException catch (e) {
+      throw ServerException(DioErrorHandler.getMessage(e));
+    } catch (e) {
+      throw ServerException('Gagal mereset password.');
+    }
+  }
 }
+

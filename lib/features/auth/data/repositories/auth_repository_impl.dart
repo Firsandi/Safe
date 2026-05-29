@@ -48,4 +48,40 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(ServerFailure('Registration failed: Connection or server issue.'));
     }
   }
+
+  @override
+  Future<Either<Failure, void>> forgotPassword(String email) async {
+    try {
+      await remoteDataSource.forgotPassword(email);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Unknown error occurred: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> verifyResetOtp(String email, String otp) async {
+    try {
+      await remoteDataSource.verifyResetOtp(email, otp);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Unknown error occurred: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resetPassword(String email, String otp, String newPassword) async {
+    try {
+      await remoteDataSource.resetPassword(email, otp, newPassword);
+      return const Right(null);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Unknown error occurred: $e'));
+    }
+  }
 }

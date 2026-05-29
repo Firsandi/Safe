@@ -26,6 +26,10 @@ import 'package:safe/features/home/presentation/pages/language_page.dart';
 import 'package:safe/features/home/presentation/pages/help_center_page.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart' hide Path;
+import 'package:geocoding/geocoding.dart';
+import 'package:safe/features/home/presentation/pages/full_map_page.dart';
 
 class HomePage extends StatefulWidget {
   final UserEntity user;
@@ -39,6 +43,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   int _currentIndex = 0;
   bool _isInit = false;
   final CrashDetectionService _crashDetection = CrashDetectionService();
+  LatLng? _currentLocation;
+  String _currentAddress = 'Mencari lokasi...';
 
   // Sensor Subscriptions and States
   StreamSubscription? _accelerometerSub;
@@ -833,28 +839,141 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             index: 5,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Container(
-                height: 180,
-                decoration: BoxDecoration(
-                  color: Colors.blueGrey[800],
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const ClipRRect(
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                  child: CustomPaint(
-                    painter: MockMapPainter(),
+              child: GestureDetector(
+                onTap: () {
+                  if (_currentLocation != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FullMapPage(initialLocation: _currentLocation!),
+                      ),
+                    );
+                  }
+                },
+                child: Container(
+                  height: 180,
+                  decoration: BoxDecoration(
+                    color: Colors.blueGrey[800],
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                  borderRadius: const BorderRadius.all(Radius.circular(16)),
+                  child: Stack(
+                    children: [
+                      if (_currentLocation != null)
+                        FlutterMap(
+                          options: MapOptions(
+                            initialCenter: _currentLocation!,
+                            initialZoom: 15.0,
+                            interactionOptions: const InteractionOptions(
+                              flags: InteractiveFlag.none,
+                            ),
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                              userAgentPackageName: 'com.example.safe',
+                            ),
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point: _currentLocation!,
+                                  width: 40,
+                                  height: 40,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.withOpacity(0.3),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      Container(
+                                        width: 16,
+                                        height: 16,
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2.5,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.2),
+                                              blurRadius: 4,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      else
+                        const Center(
+                          child: CircularProgressIndicator(color: AppColors.primaryRed),
+                        ),
+                      Positioned(
+                        bottom: 12,
+                        left: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.location_on_outlined,
+                                color: AppColors.textDark,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  _currentAddress,
+                                  style: AppTextStyles.subHeading.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textDark,
+                                    fontSize: 12,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
           ),
+        ),
           const SizedBox(height: 40),
         ],
       ),
@@ -1086,11 +1205,105 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           _hasNotificationPermission = notifGranted;
           _checkingPermissions = false;
         });
+        if (locGranted) {
+          _loadCurrentLocation();
+        }
       }
     } catch (_) {
       if (mounted) {
         setState(() => _checkingPermissions = false);
       }
+    }
+  }
+
+  Future<void> _loadCurrentLocation() async {
+    final pos = await LocationService.getCurrentLocation();
+    if (pos != null && mounted) {
+      setState(() {
+        _currentLocation = LatLng(pos.latitude, pos.longitude);
+      });
+      _fetchAddress(pos.latitude, pos.longitude);
+    } else if (mounted) {
+      // Default location if failed
+      setState(() {
+        _currentLocation = const LatLng(-8.1691, 113.7020); // Jember
+        _currentAddress = 'Lokasi tidak ditemukan';
+      });
+    }
+  }
+
+  Future<void> _fetchAddress(double lat, double lng) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        final locality = place.locality ?? place.subLocality ?? '';
+        final subAdministrativeArea = place.subAdministrativeArea ?? place.administrativeArea ?? '';
+        
+        String address = '';
+        if (locality.isNotEmpty && subAdministrativeArea.isNotEmpty) {
+          address = '$locality, $subAdministrativeArea';
+        } else if (locality.isNotEmpty) {
+          address = locality;
+        } else if (subAdministrativeArea.isNotEmpty) {
+          address = subAdministrativeArea;
+        } else {
+          address = 'Lokasi ditemukan';
+        }
+
+        if (mounted) {
+          setState(() {
+            _currentAddress = address;
+          });
+        }
+        return;
+      }
+    } catch (e) {
+      // Fallback to OpenStreetMap Nominatim API if Geocoder throws (e.g. no Play Services)
+      try {
+        final dio = Dio();
+        final response = await dio.get(
+          'https://nominatim.openstreetmap.org/reverse',
+          queryParameters: {
+            'format': 'json',
+            'lat': lat,
+            'lon': lng,
+            'zoom': 14,
+            'addressdetails': 1,
+          },
+        );
+        if (response.statusCode == 200 && response.data != null) {
+          final addressData = response.data['address'];
+          if (addressData != null) {
+            final city = addressData['city'] ?? addressData['town'] ?? addressData['village'] ?? addressData['county'] ?? addressData['suburb'] ?? '';
+            final state = addressData['state'] ?? '';
+            
+            String address = '';
+            if (city.isNotEmpty && state.isNotEmpty) {
+              address = '$city, $state';
+            } else if (city.isNotEmpty) {
+              address = city.toString();
+            } else if (state.isNotEmpty) {
+              address = state.toString();
+            } else {
+              address = 'Lokasi ditemukan';
+            }
+
+            if (mounted) {
+              setState(() {
+                _currentAddress = address;
+              });
+            }
+            return;
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      setState(() {
+        _currentAddress = 'Gagal memuat alamat';
+      });
     }
   }
 
