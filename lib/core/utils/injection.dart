@@ -76,8 +76,8 @@ Future<void> init() async {
   // EXTERNAL
   final dio = Dio(
     BaseOptions(
-      baseUrl: 'https://safe-backend-production-abb2.up.railway.app/', 
-      // baseUrl: 'http://10.201.183.245:8080/', // Ganti dengan IP address lokal Anda
+      // baseUrl: 'https://safe-backend-production-abb2.up.railway.app/', 
+      baseUrl: 'http://192.168.1.5:8080/',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {

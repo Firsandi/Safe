@@ -6,7 +6,6 @@ import 'package:geolocator/geolocator.dart';
 import 'package:dio/dio.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:safe/core/theme/app_colors.dart';
-import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/core/services/notification_manager.dart';
 import 'package:safe/features/emergency/presentation/pages/sos_route_page.dart';
 import 'package:safe/core/utils/injection.dart';

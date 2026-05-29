@@ -13,7 +13,7 @@ import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/features/emergency/data/models/contact_model.dart';
 
 class LocationPage extends StatefulWidget {
-  const LocationPage({Key? key}) : super(key: key);
+  const LocationPage({super.key});
 
   @override
   State<LocationPage> createState() => _LocationPageState();
@@ -153,6 +153,17 @@ class _LocationPageState extends State<LocationPage> {
         children: [
           // MAP BACKGROUND
           _buildMap(displayContacts),
+
+          // LOADING OVERLAY
+          if (_isLoading)
+            Container(
+              color: Colors.white.withOpacity(0.6),
+              child: const Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.primaryRed,
+                ),
+              ),
+            ),
 
           // HEADER SECTION
           Positioned(
@@ -409,6 +420,16 @@ class _LocationPageState extends State<LocationPage> {
               ],
             ),
           ),
+          if (targetLatLng != null) ...[
+            const SizedBox(width: 8),
+            IconButton(
+              icon: Icon(
+                Icons.navigation_outlined,
+                color: isSos ? Colors.white : AppColors.primaryRed,
+              ),
+              onPressed: () => _openNavigation(targetLatLng.latitude, targetLatLng.longitude),
+            ),
+          ],
         ],
       ),
     );
