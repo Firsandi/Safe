@@ -5,6 +5,7 @@ import 'package:safe/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:safe/features/auth/domain/repositories/auth_repository.dart';
 import 'package:safe/features/auth/domain/usecases/login_usecase.dart';
 import 'package:safe/features/auth/domain/usecases/register_usecase.dart';
+import 'package:safe/features/auth/domain/usecases/forgot_password_usecases.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:safe/core/localization/language_cubit.dart';
 
@@ -23,6 +24,9 @@ Future<void> init() async {
   sl.registerFactory(() => AuthCubit(
         loginUseCase: sl(),
         registerUseCase: sl(),
+        forgotPasswordUseCase: sl(),
+        verifyResetOtpUseCase: sl(),
+        resetPasswordUseCase: sl(),
       ));
 
   sl.registerFactory(() => LanguageCubit());
@@ -40,6 +44,9 @@ Future<void> init() async {
   // USE CASES
   sl.registerLazySingleton(() => LoginUseCase(sl()));
   sl.registerLazySingleton(() => RegisterUseCase(sl()));
+  sl.registerLazySingleton(() => ForgotPasswordUseCase(sl()));
+  sl.registerLazySingleton(() => VerifyResetOtpUseCase(sl()));
+  sl.registerLazySingleton(() => ResetPasswordUseCase(sl()));
   sl.registerLazySingleton(() => GetContactsUseCase(sl()));
   sl.registerLazySingleton(() => GetPendingRequestsUseCase(sl()));
   sl.registerLazySingleton(() => SearchUserUseCase(sl()));
@@ -69,7 +76,8 @@ Future<void> init() async {
   // EXTERNAL
   final dio = Dio(
     BaseOptions(
-      baseUrl: 'https://safe-backend-production-abb2.up.railway.app/', 
+      // baseUrl: 'https://safe-backend-production-abb2.up.railway.app/', 
+      baseUrl: 'http://10.201.183.245:8080/', // Ganti dengan IP address lokal Anda
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {

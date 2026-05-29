@@ -26,6 +26,10 @@ import 'package:safe/features/home/presentation/pages/language_page.dart';
 import 'package:safe/features/home/presentation/pages/help_center_page.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart' hide Path;
+import 'package:geocoding/geocoding.dart';
+import 'package:safe/features/home/presentation/pages/full_map_page.dart';
 import 'package:safe/core/services/notification_manager.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -41,6 +45,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   int _currentIndex = 0;
   bool _isInit = false;
   final CrashDetectionService _crashDetection = CrashDetectionService();
+  LatLng? _currentLocation;
+  String _currentAddress = 'Mencari lokasi...';
 
   // Sensor Subscriptions and States
   StreamSubscription? _accelerometerSub;
@@ -836,28 +842,141 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             index: 5,
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Container(
-                height: 180,
-                decoration: BoxDecoration(
-                  color: Colors.blueGrey[800],
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: const ClipRRect(
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                  child: CustomPaint(
-                    painter: MockMapPainter(),
+              child: GestureDetector(
+                onTap: () {
+                  if (_currentLocation != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FullMapPage(initialLocation: _currentLocation!),
+                      ),
+                    );
+                  }
+                },
+                child: Container(
+                  height: 180,
+                  decoration: BoxDecoration(
+                    color: Colors.blueGrey[800],
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                  borderRadius: const BorderRadius.all(Radius.circular(16)),
+                  child: Stack(
+                    children: [
+                      if (_currentLocation != null)
+                        FlutterMap(
+                          options: MapOptions(
+                            initialCenter: _currentLocation!,
+                            initialZoom: 15.0,
+                            interactionOptions: const InteractionOptions(
+                              flags: InteractiveFlag.none,
+                            ),
+                          ),
+                          children: [
+                            TileLayer(
+                              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                              userAgentPackageName: 'com.example.safe',
+                            ),
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point: _currentLocation!,
+                                  width: 40,
+                                  height: 40,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue.withOpacity(0.3),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      Container(
+                                        width: 16,
+                                        height: 16,
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue,
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2.5,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black.withOpacity(0.2),
+                                              blurRadius: 4,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        )
+                      else
+                        const Center(
+                          child: CircularProgressIndicator(color: AppColors.primaryRed),
+                        ),
+                      Positioned(
+                        bottom: 12,
+                        left: 12,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.location_on_outlined,
+                                color: AppColors.textDark,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  _currentAddress,
+                                  style: AppTextStyles.subHeading.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textDark,
+                                    fontSize: 12,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
           ),
+        ),
           const SizedBox(height: 40),
         ],
       ),
@@ -1093,6 +1212,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           _hasOverlayPermission = overlayGranted;
           _checkingPermissions = false;
         });
+        if (locGranted) {
+          _loadCurrentLocation();
+        }
       }
     } catch (_) {
       if (mounted) {
@@ -1101,13 +1223,115 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     }
   }
 
+  Future<void> _loadCurrentLocation() async {
+    final pos = await LocationService.getCurrentLocation();
+    if (pos != null && mounted) {
+      setState(() {
+        _currentLocation = LatLng(pos.latitude, pos.longitude);
+      });
+      _fetchAddress(pos.latitude, pos.longitude);
+    } else if (mounted) {
+      // Default location if failed
+      setState(() {
+        _currentLocation = const LatLng(-8.1691, 113.7020); // Jember
+        _currentAddress = 'Lokasi tidak ditemukan';
+      });
+    }
+  }
+
+  Future<void> _fetchAddress(double lat, double lng) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        final locality = place.locality ?? place.subLocality ?? '';
+        final subAdministrativeArea = place.subAdministrativeArea ?? place.administrativeArea ?? '';
+        
+        String address = '';
+        if (locality.isNotEmpty && subAdministrativeArea.isNotEmpty) {
+          address = '$locality, $subAdministrativeArea';
+        } else if (locality.isNotEmpty) {
+          address = locality;
+        } else if (subAdministrativeArea.isNotEmpty) {
+          address = subAdministrativeArea;
+        } else {
+          address = 'Lokasi ditemukan';
+        }
+
+        if (mounted) {
+          setState(() {
+            _currentAddress = address;
+          });
+        }
+        return;
+      }
+    } catch (e) {
+      // Fallback to OpenStreetMap Nominatim API if Geocoder throws (e.g. no Play Services)
+      try {
+        final dio = Dio();
+        final response = await dio.get(
+          'https://nominatim.openstreetmap.org/reverse',
+          queryParameters: {
+            'format': 'json',
+            'lat': lat,
+            'lon': lng,
+            'zoom': 14,
+            'addressdetails': 1,
+          },
+        );
+        if (response.statusCode == 200 && response.data != null) {
+          final addressData = response.data['address'];
+          if (addressData != null) {
+            final city = addressData['city'] ?? addressData['town'] ?? addressData['village'] ?? addressData['county'] ?? addressData['suburb'] ?? '';
+            final state = addressData['state'] ?? '';
+            
+            String address = '';
+            if (city.isNotEmpty && state.isNotEmpty) {
+              address = '$city, $state';
+            } else if (city.isNotEmpty) {
+              address = city.toString();
+            } else if (state.isNotEmpty) {
+              address = state.toString();
+            } else {
+              address = 'Lokasi ditemukan';
+            }
+
+            if (mounted) {
+              setState(() {
+                _currentAddress = address;
+              });
+            }
+            return;
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      setState(() {
+        _currentAddress = 'Gagal memuat alamat';
+      });
+    }
+  }
+
   Future<void> _requestPermissions() async {
     // 1. Minta izin lokasi secara langsung via Geolocator
     var locPermissionStatus = await Geolocator.checkPermission();
+    if (locPermissionStatus == LocationPermission.deniedForever) {
+      await Geolocator.openAppSettings();
+      return;
+    }
     if (locPermissionStatus == LocationPermission.denied) {
       locPermissionStatus = await Geolocator.requestPermission();
+      if (locPermissionStatus == LocationPermission.deniedForever) {
+        await Geolocator.openAppSettings();
+        return;
+      }
     }
     
+    // Add a delay to allow the activity to resume fully before requesting the next permission
+    await Future.delayed(const Duration(milliseconds: 800));
+
     // 2. Minta izin notifikasi
     final messaging = FirebaseMessaging.instance;
     final settings = await messaging.requestPermission(
@@ -1122,24 +1346,25 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     // Jika notifikasi diizinkan setelah login, langsung unggah token ke backend
     if (notifGranted) {
       await NotificationManager.uploadFcmToken();
+    } else {
+      final currentSettings = await FirebaseMessaging.instance.getNotificationSettings();
+      if (currentSettings.authorizationStatus == AuthorizationStatus.denied) {
+        await Geolocator.openAppSettings();
+        return;
+      }
     }
+
+    // Add a delay to allow the activity to resume fully before requesting overlay permission
+    await Future.delayed(const Duration(milliseconds: 800));
 
     // 3. Minta izin overlay (draw over other apps)
     var overlayStatus = await Permission.systemAlertWindow.status;
     if (!overlayStatus.isGranted) {
       overlayStatus = await Permission.systemAlertWindow.request();
-    }
-
-    // Jika ditolak secara permanen, arahkan ke pengaturan aplikasi
-    if (locPermissionStatus == LocationPermission.deniedForever) {
-      await Geolocator.openAppSettings();
-    } else if (!notifGranted) {
-      final currentSettings = await FirebaseMessaging.instance.getNotificationSettings();
-      if (currentSettings.authorizationStatus == AuthorizationStatus.denied) {
-        await Geolocator.openAppSettings();
+      if (overlayStatus.isPermanentlyDenied) {
+        await openAppSettings();
+        return;
       }
-    } else if (overlayStatus.isPermanentlyDenied) {
-      await openAppSettings();
     }
 
     await _checkPermissionsState();
@@ -1150,167 +1375,181 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Spacer(),
-              // Premium Concentric Circles with Shield Icon
-              Center(
-                child: SizedBox(
-                  height: 220,
-                  width: 220,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Outer circle 1
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.inputBorder.withOpacity(0.4), width: 1.5),
-                        ),
-                      ),
-                      // Outer circle 2
-                      Container(
-                        width: 170,
-                        height: 170,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.inputBorder.withOpacity(0.8), width: 1.5),
-                        ),
-                      ),
-                      // Glowing center circle
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryRed,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primaryRed.withOpacity(0.35),
-                              blurRadius: 30,
-                              spreadRadius: 8,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 28.0, vertical: 24.0),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Spacer(),
+                        // Premium Concentric Circles with Shield Icon
+                        Center(
+                          child: SizedBox(
+                            height: 220,
+                            width: 220,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // Outer circle 1
+                                Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: AppColors.inputBorder.withOpacity(0.4), width: 1.5),
+                                  ),
+                                ),
+                                // Outer circle 2
+                                Container(
+                                  width: 170,
+                                  height: 170,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: AppColors.inputBorder.withOpacity(0.8), width: 1.5),
+                                  ),
+                                ),
+                                // Glowing center circle
+                                Container(
+                                  width: 120,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryRed,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.primaryRed.withOpacity(0.35),
+                                        blurRadius: 30,
+                                        spreadRadius: 8,
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.security_outlined,
+                                      color: Colors.white,
+                                      size: 52,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.security_outlined,
-                            color: Colors.white,
-                            size: 52,
                           ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 36),
+                        // Title
+                        Text(
+                          l10n.permissionRequiredTitle,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.heading.copyWith(
+                            color: AppColors.textDark,
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        // Description
+                        Text(
+                          l10n.permissionRequiredDesc,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.subHeading.copyWith(
+                            color: AppColors.textGrey,
+                            fontSize: 14,
+                            height: 1.5,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        // List of permissions missing
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                          decoration: BoxDecoration(
+                            color: AppColors.inputBackground,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: AppColors.inputBorder, width: 1),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.02),
+                                blurRadius: 16,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              _buildPermissionStatusRow(
+                                icon: Icons.location_on_outlined,
+                                title: l10n.locationTitle,
+                                isGranted: _hasLocationPermission,
+                              ),
+                              Divider(height: 28, color: AppColors.inputBorder.withOpacity(0.6)),
+                              _buildPermissionStatusRow(
+                                icon: Icons.notifications_none_outlined,
+                                title: l10n.notificationsTitle,
+                                isGranted: _hasNotificationPermission,
+                              ),
+                              Divider(height: 28, color: AppColors.inputBorder.withOpacity(0.6)),
+                              _buildPermissionStatusRow(
+                                icon: Icons.layers_outlined,
+                                title: Localizations.localeOf(context).languageCode == 'en'
+                                    ? 'Display Over Other Apps'
+                                    : 'Tampilkan di Atas Aplikasi Lain',
+                                isGranted: _hasOverlayPermission,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                        // Instruction
+                        Text(
+                          l10n.openSettingsInstruction,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.footer.copyWith(
+                            color: AppColors.textGrey,
+                            fontSize: 12,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        // Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: _requestPermissions,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primaryRed,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(28),
+                              ),
+                              elevation: 3,
+                              shadowColor: AppColors.primaryRed.withOpacity(0.3),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  l10n.allowPermissionsButton,
+                                  style: AppTextStyles.buttonPrimary,
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.arrow_forward_rounded, size: 20),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 36),
-              // Title
-              Text(
-                l10n.permissionRequiredTitle,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.heading.copyWith(
-                  color: AppColors.textDark,
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 14),
-              // Description
-              Text(
-                l10n.permissionRequiredDesc,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.subHeading.copyWith(
-                  color: AppColors.textGrey,
-                  fontSize: 14,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 32),
-              // List of permissions missing
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-                decoration: BoxDecoration(
-                  color: AppColors.inputBackground,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.inputBorder, width: 1),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
-                      blurRadius: 16,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    _buildPermissionStatusRow(
-                      icon: Icons.location_on_outlined,
-                      title: l10n.locationTitle,
-                      isGranted: _hasLocationPermission,
-                    ),
-                    Divider(height: 28, color: AppColors.inputBorder.withOpacity(0.6)),
-                    _buildPermissionStatusRow(
-                      icon: Icons.notifications_none_outlined,
-                      title: l10n.notificationsTitle,
-                      isGranted: _hasNotificationPermission,
-                    ),
-                    Divider(height: 28, color: AppColors.inputBorder.withOpacity(0.6)),
-                    _buildPermissionStatusRow(
-                      icon: Icons.layers_outlined,
-                      title: Localizations.localeOf(context).languageCode == 'en'
-                          ? 'Display Over Other Apps'
-                          : 'Tampilkan di Atas Aplikasi Lain',
-                      isGranted: _hasOverlayPermission,
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              // Instruction
-              Text(
-                l10n.openSettingsInstruction,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.footer.copyWith(
-                  color: AppColors.textGrey,
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 20),
-              // Button
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: _requestPermissions,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryRed,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
-                    ),
-                    elevation: 3,
-                    shadowColor: AppColors.primaryRed.withOpacity(0.3),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        l10n.allowPermissionsButton,
-                        style: AppTextStyles.buttonPrimary,
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(Icons.arrow_forward_rounded, size: 20),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

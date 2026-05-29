@@ -13,4 +13,8 @@ abstract class AuthRepository {
     String? bloodType,
     String? medicalNotes,
   });
+
+  Future<Either<Failure, void>> forgotPassword(String email);
+  Future<Either<Failure, void>> verifyResetOtp(String email, String otp);
+  Future<Either<Failure, void>> resetPassword(String email, String otp, String newPassword);
 }

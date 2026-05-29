@@ -5,21 +5,31 @@ import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_state.dart';
-import 'reset_otp_page.dart';
 
-class ForgotPasswordPage extends StatefulWidget {
-  const ForgotPasswordPage({super.key});
+class NewPasswordPage extends StatefulWidget {
+  final String email;
+  final String otp;
+
+  const NewPasswordPage({
+    super.key,
+    required this.email,
+    required this.otp,
+  });
 
   @override
-  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
+  State<NewPasswordPage> createState() => _NewPasswordPageState();
 }
 
-class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
-  final emailController = TextEditingController();
+class _NewPasswordPageState extends State<NewPasswordPage> {
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+  bool _isPasswordVisible = false;
+  bool _isConfirmPasswordVisible = false;
 
   @override
   void dispose() {
-    emailController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -46,14 +56,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   backgroundColor: Colors.green,
                 ),
               );
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ResetOtpPage(
-                    email: emailController.text.trim(),
-                  ),
-                ),
-              );
+              // Kembali ke halaman login
+              Navigator.popUntil(context, (route) => route.isFirst);
             } else if (state is AuthError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -77,21 +81,46 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           const Icon(Icons.shield, color: AppColors.primaryRed, size: 56),
                     ),
                     const SizedBox(height: 32),
-                    Text('Lupa Kata Sandi', style: AppTextStyles.heading),
+                    Text('Kata Sandi Baru', style: AppTextStyles.heading),
                     const SizedBox(height: 8),
                     Text(
-                      'Masukkan email yang terdaftar untuk mengatur ulang kata sandi Anda.',
+                      'Silakan buat kata sandi baru untuk akun Anda.',
                       style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
                     ),
                     const SizedBox(height: 32),
-                    Text('EMAIL', style: AppTextStyles.inputLabel),
+                    
+                    Text('KATA SANDI BARU', style: AppTextStyles.inputLabel),
                     const SizedBox(height: 8),
                     _buildInputField(
-                      controller: emailController,
-                      hint: 'nama@email.com',
-                      prefixIcon: Icons.mail_outline,
+                      controller: passwordController,
+                      hint: 'Minimal 6 karakter',
+                      prefixIcon: Icons.lock_outline,
+                      isPassword: true,
+                      obscureText: !_isPasswordVisible,
+                      onToggleVisibility: () {
+                        setState(() {
+                          _isPasswordVisible = !_isPasswordVisible;
+                        });
+                      },
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 20),
+                    
+                    Text('KONFIRMASI KATA SANDI', style: AppTextStyles.inputLabel),
+                    const SizedBox(height: 8),
+                    _buildInputField(
+                      controller: confirmPasswordController,
+                      hint: 'Ulangi kata sandi baru',
+                      prefixIcon: Icons.lock_outline,
+                      isPassword: true,
+                      obscureText: !_isConfirmPasswordVisible,
+                      onToggleVisibility: () {
+                        setState(() {
+                          _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 40),
+
                     SizedBox(
                       width: double.infinity,
                       height: 54,
@@ -108,22 +137,46 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         onPressed: state is AuthLoading
                             ? null
                             : () {
-                                if (emailController.text.isEmpty) {
+                                final pw = passwordController.text;
+                                final cpw = confirmPasswordController.text;
+
+                                if (pw.isEmpty || cpw.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Silahkan isi email'),
+                                      content: Text('Silahkan lengkapi kedua kolom kata sandi'),
                                       backgroundColor: AppColors.primaryRed,
                                     ),
                                   );
                                   return;
                                 }
-                                context.read<AuthCubit>().forgotPassword(
-                                      emailController.text.trim(),
+                                if (pw.length < 6) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Kata sandi minimal 6 karakter'),
+                                      backgroundColor: AppColors.primaryRed,
+                                    ),
+                                  );
+                                  return;
+                                }
+                                if (pw != cpw) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Konfirmasi kata sandi tidak cocok'),
+                                      backgroundColor: AppColors.primaryRed,
+                                    ),
+                                  );
+                                  return;
+                                }
+
+                                context.read<AuthCubit>().resetPassword(
+                                      widget.email,
+                                      widget.otp,
+                                      pw,
                                     );
                               },
                         child: state is AuthLoading
                             ? const CircularProgressIndicator(color: Colors.white)
-                            : Text('KIRIM KODE OTP', style: AppTextStyles.buttonPrimary),
+                            : Text('SIMPAN KATA SANDI', style: AppTextStyles.buttonPrimary),
                       ),
                     ),
                   ],
@@ -140,6 +193,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     required TextEditingController controller,
     required String hint,
     required IconData prefixIcon,
+    bool isPassword = false,
+    bool obscureText = false,
+    VoidCallback? onToggleVisibility,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -149,6 +205,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       ),
       child: TextField(
         controller: controller,
+        obscureText: obscureText,
         style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
         decoration: InputDecoration(
           hintText: hint,
@@ -156,6 +213,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
           prefixIcon: Icon(prefixIcon, color: AppColors.inputIconGrey, size: 22),
+          suffixIcon: isPassword
+              ? IconButton(
+                  icon: Icon(
+                    obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    color: AppColors.inputIconGrey,
+                    size: 22,
+                  ),
+                  onPressed: onToggleVisibility,
+                )
+              : null,
         ),
       ),
     );
