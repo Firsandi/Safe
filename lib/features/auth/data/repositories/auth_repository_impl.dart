@@ -11,9 +11,23 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<Either<Failure, UserEntity>> login(String email, String password) async {
+  Future<Either<Failure, UserEntity>> login(String email, String password, {String? deviceToken}) async {
     try {
-      final remoteUser = await remoteDataSource.login(email, password);
+      final remoteUser = await remoteDataSource.login(email, password, deviceToken: deviceToken);
+      return Right(remoteUser);
+    } on OtpRequiredException catch (e) {
+      return Left(OtpRequiredFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Unknown error occurred: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, UserEntity>> verifyLoginOtp(String email, String otp) async {
+    try {
+      final remoteUser = await remoteDataSource.verifyLoginOtp(email, otp);
       return Right(remoteUser);
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));

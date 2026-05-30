@@ -63,6 +63,22 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 (route) => false, // Hapus semua route sebelumnya
               );
+            } else if (state is AuthOtpRequired) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: Colors.blue,
+                ),
+              );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => OtpVerificationPage(
+                    email: state.email,
+                    isLoginOtp: true,
+                  ),
+                ),
+              );
             } else if (state is AuthError) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(

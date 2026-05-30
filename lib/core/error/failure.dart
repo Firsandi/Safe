@@ -16,3 +16,7 @@ class ServerFailure extends Failure {
 class CacheFailure extends Failure {
   const CacheFailure(super.message);
 }
+
+class OtpRequiredFailure extends Failure {
+  const OtpRequiredFailure(super.message);
+}

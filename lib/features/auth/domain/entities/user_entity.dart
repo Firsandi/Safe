@@ -9,6 +9,7 @@ class UserEntity extends Equatable {
   final String? medicalNotes;
   final String? token;
   final String? profileImage;
+  final String? deviceToken;
 
   const UserEntity({
     required this.userId,
@@ -19,8 +20,9 @@ class UserEntity extends Equatable {
     this.medicalNotes,
     this.token,
     this.profileImage,
+    this.deviceToken,
   });
 
   @override
-  List<Object?> get props => [userId, email, name, phoneNumber, bloodType, medicalNotes, token, profileImage];
+  List<Object?> get props => [userId, email, name, phoneNumber, bloodType, medicalNotes, token, profileImage, deviceToken];
 }

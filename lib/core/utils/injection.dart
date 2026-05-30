@@ -6,6 +6,7 @@ import 'package:safe/features/auth/domain/repositories/auth_repository.dart';
 import 'package:safe/features/auth/domain/usecases/login_usecase.dart';
 import 'package:safe/features/auth/domain/usecases/register_usecase.dart';
 import 'package:safe/features/auth/domain/usecases/forgot_password_usecases.dart';
+import 'package:safe/features/auth/domain/usecases/verify_login_otp_usecase.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:safe/core/localization/language_cubit.dart';
 
@@ -27,6 +28,7 @@ Future<void> init() async {
         forgotPasswordUseCase: sl(),
         verifyResetOtpUseCase: sl(),
         resetPasswordUseCase: sl(),
+        verifyLoginOtpUseCase: sl(),
       ));
 
   sl.registerFactory(() => LanguageCubit());
@@ -47,6 +49,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => ForgotPasswordUseCase(sl()));
   sl.registerLazySingleton(() => VerifyResetOtpUseCase(sl()));
   sl.registerLazySingleton(() => ResetPasswordUseCase(sl()));
+  sl.registerLazySingleton(() => VerifyLoginOtpUseCase(sl()));
   sl.registerLazySingleton(() => GetContactsUseCase(sl()));
   sl.registerLazySingleton(() => GetPendingRequestsUseCase(sl()));
   sl.registerLazySingleton(() => SearchUserUseCase(sl()));

@@ -3,7 +3,8 @@ import 'package:safe/core/error/failure.dart';
 import 'package:safe/features/auth/domain/entities/user_entity.dart';
 
 abstract class AuthRepository {
-  Future<Either<Failure, UserEntity>> login(String email, String password);
+  Future<Either<Failure, UserEntity>> login(String email, String password, {String? deviceToken});
+  Future<Either<Failure, UserEntity>> verifyLoginOtp(String email, String otp);
 
   Future<Either<Failure, UserEntity>> register({
     required String name,

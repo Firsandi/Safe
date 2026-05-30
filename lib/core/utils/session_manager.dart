@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SessionManager {
   static const String _keyToken = 'auth_token';
   static const String _keyUserData = 'user_data';
+  static const String _keyDeviceToken = 'device_token';
 
   /// Simpan session setelah login berhasil
   static Future<void> saveSession({
@@ -35,10 +36,23 @@ class SessionManager {
     return prefs.getString(_keyToken);
   }
 
-  /// Hapus session (logout)
+  /// Simpan device token
+  static Future<void> saveDeviceToken(String deviceToken) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_keyDeviceToken, deviceToken);
+  }
+
+  /// Ambil device token
+  static Future<String?> getDeviceToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyDeviceToken);
+  }
+
+  /// Hapus session (logout) - JANGAN hapus device token
   static Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_keyToken);
     await prefs.remove(_keyUserData);
+    // await prefs.remove(_keyDeviceToken); // Device token dipertahankan
   }
 }

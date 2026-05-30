@@ -6,14 +6,17 @@ import 'package:flutter/services.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/core/utils/injection.dart';
+import 'package:safe/core/utils/session_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OtpVerificationPage extends StatefulWidget {
   final String email;
+  final bool isLoginOtp;
 
   const OtpVerificationPage({
     super.key,
     required this.email,
+    this.isLoginOtp = false,
   });
 
   @override
@@ -197,17 +200,52 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
 
     setState(() => _isLoading = true);
     try {
-      final response = await sl<Dio>().post('/api/verify-email', data: {
+      final endpoint = widget.isLoginOtp ? '/api/verify-login-otp' : '/api/verify-email';
+      final response = await sl<Dio>().post(endpoint, data: {
         'email': widget.email,
         'otp': otp,
       });
-      final message = response.data['message'] ?? 'Email berhasil diverifikasi. Silakan login.';
+
+      if (widget.isLoginOtp) {
+        final token = response.data['token'] as String?;
+        final deviceToken = response.data['device_token'] as String?;
+        final user = response.data['user'];
+
+        if (token != null) {
+          await SessionManager.saveSession(
+            token: token,
+            userData: {
+              'user_id': user['user_id'],
+              'email': user['email'],
+              'name': user['name'],
+              'phone_number': user['phone_number'],
+              'blood_type': user['blood_type'],
+              'medical_notes': user['medical_notes'],
+              'profile_image': user['profile_image'],
+            },
+          );
+        }
+        if (deviceToken != null) {
+          await SessionManager.saveDeviceToken(deviceToken);
+        }
+      }
+
+      final message = response.data['message'] ?? (widget.isLoginOtp ? 'Login berhasil.' : 'Email berhasil diverifikasi. Silakan login.');
       if (!mounted) return;
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_expiryStorageKey);
       await prefs.remove(_resendStorageKey);
       _showMessage(message);
-      Navigator.popUntil(context, (route) => route.isFirst);
+
+      if (widget.isLoginOtp) {
+        // Harus navigate ke HomePage
+        // Kita butuh UserModel, bisa parsing dari user map. Tapi untuk simplicity, HomePage butuh UserModel
+        // Mending kita gunakan Bloc untuk verifyLoginOtp atau emit success. Tapi karena ini direct, kita harus panggil AuthCubit.
+        // Sebenarnya lebih baik redirect ke "/" (splash) agar otomatis terdetect sudah login.
+        Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+      } else {
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
     } on DioException catch (e) {
       final message = e.response?.data?['error'] ?? 'Kode OTP tidak valid atau sudah kedaluwarsa.';
       _showMessage(message, isError: true);

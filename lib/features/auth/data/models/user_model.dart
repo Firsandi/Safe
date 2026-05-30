@@ -10,6 +10,7 @@ class UserModel extends UserEntity {
     super.medicalNotes,
     super.token,
     super.profileImage,
+    super.deviceToken,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json, {String? token}) {
@@ -22,6 +23,7 @@ class UserModel extends UserEntity {
       medicalNotes: json['medical_notes'],
       token: token ?? json['token'],
       profileImage: json['profile_image'] ?? '',
+      deviceToken: json['device_token'],
     );
   }
 
@@ -35,6 +37,7 @@ class UserModel extends UserEntity {
       'medical_notes': medicalNotes,
       'token': token,
       'profile_image': profileImage,
+      'device_token': deviceToken,
     };
   }
 }
