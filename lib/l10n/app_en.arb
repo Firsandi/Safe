@@ -2,6 +2,16 @@
   "@@locale": "en",
   "loginTitle": "Welcome back",
   "loginSubTitle": "Access your tactical medical dashboard.",
+  "loginWelcome": "Log In",
+  "loginWelcomeSub": "Enter your registered email and password",
+  "orText": "OR",
+  "loginGoogle": "Sign in with Google",
+  "noAccountText": "Don't have an account?",
+  "registerNow": "Register now",
+  "fillEmailPasswordError": "Please fill in email and password",
+  "invalidEmailError": "Email format must contain @",
+  "enterEmailFirstError": "Please enter your email first",
+  "failedResendOtpError": "Failed to resend OTP code.",
   "emailLabel": "EMAIL",
   "passwordLabel": "ACCESS PASSWORD",
   "forgotPassword": "Forgot password?",
@@ -310,5 +320,101 @@
   "receiverLocationUnreachable": "Location unreachable",
   "receiverSearchingLocation": "Searching location...",
   "receiverSomeone": "Someone",
-  "cancelSos": "CANCEL"
+
+  "cancelSos": "CANCEL",
+  "splashTitle": "Security at Your\nFingertips",
+  "splashSubtitle": "One touch, One family, Always safe",
+  "splashStartButton": "Get Started",
+  "splashHaveAccount": "Already have an account? ",
+  "splashLoginLink": "Login",
+  "registerTitleText": "Register New Account",
+  "registerSubtitleText": "Join SAFE for your safety and peace of mind.",
+  "stepBasicAccount": "Basic Account",
+  "stepMedicalData": "Medical Data",
+  "fullNameHint": "Enter your full name",
+  "emailHint": "name@email.com",
+  "requiredFieldError": "Required field",
+  "emailFormatError": "Email must contain @",
+  "emailInvalidError": "Invalid email format",
+  "phoneHint": "081234567890",
+  "phonePrefixError": "Phone number must start with 08",
+  "phoneMinLengthError": "Phone number must be at least 10 digits",
+  "phoneMaxLengthError": "Phone number is too long",
+  "passwordHint": "At least 8 characters",
+  "passwordMinLengthError": "Password must be at least 8 characters",
+  "confirmPasswordLabel": "CONFIRM PASSWORD",
+  "confirmPasswordHint": "Repeat your password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "continueButton": "Continue",
+  "registerGoogle": "Sign up with Google",
+  "registerSuccessMsg": "Registration successful. Check email for OTP code.",
+  "skipAndRegister": "Skip & Register",
+  "backTooltip": "Back",
+  "medicalInfoTitle": "Medical Information",
+  "medicalInfoSubtitle": "Blood type and disease/allergy information will greatly assist rescue teams in emergencies.",
+  "bloodTypeHint": "Select Blood Type",
+  "medicalHistoryLabel": "MEDICAL HISTORY OR ALLERGIES",
+  "medicalHistoryHint": "Search disease/allergy (e.g. Asthma)",
+  "registerNowButton": "Register Now",
+  "forgotPasswordTitleText": "Forgot Password",
+  "forgotPasswordSubtitleText": "Enter your registered email to reset your password.",
+  "fillEmailError": "Please fill in your email",
+  "sendOtpCodeButton": "SEND OTP CODE",
+  "verifyEmailTitle": "Verify Email",
+  "enterOtpSentTo": "Enter the 6-digit OTP code sent to {email}",
+  "@enterOtpSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "otpLabel": "OTP CODE",
+  "codeExpiresIn": "Code expires in {timer}",
+  "@codeExpiresIn": {
+    "placeholders": {
+      "timer": {
+        "type": "String"
+      }
+    }
+  },
+  "codeExpired": "OTP code has expired",
+  "enter6DigitOtp": "Enter the 6-digit OTP code",
+  "verifyButton": "VERIFY",
+  "waitToResend": "Wait {timer} to resend",
+  "@waitToResend": {
+    "placeholders": {
+      "timer": {
+        "type": "String"
+      }
+    }
+  },
+  "goBackAndResend": "Go Back & Resend OTP",
+  "invalidOtpError": "Invalid or expired OTP code.",
+  "verificationSuccessMsg": "Email successfully verified. Please login.",
+  "registrationCancelledError": "OTP expired. Registration cancelled, please register again.",
+  "registrationExpiredError": "OTP expired. Please register again.",
+  "resendingText": "Resending...",
+  "resendInText": "Resend in {timer}",
+  "@resendInText": {
+    "placeholders": {
+      "timer": {
+        "type": "String"
+      }
+    }
+  },
+  "resendOtpCodeButton": "Resend OTP code",
+  "newPasswordTitle": "New Password",
+  "newPasswordSubtitle": "Please create a new password for your account.",
+  "newPasswordLabel": "NEW PASSWORD",
+  "newPasswordHint": "At least 8 characters",
+  "confirmNewPasswordLabel": "CONFIRM PASSWORD",
+  "confirmNewPasswordHint": "Repeat your new password",
+  "fillBothPasswordFieldsError": "Please fill in both password fields",
+  "newPasswordMinLengthError": "Password must be at least 8 characters",
+  "confirmPasswordNotMatch": "Confirm password does not match",
+  "savePasswordButton": "SAVE PASSWORD",
+  "selectCountryCodeTitle": "Select Country Code",
+  "searchCountryHint": "Search country...",
+  "invalidPhoneFormatError": "Invalid phone format (numbers only)"
 }

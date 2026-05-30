@@ -2,6 +2,16 @@
   "@@locale": "id",
   "loginTitle": "Selamat datang kembali",
   "loginSubTitle": "Akses dasbor medis taktis Anda.",
+  "loginWelcome": "Masuk Akun",
+  "loginWelcomeSub": "Masukkan email dan kata sandi yang terdaftar",
+  "orText": "ATAU",
+  "loginGoogle": "Masuk dengan Google",
+  "noAccountText": "Belum punya akun?",
+  "registerNow": "Daftar sekarang",
+  "fillEmailPasswordError": "Silahkan isi email dan kata sandi",
+  "invalidEmailError": "Format email harus mengandung @",
+  "enterEmailFirstError": "Isi email terlebih dahulu",
+  "failedResendOtpError": "Gagal mengirim ulang kode OTP.",
   "emailLabel": "EMAIL",
   "passwordLabel": "KATA SANDI AKSES",
   "forgotPassword": "Lupa kata sandi?",
@@ -310,5 +320,101 @@
   "receiverLocationUnreachable": "Lokasi tidak terjangkau",
   "receiverSearchingLocation": "Mencari lokasi...",
   "receiverSomeone": "Seseorang",
-  "cancelSos": "BATALKAN"
+
+  "cancelSos": "BATALKAN",
+  "splashTitle": "Keamanan di Ujung\nJari Anda",
+  "splashSubtitle": "Satu sentuhan, Satu keluarga, Selalu\naman",
+  "splashStartButton": "Mulai Sekarang",
+  "splashHaveAccount": "Punya akun? ",
+  "splashLoginLink": "Masuk",
+  "registerTitleText": "Daftar Akun Baru",
+  "registerSubtitleText": "Bergabunglah dengan SAFE untuk perlindungan dan ketenangan pikiran Anda.",
+  "stepBasicAccount": "Akun Dasar",
+  "stepMedicalData": "Data Medis",
+  "fullNameHint": "Masukkan nama lengkap Anda",
+  "emailHint": "nama@email.com",
+  "requiredFieldError": "Wajib diisi",
+  "emailFormatError": "Format email harus mengandung @",
+  "emailInvalidError": "Format email tidak valid",
+  "phoneHint": "081234567890",
+  "phonePrefixError": "Nomor harus diawali 08",
+  "phoneMinLengthError": "Nomor minimal 10 digit",
+  "phoneMaxLengthError": "Nomor terlalu panjang",
+  "passwordHint": "Minimal 8 karakter",
+  "passwordMinLengthError": "Kata sandi minimal 8 karakter",
+  "confirmPasswordLabel": "KONFIRMASI KATA SANDI",
+  "confirmPasswordHint": "Ulangi kata sandi Anda",
+  "passwordsDoNotMatch": "Kata sandi tidak cocok",
+  "continueButton": "Lanjutkan",
+  "registerGoogle": "Daftar dengan Google",
+  "registerSuccessMsg": "Registrasi berhasil. Cek email untuk kode OTP.",
+  "skipAndRegister": "Lewati & Daftar",
+  "backTooltip": "Kembali",
+  "medicalInfoTitle": "Informasi Medis",
+  "medicalInfoSubtitle": "Informasi golongan darah dan penyakit/alergi akan sangat membantu tim penolong dalam situasi darurat.",
+  "bloodTypeHint": "Pilih Golongan Darah",
+  "medicalHistoryLabel": "RIWAYAT PENYAKIT ATAU ALERGI",
+  "medicalHistoryHint": "Cari penyakit/alergi (cth: Asma)",
+  "registerNowButton": "Daftar Sekarang",
+  "forgotPasswordTitleText": "Lupa Kata Sandi",
+  "forgotPasswordSubtitleText": "Masukkan email yang terdaftar untuk mengatur ulang kata sandi Anda.",
+  "fillEmailError": "Silahkan isi email",
+  "sendOtpCodeButton": "KIRIM KODE OTP",
+  "verifyEmailTitle": "Verifikasi Email",
+  "enterOtpSentTo": "Masukkan kode OTP 6 digit yang dikirim ke {email}",
+  "@enterOtpSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "otpLabel": "KODE OTP",
+  "codeExpiresIn": "Kode kedaluwarsa dalam {timer}",
+  "@codeExpiresIn": {
+    "placeholders": {
+      "timer": {
+        "type": "String"
+      }
+    }
+  },
+  "codeExpired": "Kode OTP sudah kedaluwarsa",
+  "enter6DigitOtp": "Masukkan kode OTP 6 digit",
+  "verifyButton": "VERIFIKASI",
+  "waitToResend": "Tunggu {timer} untuk kirim ulang",
+  "@waitToResend": {
+    "placeholders": {
+      "timer": {
+        "type": "String"
+      }
+    }
+  },
+  "goBackAndResend": "Kembali & Kirim ulang OTP",
+  "invalidOtpError": "Kode OTP tidak valid atau sudah kedaluwarsa.",
+  "verificationSuccessMsg": "Email berhasil diverifikasi. Silakan login.",
+  "registrationCancelledError": "Kode OTP kedaluwarsa. Registrasi dibatalkan, silakan daftar ulang.",
+  "registrationExpiredError": "Kode OTP kedaluwarsa. Silakan daftar ulang.",
+  "resendingText": "Mengirim ulang...",
+  "resendInText": "Kirim ulang dalam {timer}",
+  "@resendInText": {
+    "placeholders": {
+      "timer": {
+        "type": "String"
+      }
+    }
+  },
+  "resendOtpCodeButton": "Kirim ulang kode OTP",
+  "newPasswordTitle": "Kata Sandi Baru",
+  "newPasswordSubtitle": "Silakan buat kata sandi baru untuk akun Anda.",
+  "newPasswordLabel": "KATA SANDI BARU",
+  "newPasswordHint": "Minimal 8 karakter",
+  "confirmNewPasswordLabel": "KONFIRMASI KATA SANDI",
+  "confirmNewPasswordHint": "Ulangi kata sandi baru",
+  "fillBothPasswordFieldsError": "Silahkan lengkapi kedua kolom kata sandi",
+  "newPasswordMinLengthError": "Kata sandi minimal 8 karakter",
+  "confirmPasswordNotMatch": "Konfirmasi kata sandi tidak cocok",
+  "savePasswordButton": "SIMPAN KATA SANDI",
+  "selectCountryCodeTitle": "Pilih Kode Negara",
+  "searchCountryHint": "Cari negara...",
+  "invalidPhoneFormatError": "Format nomor tidak valid (hanya angka)"
 }

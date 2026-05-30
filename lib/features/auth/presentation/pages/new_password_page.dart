@@ -5,6 +5,7 @@ import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_state.dart';
+import 'package:safe/l10n/app_localizations.dart';
 
 class NewPasswordPage extends StatefulWidget {
   final String email;
@@ -74,19 +75,26 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Kata Sandi Baru', style: AppTextStyles.heading),
+                    Image.asset(
+                      'assets/images/logo.png',
+                      height: 56,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.shield, color: AppColors.primaryRed, size: 56),
+                    ),
+                    const SizedBox(height: 32),
+                    Text(AppLocalizations.of(context)!.newPasswordTitle, style: AppTextStyles.heading),
                     const SizedBox(height: 8),
                     Text(
-                      'Silakan buat kata sandi baru untuk akun Anda.',
+                      AppLocalizations.of(context)!.newPasswordSubtitle,
                       style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
                     ),
                     const SizedBox(height: 32),
                     
-                    Text('KATA SANDI BARU', style: AppTextStyles.inputLabel),
+                    Text(AppLocalizations.of(context)!.newPasswordLabel, style: AppTextStyles.inputLabel),
                     const SizedBox(height: 8),
                     _buildInputField(
                       controller: passwordController,
-                      hint: 'Minimal 6 karakter',
+                      hint: AppLocalizations.of(context)!.newPasswordHint,
                       prefixIcon: Icons.lock_outline,
                       isPassword: true,
                       obscureText: !_isPasswordVisible,
@@ -98,11 +106,11 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                     ),
                     const SizedBox(height: 20),
                     
-                    Text('KONFIRMASI KATA SANDI', style: AppTextStyles.inputLabel),
+                    Text(AppLocalizations.of(context)!.confirmNewPasswordLabel, style: AppTextStyles.inputLabel),
                     const SizedBox(height: 8),
                     _buildInputField(
                       controller: confirmPasswordController,
-                      hint: 'Ulangi kata sandi baru',
+                      hint: AppLocalizations.of(context)!.confirmNewPasswordHint,
                       prefixIcon: Icons.lock_outline,
                       isPassword: true,
                       obscureText: !_isConfirmPasswordVisible,
@@ -133,19 +141,19 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                                 final pw = passwordController.text;
                                 final cpw = confirmPasswordController.text;
 
-                                if (pw.isEmpty || cpw.isEmpty) {
+                                 if (pw.isEmpty || cpw.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Silahkan lengkapi kedua kolom kata sandi'),
+                                    SnackBar(
+                                      content: Text(AppLocalizations.of(context)!.fillBothPasswordFieldsError),
                                       backgroundColor: AppColors.primaryRed,
                                     ),
                                   );
                                   return;
                                 }
-                                if (pw.length < 6) {
+                                if (pw.length < 8) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Kata sandi minimal 6 karakter'),
+                                    SnackBar(
+                                      content: Text(AppLocalizations.of(context)!.newPasswordMinLengthError),
                                       backgroundColor: AppColors.primaryRed,
                                     ),
                                   );
@@ -153,8 +161,8 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                                 }
                                 if (pw != cpw) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Konfirmasi kata sandi tidak cocok'),
+                                    SnackBar(
+                                      content: Text(AppLocalizations.of(context)!.confirmPasswordNotMatch),
                                       backgroundColor: AppColors.primaryRed,
                                     ),
                                   );
@@ -169,7 +177,7 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                               },
                         child: state is AuthLoading
                             ? const CircularProgressIndicator(color: Colors.white)
-                            : Text('SIMPAN KATA SANDI', style: AppTextStyles.buttonPrimary),
+                            : Text(AppLocalizations.of(context)!.savePasswordButton, style: AppTextStyles.buttonPrimary),
                       ),
                     ),
                   ],

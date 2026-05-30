@@ -3,6 +3,9 @@ import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/features/auth/presentation/pages/login_page.dart';
 import 'package:safe/features/auth/presentation/pages/register_page.dart';
+import 'package:safe/core/localization/language_selector.dart';
+import 'package:safe/l10n/app_localizations.dart';
+
 
 class SplashPage extends StatelessWidget {
   const SplashPage({super.key});
@@ -26,7 +29,23 @@ class SplashPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-
+                        // Header Logo & Language Selector
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Image.asset(
+                              'assets/images/logo.png',
+                              height: 28,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(
+                                    Icons.shield,
+                                    color: AppColors.primaryRed,
+                                    size: 28,
+                                  ),
+                            ),
+                            const LanguageSelector(),
+                          ],
+                        ),
 
                         const Spacer(),
 
@@ -101,7 +120,7 @@ class SplashPage extends StatelessWidget {
 
                         // Texts
                         Text(
-                          'Keamanan di Ujung\nJari Anda',
+                          AppLocalizations.of(context)!.splashTitle,
                           textAlign: TextAlign.center,
                           style: AppTextStyles.heading.copyWith(
                             fontSize: 28,
@@ -110,7 +129,7 @@ class SplashPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Satu sentuhan, Satu keluarga, Selalu\naman',
+                          AppLocalizations.of(context)!.splashSubtitle,
                           textAlign: TextAlign.center,
                           style: AppTextStyles.subHeading.copyWith(
                             color: AppColors.primaryRed,
@@ -146,7 +165,7 @@ class SplashPage extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Mulai Sekarang',
+                                  AppLocalizations.of(context)!.splashStartButton,
                                   style: AppTextStyles.buttonPrimary,
                                 ),
                                 const SizedBox(width: 8),
@@ -162,7 +181,7 @@ class SplashPage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'Punya akun? ',
+                              AppLocalizations.of(context)!.splashHaveAccount,
                               style: AppTextStyles.subHeading.copyWith(
                                 fontSize: 14,
                                 color: AppColors.textDark,
@@ -178,7 +197,7 @@ class SplashPage extends StatelessWidget {
                                 );
                               },
                               child: Text(
-                                'Masuk',
+                                AppLocalizations.of(context)!.splashLoginLink,
                                 style: AppTextStyles.subHeading.copyWith(
                                   fontSize: 14,
                                   color: AppColors.primaryRed,

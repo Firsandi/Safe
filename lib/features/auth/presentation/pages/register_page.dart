@@ -8,6 +8,9 @@ import 'package:safe/core/utils/injection.dart';
 import 'package:safe/core/utils/google_auth_helper.dart';
 import 'package:safe/features/auth/presentation/pages/login_page.dart';
 import 'package:safe/features/auth/presentation/pages/otp_verification_page.dart';
+import 'package:safe/core/localization/language_selector.dart';
+import 'package:safe/l10n/app_localizations.dart';
+import 'package:safe/core/utils/country_codes.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -18,6 +21,8 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   int _currentStep = 1; // 1 = Akun Dasar, 2 = Data Medis
+  Country _selectedCountry = CountryCodes.countries.firstWhere((c) => c.code == 'ID');
+  String _searchQuery = '';
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -167,8 +172,8 @@ class _RegisterPageState extends State<RegisterPage> {
     if (_formKey.currentState!.validate()) {
       if (_passwordController.text != _confirmPasswordController.text) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Kata sandi tidak cocok'), 
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.passwordsDoNotMatch), 
             backgroundColor: AppColors.primaryRed,
             behavior: SnackBarBehavior.floating,
           ),
@@ -188,13 +193,129 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _submitRegistration(BuildContext innerContext, {bool skipMedical = false}) {
+    final rawPhone = _phoneController.text.trim();
+    final cleanPhone = rawPhone.startsWith('0') ? rawPhone.substring(1) : rawPhone;
+    final fullPhone = '${_selectedCountry.dialCode}$cleanPhone';
+
     innerContext.read<AuthCubit>().register(
       name: _nameController.text,
-      phoneNumber: _phoneController.text,
+      phoneNumber: fullPhone,
       email: _emailController.text,
       password: _passwordController.text,
       bloodType: skipMedical ? null : _selectedBloodType,
       medicalNotes: skipMedical ? '' : _medicalNotesController.text,
+    );
+  }
+
+  void _showCountryCodePicker() {
+    _searchQuery = '';
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.7,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              expand: false,
+              builder: (context, scrollController) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      // Drag Handle
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      Text(
+                        AppLocalizations.of(context)!.selectCountryCodeTitle,
+                        style: AppTextStyles.heading.copyWith(fontSize: 18),
+                      ),
+                      const SizedBox(height: 12),
+                      // Search Bar
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.inputBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.inputBorder),
+                        ),
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: AppLocalizations.of(context)!.searchCountryHint,
+                            hintStyle: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey),
+                            prefixIcon: const Icon(Icons.search, color: AppColors.inputIconGrey, size: 20),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
+                          onChanged: (val) {
+                            setModalState(() {
+                              _searchQuery = val.toLowerCase();
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Country List
+                      Expanded(
+                        child: ListView.builder(
+                          controller: scrollController,
+                          itemCount: CountryCodes.countries.length,
+                          itemBuilder: (context, index) {
+                            final country = CountryCodes.countries[index];
+                            final name = isEn ? country.nameEn : country.nameId;
+                            if (_searchQuery.isNotEmpty &&
+                                !name.toLowerCase().contains(_searchQuery) &&
+                                !country.dialCode.contains(_searchQuery)) {
+                              return const SizedBox.shrink();
+                            }
+                            return ListTile(
+                              leading: Text(
+                                country.flag,
+                                style: const TextStyle(fontSize: 24),
+                              ),
+                              title: Text(
+                                name,
+                                style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
+                              ),
+                              trailing: Text(
+                                country.dialCode,
+                                style: AppTextStyles.subHeading.copyWith(
+                                  color: AppColors.textGrey,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  _selectedCountry = country;
+                                });
+                                Navigator.pop(context);
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 
@@ -211,7 +332,7 @@ class _RegisterPageState extends State<RegisterPage> {
         children: [
           _buildStepIndicator(
             step: 1,
-            title: 'Akun Dasar',
+            title: AppLocalizations.of(context)!.stepBasicAccount,
             isActive: _currentStep >= 1,
             isCompleted: _currentStep > 1,
           ),
@@ -224,7 +345,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ),
           _buildStepIndicator(
             step: 2,
-            title: 'Data Medis',
+            title: AppLocalizations.of(context)!.stepMedicalData,
             isActive: _currentStep >= 2,
             isCompleted: false,
           ),
@@ -298,8 +419,8 @@ class _RegisterPageState extends State<RegisterPage> {
           listener: (context, state) {
             if (state is AuthSuccess) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Registrasi berhasil. Cek email untuk kode OTP.'),
+                SnackBar(
+                  content: Text(AppLocalizations.of(context)!.registerSuccessMsg),
                   backgroundColor: Colors.green,
                   behavior: SnackBarBehavior.floating,
                 ),
@@ -343,7 +464,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               IconButton(
                                 icon: const Icon(Icons.arrow_back, color: Color(0xFF193855)),
                                 onPressed: _previousStep,
-                                tooltip: 'Kembali',
+                                tooltip: AppLocalizations.of(context)!.backTooltip,
                               )
                             else
                               const SizedBox(height: 36),
@@ -353,8 +474,8 @@ class _RegisterPageState extends State<RegisterPage> {
                                 child: Row(
                                   children: [
                                     Text(
-                                      'Lewati & Daftar',
-                                      style: TextStyle(
+                                      AppLocalizations.of(context)!.skipAndRegister,
+                                      style: const TextStyle(
                                         color: AppColors.primaryRed,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
@@ -364,7 +485,9 @@ class _RegisterPageState extends State<RegisterPage> {
                                     const Icon(Icons.arrow_forward, size: 16, color: AppColors.primaryRed),
                                   ],
                                 ),
-                              ),
+                              )
+                            else
+                              const LanguageSelector(),
                           ],
                         ),
                         const SizedBox(height: 16),
@@ -393,36 +516,36 @@ class _RegisterPageState extends State<RegisterPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // TITLES
-        Text('Daftar Akun Baru', style: AppTextStyles.heading.copyWith(fontSize: 24)),
+        Text(AppLocalizations.of(context)!.registerTitleText, style: AppTextStyles.heading.copyWith(fontSize: 24)),
         const SizedBox(height: 8),
         Text(
-          'Bergabunglah dengan SAFE untuk perlindungan dan ketenangan pikiran Anda.',
+          AppLocalizations.of(context)!.registerSubtitleText,
           style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 13),
         ),
         const SizedBox(height: 24),
 
         // NAMA LENGKAP FIELD
-        Text('NAMA LENGKAP', style: AppTextStyles.inputLabel),
+        Text(AppLocalizations.of(context)!.fullNameLabel, style: AppTextStyles.inputLabel),
         const SizedBox(height: 8),
         _buildInputField(
           controller: _nameController,
-          hint: 'Masukkan nama lengkap Anda',
+          hint: AppLocalizations.of(context)!.fullNameHint,
           prefixIcon: Icons.person_outline,
         ),
         const SizedBox(height: 16),
 
         // EMAIL FIELD
-        Text('EMAIL', style: AppTextStyles.inputLabel),
+        Text(AppLocalizations.of(context)!.emailLabel, style: AppTextStyles.inputLabel),
         const SizedBox(height: 8),
         _buildInputField(
           controller: _emailController,
-          hint: 'nama@email.com',
+          hint: AppLocalizations.of(context)!.emailHint,
           prefixIcon: Icons.mail_outline,
           validator: (value) {
-            if (value == null || value.isEmpty) return 'Wajib diisi';
-            if (!value.contains('@')) return 'Format email harus mengandung @';
+            if (value == null || value.isEmpty) return AppLocalizations.of(context)!.requiredFieldError;
+            if (!value.contains('@')) return AppLocalizations.of(context)!.emailFormatError;
             if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-              return 'Format email tidak valid';
+              return AppLocalizations.of(context)!.emailInvalidError;
             }
             return null;
           },
@@ -430,29 +553,61 @@ class _RegisterPageState extends State<RegisterPage> {
         const SizedBox(height: 16),
         
         // NOMOR HP FIELD
-        Text('NOMOR HANDPHONE', style: AppTextStyles.inputLabel),
+        Text(AppLocalizations.of(context)!.phoneLabel, style: AppTextStyles.inputLabel),
         const SizedBox(height: 8),
         _buildInputField(
           controller: _phoneController,
-          hint: '081234567890',
-          prefixIcon: Icons.phone_outlined,
+          hint: AppLocalizations.of(context)!.phoneHint,
+          prefixWidget: GestureDetector(
+            onTap: _showCountryCodePicker,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _selectedCountry.flag,
+                    style: const TextStyle(fontSize: 18),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    _selectedCountry.dialCode,
+                    style: AppTextStyles.subHeading.copyWith(
+                      color: AppColors.textDark,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Icon(Icons.arrow_drop_down, color: AppColors.inputIconGrey, size: 20),
+                  Container(
+                    height: 24,
+                    width: 1,
+                    color: AppColors.inputBorder,
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                ],
+              ),
+            ),
+          ),
           keyboardType: TextInputType.phone,
           validator: (value) {
-            if (value == null || value.isEmpty) return 'Wajib diisi';
-            if (!value.startsWith('08')) return 'Nomor harus diawali 08';
-            if (value.length < 10) return 'Nomor minimal 10 digit';
-            if (value.length > 15) return 'Nomor terlalu panjang';
+            if (value == null || value.isEmpty) return AppLocalizations.of(context)!.requiredFieldError;
+            final cleanVal = value.startsWith('0') ? value.substring(1) : value;
+            if (!RegExp(r'^[0-9]+$').hasMatch(cleanVal)) {
+              return AppLocalizations.of(context)!.invalidPhoneFormatError;
+            }
+            if (cleanVal.length < 8) return AppLocalizations.of(context)!.phoneMinLengthError;
+            if (cleanVal.length > 13) return AppLocalizations.of(context)!.phoneMaxLengthError;
             return null;
           },
         ),
         const SizedBox(height: 16),
 
         // KATA SANDI FIELD
-        Text('KATA SANDI', style: AppTextStyles.inputLabel),
+        Text(AppLocalizations.of(context)!.passwordLabel, style: AppTextStyles.inputLabel),
         const SizedBox(height: 8),
         _buildInputField(
           controller: _passwordController,
-          hint: 'Minimal 8 karakter',
+          hint: AppLocalizations.of(context)!.passwordHint,
           prefixIcon: Icons.lock_outline,
           isPassword: true,
           obscureText: !_isPasswordVisible,
@@ -462,19 +617,19 @@ class _RegisterPageState extends State<RegisterPage> {
             });
           },
           validator: (value) {
-            if (value == null || value.isEmpty) return 'Wajib diisi';
-            if (value.length < 8) return 'Kata sandi minimal 8 karakter';
+            if (value == null || value.isEmpty) return AppLocalizations.of(context)!.requiredFieldError;
+            if (value.length < 8) return AppLocalizations.of(context)!.passwordMinLengthError;
             return null;
           },
         ),
         const SizedBox(height: 16),
         
         // KONFIRMASI KATA SANDI
-        Text('KONFIRMASI KATA SANDI', style: AppTextStyles.inputLabel),
+        Text(AppLocalizations.of(context)!.confirmPasswordLabel, style: AppTextStyles.inputLabel),
         const SizedBox(height: 8),
         _buildInputField(
           controller: _confirmPasswordController,
-          hint: 'Ulangi kata sandi Anda',
+          hint: AppLocalizations.of(context)!.confirmPasswordHint,
           prefixIcon: Icons.lock_outline,
           isPassword: true,
           obscureText: !_isConfirmPasswordVisible,
@@ -504,7 +659,7 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Lanjutkan', style: AppTextStyles.buttonPrimary),
+                Text(AppLocalizations.of(context)!.continueButton, style: AppTextStyles.buttonPrimary),
                 const SizedBox(width: 8),
                 const Icon(Icons.arrow_forward, size: 20),
               ],
@@ -520,7 +675,7 @@ class _RegisterPageState extends State<RegisterPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                'ATAU',
+                AppLocalizations.of(context)!.orText,
                 style: AppTextStyles.inputLabel.copyWith(color: AppColors.inputIconGrey),
               ),
             ),
@@ -550,7 +705,7 @@ class _RegisterPageState extends State<RegisterPage> {
               children: [
                 Image.asset('assets/images/google_logo.png', height: 20, width: 20),
                 const SizedBox(width: 12),
-                Text('Daftar dengan Google', style: AppTextStyles.buttonSecondary),
+                Text(AppLocalizations.of(context)!.registerGoogle, style: AppTextStyles.buttonSecondary),
               ],
             ),
           ),
@@ -563,7 +718,7 @@ class _RegisterPageState extends State<RegisterPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              'Sudah punya akun? ',
+              AppLocalizations.of(context)!.alreadyHaveAccount + ' ',
               style: AppTextStyles.subHeading.copyWith(fontSize: 14, color: AppColors.textGrey),
             ),
             GestureDetector(
@@ -575,7 +730,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 );
               },
               child: Text(
-                'Masuk',
+                AppLocalizations.of(context)!.loginLink,
                 style: AppTextStyles.subHeading.copyWith(
                   fontSize: 14,
                   color: const Color(0xFF193855),
@@ -594,16 +749,16 @@ class _RegisterPageState extends State<RegisterPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // TITLES
-        Text('Informasi Medis', style: AppTextStyles.heading.copyWith(fontSize: 24)),
+        Text(AppLocalizations.of(context)!.medicalInfoTitle, style: AppTextStyles.heading.copyWith(fontSize: 24)),
         const SizedBox(height: 8),
         Text(
-          'Informasi golongan darah dan penyakit/alergi akan sangat membantu tim penolong dalam situasi darurat.',
+          AppLocalizations.of(context)!.medicalInfoSubtitle,
           style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 13),
         ),
         const SizedBox(height: 24),
 
         // GOLONGAN DARAH FIELD
-        Text('GOLONGAN DARAH', style: AppTextStyles.inputLabel),
+        Text(AppLocalizations.of(context)!.bloodType, style: AppTextStyles.inputLabel),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -620,7 +775,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     value: _selectedBloodType,
-                    hint: Text('Pilih Golongan Darah', style: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey)),
+                    hint: Text(AppLocalizations.of(context)!.bloodTypeHint, style: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey)),
                     icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.inputIconGrey),
                     isExpanded: true,
                     style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
@@ -644,7 +799,7 @@ class _RegisterPageState extends State<RegisterPage> {
         const SizedBox(height: 20),
 
         // RIWAYAT PENYAKIT / ALERGI FIELD
-        Text('RIWAYAT PENYAKIT ATAU ALERGI', style: AppTextStyles.inputLabel),
+        Text(AppLocalizations.of(context)!.medicalHistoryLabel, style: AppTextStyles.inputLabel),
         const SizedBox(height: 8),
         Autocomplete<String>(
           optionsBuilder: (TextEditingValue textEditingValue) {
@@ -678,7 +833,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 focusNode: focusNode,
                 style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
                 decoration: InputDecoration(
-                  hintText: 'Cari penyakit/alergi (cth: Asma)',
+                  hintText: AppLocalizations.of(context)!.medicalHistoryHint,
                   hintStyle: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -707,7 +862,7 @@ class _RegisterPageState extends State<RegisterPage> {
             onPressed: state is AuthLoading ? null : () => _submitRegistration(context, skipMedical: false),
             child: state is AuthLoading
                 ? const CircularProgressIndicator(color: Colors.white)
-                : Text('Daftar Sekarang', style: AppTextStyles.buttonPrimary),
+                : Text(AppLocalizations.of(context)!.registerNowButton, style: AppTextStyles.buttonPrimary),
           ),
         ),
       ],
@@ -717,7 +872,8 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget _buildInputField({
     required TextEditingController controller,
     required String hint,
-    required IconData prefixIcon,
+    IconData? prefixIcon,
+    Widget? prefixWidget,
     bool isPassword = false,
     bool obscureText = false,
     VoidCallback? onToggleVisibility,
@@ -740,7 +896,7 @@ class _RegisterPageState extends State<RegisterPage> {
           hintStyle: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          prefixIcon: Icon(prefixIcon, color: AppColors.inputIconGrey, size: 22),
+          prefixIcon: prefixWidget ?? (prefixIcon != null ? Icon(prefixIcon, color: AppColors.inputIconGrey, size: 22) : null),
           suffixIcon: isPassword && onToggleVisibility != null
               ? IconButton(
                   icon: Icon(
@@ -752,7 +908,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 )
               : null,
         ),
-        validator: validator ?? ((value) => value == null || value.isEmpty ? 'Wajib diisi' : null),
+        validator: validator ?? ((value) => value == null || value.isEmpty ? AppLocalizations.of(context)!.requiredFieldError : null),
       ),
     );
   }

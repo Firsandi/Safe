@@ -15,6 +15,36 @@ class AppLocalizationsId extends AppLocalizations {
   String get loginSubTitle => 'Akses dasbor medis taktis Anda.';
 
   @override
+  String get loginWelcome => 'Masuk Akun';
+
+  @override
+  String get loginWelcomeSub => 'Masukkan email dan kata sandi yang terdaftar';
+
+  @override
+  String get orText => 'ATAU';
+
+  @override
+  String get loginGoogle => 'Masuk dengan Google';
+
+  @override
+  String get noAccountText => 'Belum punya akun?';
+
+  @override
+  String get registerNow => 'Daftar sekarang';
+
+  @override
+  String get fillEmailPasswordError => 'Silahkan isi email dan kata sandi';
+
+  @override
+  String get invalidEmailError => 'Format email harus mengandung @';
+
+  @override
+  String get enterEmailFirstError => 'Isi email terlebih dahulu';
+
+  @override
+  String get failedResendOtpError => 'Gagal mengirim ulang kode OTP.';
+
+  @override
   String get emailLabel => 'EMAIL';
 
   @override
@@ -315,10 +345,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get choose => 'Pilih';
 
   @override
-  String get medicalHistoryLabel => 'RIWAYAT PENYAKIT / ALERGI';
+  String get medicalHistoryLabel => 'RIWAYAT PENYAKIT ATAU ALERGI';
 
   @override
-  String get medicalHistoryHint => 'Cth: Asma, Alergi Kacang';
+  String get medicalHistoryHint => 'Cari penyakit/alergi (cth: Asma)';
 
   @override
   String get saveChanges => 'Simpan Perubahan';
@@ -695,4 +725,217 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get cancelSos => 'BATALKAN';
+
+  @override
+  String get splashTitle => 'Keamanan di Ujung\nJari Anda';
+
+  @override
+  String get splashSubtitle => 'Satu sentuhan, Satu keluarga, Selalu\naman';
+
+  @override
+  String get splashStartButton => 'Mulai Sekarang';
+
+  @override
+  String get splashHaveAccount => 'Punya akun? ';
+
+  @override
+  String get splashLoginLink => 'Masuk';
+
+  @override
+  String get registerTitleText => 'Daftar Akun Baru';
+
+  @override
+  String get registerSubtitleText =>
+      'Bergabunglah dengan SAFE untuk perlindungan dan ketenangan pikiran Anda.';
+
+  @override
+  String get stepBasicAccount => 'Akun Dasar';
+
+  @override
+  String get stepMedicalData => 'Data Medis';
+
+  @override
+  String get fullNameHint => 'Masukkan nama lengkap Anda';
+
+  @override
+  String get emailHint => 'nama@email.com';
+
+  @override
+  String get requiredFieldError => 'Wajib diisi';
+
+  @override
+  String get emailFormatError => 'Format email harus mengandung @';
+
+  @override
+  String get emailInvalidError => 'Format email tidak valid';
+
+  @override
+  String get phoneHint => '081234567890';
+
+  @override
+  String get phonePrefixError => 'Nomor harus diawali 08';
+
+  @override
+  String get phoneMinLengthError => 'Nomor minimal 10 digit';
+
+  @override
+  String get phoneMaxLengthError => 'Nomor terlalu panjang';
+
+  @override
+  String get passwordHint => 'Minimal 8 karakter';
+
+  @override
+  String get passwordMinLengthError => 'Kata sandi minimal 8 karakter';
+
+  @override
+  String get confirmPasswordLabel => 'KONFIRMASI KATA SANDI';
+
+  @override
+  String get confirmPasswordHint => 'Ulangi kata sandi Anda';
+
+  @override
+  String get passwordsDoNotMatch => 'Kata sandi tidak cocok';
+
+  @override
+  String get continueButton => 'Lanjutkan';
+
+  @override
+  String get registerGoogle => 'Daftar dengan Google';
+
+  @override
+  String get registerSuccessMsg =>
+      'Registrasi berhasil. Cek email untuk kode OTP.';
+
+  @override
+  String get skipAndRegister => 'Lewati & Daftar';
+
+  @override
+  String get backTooltip => 'Kembali';
+
+  @override
+  String get medicalInfoTitle => 'Informasi Medis';
+
+  @override
+  String get medicalInfoSubtitle =>
+      'Informasi golongan darah dan penyakit/alergi akan sangat membantu tim penolong dalam situasi darurat.';
+
+  @override
+  String get bloodTypeHint => 'Pilih Golongan Darah';
+
+  @override
+  String get registerNowButton => 'Daftar Sekarang';
+
+  @override
+  String get forgotPasswordTitleText => 'Lupa Kata Sandi';
+
+  @override
+  String get forgotPasswordSubtitleText =>
+      'Masukkan email yang terdaftar untuk mengatur ulang kata sandi Anda.';
+
+  @override
+  String get fillEmailError => 'Silahkan isi email';
+
+  @override
+  String get sendOtpCodeButton => 'KIRIM KODE OTP';
+
+  @override
+  String get verifyEmailTitle => 'Verifikasi Email';
+
+  @override
+  String enterOtpSentTo(String email) {
+    return 'Masukkan kode OTP 6 digit yang dikirim ke $email';
+  }
+
+  @override
+  String get otpLabel => 'KODE OTP';
+
+  @override
+  String codeExpiresIn(String timer) {
+    return 'Kode kedaluwarsa dalam $timer';
+  }
+
+  @override
+  String get codeExpired => 'Kode OTP sudah kedaluwarsa';
+
+  @override
+  String get enter6DigitOtp => 'Masukkan kode OTP 6 digit';
+
+  @override
+  String get verifyButton => 'VERIFIKASI';
+
+  @override
+  String waitToResend(String timer) {
+    return 'Tunggu $timer untuk kirim ulang';
+  }
+
+  @override
+  String get goBackAndResend => 'Kembali & Kirim ulang OTP';
+
+  @override
+  String get invalidOtpError => 'Kode OTP tidak valid atau sudah kedaluwarsa.';
+
+  @override
+  String get verificationSuccessMsg =>
+      'Email berhasil diverifikasi. Silakan login.';
+
+  @override
+  String get registrationCancelledError =>
+      'Kode OTP kedaluwarsa. Registrasi dibatalkan, silakan daftar ulang.';
+
+  @override
+  String get registrationExpiredError =>
+      'Kode OTP kedaluwarsa. Silakan daftar ulang.';
+
+  @override
+  String get resendingText => 'Mengirim ulang...';
+
+  @override
+  String resendInText(String timer) {
+    return 'Kirim ulang dalam $timer';
+  }
+
+  @override
+  String get resendOtpCodeButton => 'Kirim ulang kode OTP';
+
+  @override
+  String get newPasswordTitle => 'Kata Sandi Baru';
+
+  @override
+  String get newPasswordSubtitle =>
+      'Silakan buat kata sandi baru untuk akun Anda.';
+
+  @override
+  String get newPasswordLabel => 'KATA SANDI BARU';
+
+  @override
+  String get newPasswordHint => 'Minimal 8 karakter';
+
+  @override
+  String get confirmNewPasswordLabel => 'KONFIRMASI KATA SANDI';
+
+  @override
+  String get confirmNewPasswordHint => 'Ulangi kata sandi baru';
+
+  @override
+  String get fillBothPasswordFieldsError =>
+      'Silahkan lengkapi kedua kolom kata sandi';
+
+  @override
+  String get newPasswordMinLengthError => 'Kata sandi minimal 8 karakter';
+
+  @override
+  String get confirmPasswordNotMatch => 'Konfirmasi kata sandi tidak cocok';
+
+  @override
+  String get savePasswordButton => 'SIMPAN KATA SANDI';
+
+  @override
+  String get selectCountryCodeTitle => 'Pilih Kode Negara';
+
+  @override
+  String get searchCountryHint => 'Cari negara...';
+
+  @override
+  String get invalidPhoneFormatError =>
+      'Format nomor tidak valid (hanya angka)';
 }

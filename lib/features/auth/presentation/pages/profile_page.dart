@@ -18,6 +18,7 @@ import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/core/services/location_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:safe/core/utils/country_codes.dart';
 
 
 class ProfilePage extends StatefulWidget {
@@ -37,6 +38,133 @@ class _ProfilePageState extends State<ProfilePage> {
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
   late TextEditingController _medicalNotesController;
+  late Country _selectedCountry;
+  String _searchQuery = '';
+
+  Country _parseCountry(String fullPhone) {
+    final sortedCountries = List<Country>.from(CountryCodes.countries)
+      ..sort((a, b) => b.dialCode.length.compareTo(a.dialCode.length));
+    
+    for (final country in sortedCountries) {
+      if (fullPhone.startsWith(country.dialCode)) {
+        return country;
+      }
+    }
+    return CountryCodes.countries.firstWhere((c) => c.code == 'ID');
+  }
+
+  void _showCountryCodePicker(StateSetter setSheetState) {
+    _searchQuery = '';
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.7,
+              minChildSize: 0.5,
+              maxChildSize: 0.95,
+              expand: false,
+              builder: (context, scrollController) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      // Drag Handle
+                      Container(
+                        margin: const EdgeInsets.symmetric(vertical: 12),
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      Text(
+                        AppLocalizations.of(context)!.selectCountryCodeTitle,
+                        style: AppTextStyles.heading.copyWith(fontSize: 18),
+                      ),
+                      const SizedBox(height: 12),
+                      // Search Bar
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.inputBackground,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.inputBorder),
+                        ),
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText: AppLocalizations.of(context)!.searchCountryHint,
+                            hintStyle: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey),
+                            prefixIcon: const Icon(Icons.search, color: AppColors.inputIconGrey, size: 20),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
+                          onChanged: (val) {
+                            setModalState(() {
+                              _searchQuery = val.toLowerCase();
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // Country List
+                      Expanded(
+                        child: ListView.builder(
+                          controller: scrollController,
+                          itemCount: CountryCodes.countries.length,
+                          itemBuilder: (context, index) {
+                            final country = CountryCodes.countries[index];
+                            final name = isEn ? country.nameEn : country.nameId;
+                            if (_searchQuery.isNotEmpty &&
+                                !name.toLowerCase().contains(_searchQuery) &&
+                                !country.dialCode.contains(_searchQuery)) {
+                              return const SizedBox.shrink();
+                            }
+                            return ListTile(
+                              leading: Text(
+                                country.flag,
+                                style: const TextStyle(fontSize: 24),
+                              ),
+                              title: Text(
+                                name,
+                                style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
+                              ),
+                              trailing: Text(
+                                country.dialCode,
+                                style: AppTextStyles.subHeading.copyWith(
+                                  color: AppColors.textGrey,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  _selectedCountry = country;
+                                });
+                                setSheetState(() {});
+                                Navigator.pop(context);
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
 
   final List<String> _bloodTypes = ['A', 'B', 'AB', 'O', 'A+', 'B+', 'AB+', 'O+', 'A-', 'B-', 'AB-', 'O-'];
 
@@ -168,7 +296,14 @@ class _ProfilePageState extends State<ProfilePage> {
     _currentPhone = widget.user.phoneNumber;
     _currentProfileImage = widget.user.profileImage ?? '';
     _nameController = TextEditingController(text: _currentName);
-    _phoneController = TextEditingController(text: _currentPhone);
+    
+    final country = _parseCountry(_currentPhone);
+    _selectedCountry = country;
+    final remainingPhone = _currentPhone.startsWith(country.dialCode)
+        ? _currentPhone.substring(country.dialCode.length)
+        : _currentPhone;
+    _phoneController = TextEditingController(text: remainingPhone);
+    
     _medicalNotesController = TextEditingController();
     _fetchMedicalProfile();
     _loadSessionUser();
@@ -183,7 +318,11 @@ class _ProfilePageState extends State<ProfilePage> {
         _currentPhone = widget.user.phoneNumber;
         _currentProfileImage = widget.user.profileImage ?? '';
         _nameController.text = _currentName;
-        _phoneController.text = _currentPhone;
+        final country = _parseCountry(_currentPhone);
+        _selectedCountry = country;
+        _phoneController.text = _currentPhone.startsWith(country.dialCode)
+            ? _currentPhone.substring(country.dialCode.length)
+            : _currentPhone;
       });
     }
   }
@@ -198,7 +337,11 @@ class _ProfilePageState extends State<ProfilePage> {
           _currentPhone = user.phoneNumber;
           _currentProfileImage = user.profileImage ?? '';
           _nameController.text = _currentName;
-          _phoneController.text = _currentPhone;
+          final country = _parseCountry(_currentPhone);
+          _selectedCountry = country;
+          _phoneController.text = _currentPhone.startsWith(country.dialCode)
+              ? _currentPhone.substring(country.dialCode.length)
+              : _currentPhone;
         });
       }
     } catch (_) {}
@@ -475,9 +618,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
       // 1. Save Basic Profile Details & Profile Image
       final newImage = _tempBase64Image ?? _currentProfileImage;
+      final rawPhone = _phoneController.text.trim();
+      final cleanPhone = rawPhone.startsWith('0') ? rawPhone.substring(1) : rawPhone;
+      final fullPhone = '${_selectedCountry.dialCode}$cleanPhone';
       final profileResponse = await dio.put('/api/profile', data: {
         'name': _nameController.text,
-        'phone_number': _phoneController.text,
+        'phone_number': fullPhone,
         'profile_image': newImage,
       });
 
@@ -490,7 +636,7 @@ class _ProfilePageState extends State<ProfilePage> {
       if (profileResponse.statusCode == 200) {
         setState(() {
           _currentName = _nameController.text;
-          _currentPhone = _phoneController.text;
+          _currentPhone = fullPhone;
           _currentProfileImage = newImage;
         });
 
@@ -798,8 +944,38 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(height: 8),
                     _buildInputField(
                       controller: _phoneController,
-                      hint: '081234567890',
+                      hint: '81234567890',
                       keyboardType: TextInputType.phone,
+                      prefixWidget: GestureDetector(
+                        onTap: () => _showCountryCodePicker(setSheetState),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _selectedCountry.flag,
+                                style: const TextStyle(fontSize: 18),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _selectedCountry.dialCode,
+                                style: AppTextStyles.subHeading.copyWith(
+                                  color: AppColors.textDark,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Icon(Icons.arrow_drop_down, color: AppColors.inputIconGrey, size: 20),
+                              Container(
+                                height: 24,
+                                width: 1,
+                                color: AppColors.inputBorder,
+                                margin: const EdgeInsets.symmetric(horizontal: 8),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
 
@@ -1300,6 +1476,7 @@ class _ProfilePageState extends State<ProfilePage> {
     required TextEditingController controller,
     required String hint,
     TextInputType? keyboardType,
+    Widget? prefixWidget,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -1316,6 +1493,7 @@ class _ProfilePageState extends State<ProfilePage> {
           hintStyle: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          prefixIcon: prefixWidget,
         ),
       ),
     );

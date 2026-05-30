@@ -7,7 +7,8 @@ import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_state.dart';
-import 'new_password_page.dart';
+import 'package:safe/features/auth/presentation/pages/new_password_page.dart';
+import 'package:safe/l10n/app_localizations.dart';
 
 class ResetOtpPage extends StatefulWidget {
   final String email;
@@ -148,19 +149,26 @@ class _ResetOtpPageState extends State<ResetOtpPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Verifikasi Email', style: AppTextStyles.heading),
+                    Image.asset(
+                      'assets/images/logo.png',
+                      height: 56,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.shield, color: AppColors.primaryRed, size: 56),
+                    ),
+                    const SizedBox(height: 32),
+                    Text(AppLocalizations.of(context)!.verifyEmailTitle, style: AppTextStyles.heading),
                     const SizedBox(height: 8),
                     Text(
-                      'Masukkan kode OTP 6 digit yang dikirim ke ${widget.email}',
+                      AppLocalizations.of(context)!.enterOtpSentTo(widget.email),
                       style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
                     ),
                     const SizedBox(height: 32),
-                    Text('KODE OTP', style: AppTextStyles.inputLabel),
+                    Text(AppLocalizations.of(context)!.otpLabel, style: AppTextStyles.inputLabel),
                     const SizedBox(height: 6),
                     Text(
                       _remainingSeconds > 0
-                          ? 'Kode kedaluwarsa dalam $_timerText'
-                          : 'Kode OTP sudah kedaluwarsa',
+                          ? AppLocalizations.of(context)!.codeExpiresIn(_timerText)
+                          : AppLocalizations.of(context)!.codeExpired,
                       style: AppTextStyles.subHeading.copyWith(
                         color: _remainingSeconds > 0 ? AppColors.textGrey : AppColors.primaryRed,
                         fontSize: 13,
@@ -188,8 +196,8 @@ class _ResetOtpPageState extends State<ResetOtpPage> {
                                 final otp = _otpControllers.map((c) => c.text).join();
                                 if (otp.length != 6) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Masukkan kode OTP 6 digit'),
+                                    SnackBar(
+                                      content: Text(AppLocalizations.of(context)!.enter6DigitOtp),
                                       backgroundColor: AppColors.primaryRed,
                                     ),
                                   );
@@ -199,7 +207,7 @@ class _ResetOtpPageState extends State<ResetOtpPage> {
                               },
                         child: state is AuthLoading
                             ? const CircularProgressIndicator(color: Colors.white)
-                            : Text('VERIFIKASI', style: AppTextStyles.buttonPrimary),
+                            : Text(AppLocalizations.of(context)!.verifyButton, style: AppTextStyles.buttonPrimary),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -211,8 +219,8 @@ class _ResetOtpPageState extends State<ResetOtpPage> {
                         } : null,
                         child: Text(
                           _remainingSeconds > 0
-                              ? 'Tunggu $_timerText untuk kirim ulang'
-                              : 'Kembali & Kirim ulang OTP',
+                              ? AppLocalizations.of(context)!.waitToResend(_timerText)
+                              : AppLocalizations.of(context)!.goBackAndResend,
                           style: TextStyle(
                             color: _remainingSeconds > 0 ? Colors.grey : AppColors.primaryRed,
                           ),

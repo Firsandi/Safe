@@ -8,6 +8,7 @@ import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/core/utils/session_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:safe/l10n/app_localizations.dart';
 
 class OtpVerificationPage extends StatefulWidget {
   final String email;
@@ -194,7 +195,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
   Future<void> _verifyOtp() async {
     final otp = _otpControllers.map((controller) => controller.text).join();
     if (otp.length != 6) {
-      _showMessage('Masukkan kode OTP 6 digit', isError: true);
+      _showMessage(AppLocalizations.of(context)!.enter6DigitOtp, isError: true);
       return;
     }
 
@@ -230,7 +231,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         }
       }
 
-      final message = response.data['message'] ?? (widget.isLoginOtp ? 'Login berhasil.' : 'Email berhasil diverifikasi. Silakan login.');
+      final message = response.data['message'] ?? (widget.isLoginOtp ? 'Login berhasil.' : AppLocalizations.of(context)!.verificationSuccessMsg);
       if (!mounted) return;
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_expiryStorageKey);
@@ -247,7 +248,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
         Navigator.popUntil(context, (route) => route.isFirst);
       }
     } on DioException catch (e) {
-      final message = e.response?.data?['error'] ?? 'Kode OTP tidak valid atau sudah kedaluwarsa.';
+      final message = e.response?.data?['error'] ?? AppLocalizations.of(context)!.invalidOtpError;
       _showMessage(message, isError: true);
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -285,14 +286,14 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       await prefs.remove(_expiryStorageKey);
       await prefs.remove(_resendStorageKey);
       if (!mounted) return;
-      _showMessage('Kode OTP kedaluwarsa. Registrasi dibatalkan, silakan daftar ulang.', isError: true);
+      _showMessage(AppLocalizations.of(context)!.registrationCancelledError, isError: true);
       Navigator.popUntil(context, (route) => route.isFirst);
     } catch (_) {
       if (!mounted) return;
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_expiryStorageKey);
       await prefs.remove(_resendStorageKey);
-      _showMessage('Kode OTP kedaluwarsa. Silakan daftar ulang.', isError: true);
+      _showMessage(AppLocalizations.of(context)!.registrationExpiredError, isError: true);
       Navigator.popUntil(context, (route) => route.isFirst);
     }
   }
@@ -366,19 +367,26 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Verifikasi Email', style: AppTextStyles.heading),
+              Image.asset(
+                'assets/images/logo.png',
+                height: 56,
+                errorBuilder: (context, error, stackTrace) =>
+                    const Icon(Icons.shield, color: AppColors.primaryRed, size: 56),
+              ),
+              const SizedBox(height: 32),
+              Text(AppLocalizations.of(context)!.verifyEmailTitle, style: AppTextStyles.heading),
               const SizedBox(height: 8),
               Text(
-                'Masukkan kode OTP 6 digit yang dikirim ke ${widget.email}',
+                AppLocalizations.of(context)!.enterOtpSentTo(widget.email),
                 style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
               ),
               const SizedBox(height: 32),
-              Text('KODE OTP', style: AppTextStyles.inputLabel),
+              Text(AppLocalizations.of(context)!.otpLabel, style: AppTextStyles.inputLabel),
               const SizedBox(height: 6),
               Text(
                 _remainingSeconds > 0
-                    ? 'Kode kedaluwarsa dalam $_timerText'
-                    : 'Kode OTP sudah kedaluwarsa',
+                    ? AppLocalizations.of(context)!.codeExpiresIn(_timerText)
+                    : AppLocalizations.of(context)!.codeExpired,
                 style: AppTextStyles.subHeading.copyWith(
                   color: _remainingSeconds > 0 ? AppColors.textGrey : AppColors.primaryRed,
                   fontSize: 13,
@@ -403,7 +411,7 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                   onPressed: _isLoading ? null : _verifyOtp,
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : Text('VERIFIKASI', style: AppTextStyles.buttonPrimary),
+                      : Text(AppLocalizations.of(context)!.verifyButton, style: AppTextStyles.buttonPrimary),
                 ),
               ),
               const SizedBox(height: 16),
@@ -412,10 +420,10 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
                   onPressed: _isResending || _resendRemainingSeconds > 0 ? null : _resendOtp,
                   child: Text(
                     _isResending
-                        ? 'Mengirim ulang...'
+                        ? AppLocalizations.of(context)!.resendingText
                         : (_resendRemainingSeconds > 0
-                            ? 'Kirim ulang dalam $_resendTimerText'
-                            : 'Kirim ulang kode OTP'),
+                            ? AppLocalizations.of(context)!.resendInText(_resendTimerText)
+                            : AppLocalizations.of(context)!.resendOtpCodeButton),
                   ),
                 ),
               ),

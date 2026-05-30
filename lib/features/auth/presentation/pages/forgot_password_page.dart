@@ -5,7 +5,8 @@ import 'package:safe/core/theme/app_text_styles.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_cubit.dart';
 import 'package:safe/features/auth/presentation/bloc/auth_state.dart';
-import 'reset_otp_page.dart';
+import 'package:safe/features/auth/presentation/pages/reset_otp_page.dart';
+import 'package:safe/l10n/app_localizations.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -70,14 +71,21 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Lupa Kata Sandi', style: AppTextStyles.heading),
+                    Image.asset(
+                      'assets/images/logo.png',
+                      height: 56,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.shield, color: AppColors.primaryRed, size: 56),
+                    ),
+                    const SizedBox(height: 32),
+                    Text(AppLocalizations.of(context)!.forgotPasswordTitleText, style: AppTextStyles.heading),
                     const SizedBox(height: 8),
                     Text(
-                      'Masukkan email yang terdaftar untuk mengatur ulang kata sandi Anda.',
+                      AppLocalizations.of(context)!.forgotPasswordSubtitleText,
                       style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
                     ),
                     const SizedBox(height: 32),
-                    Text('EMAIL', style: AppTextStyles.inputLabel),
+                    Text(AppLocalizations.of(context)!.emailLabel, style: AppTextStyles.inputLabel),
                     const SizedBox(height: 8),
                     _buildInputField(
                       controller: emailController,
@@ -103,8 +111,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             : () {
                                 if (emailController.text.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Silahkan isi email'),
+                                    SnackBar(
+                                      content: Text(AppLocalizations.of(context)!.fillEmailError),
                                       backgroundColor: AppColors.primaryRed,
                                     ),
                                   );
@@ -116,7 +124,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               },
                         child: state is AuthLoading
                             ? const CircularProgressIndicator(color: Colors.white)
-                            : Text('KIRIM KODE OTP', style: AppTextStyles.buttonPrimary),
+                            : Text(AppLocalizations.of(context)!.sendOtpCodeButton, style: AppTextStyles.buttonPrimary),
                       ),
                     ),
                   ],

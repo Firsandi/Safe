@@ -13,6 +13,9 @@ import 'otp_verification_page.dart';
 import 'register_page.dart';
 import 'forgot_password_page.dart';
 import 'package:safe/core/services/notification_manager.dart';
+import 'package:safe/core/localization/language_cubit.dart';
+import 'package:safe/core/localization/language_selector.dart';
+import 'package:safe/l10n/app_localizations.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -111,18 +114,32 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                      // LOGO & LANGUAGE SELECTOR
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Image.asset(
+                            'assets/images/logo.png',
+                            height: 56,
+                            errorBuilder: (context, error, stackTrace) => 
+                                const Icon(Icons.shield, color: AppColors.primaryRed, size: 56),
+                          ),
+                          const LanguageSelector(),
+                        ],
+                      ),
+                    const SizedBox(height: 32),
 
                     // TITLES
-                    Text('Masuk Akun', style: AppTextStyles.heading),
+                    Text(AppLocalizations.of(context)!.loginWelcome, style: AppTextStyles.heading),
                     const SizedBox(height: 8),
                     Text(
-                      'Masukkan email dan kata sandi yang terdaftar',
+                      AppLocalizations.of(context)!.loginWelcomeSub,
                       style: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 14),
                     ),
                     const SizedBox(height: 32),
 
                     // EMAIL FIELD
-                    Text('EMAIL', style: AppTextStyles.inputLabel),
+                    Text(AppLocalizations.of(context)!.emailLabel, style: AppTextStyles.inputLabel),
                     const SizedBox(height: 8),
                     _buildInputField(
                       controller: emailController,
@@ -132,7 +149,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 20),
 
                     // PASSWORD FIELD
-                    Text('KATA SANDI', style: AppTextStyles.inputLabel),
+                    Text(AppLocalizations.of(context)!.passwordLabel, style: AppTextStyles.inputLabel),
                     const SizedBox(height: 8),
                     _buildInputField(
                       controller: passwordController,
@@ -159,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
                           );
                         },
                         child: Text(
-                          'Lupa kata sandi?',
+                          AppLocalizations.of(context)!.forgotPassword,
                           style: AppTextStyles.subHeading.copyWith(
                             color: const Color(0xFF193855),
                             fontSize: 14,
@@ -189,8 +206,8 @@ class _LoginPageState extends State<LoginPage> {
                             : () {
                                 if (emailController.text.isEmpty || passwordController.text.isEmpty) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Silahkan isi email dan kata sandi'),
+                                    SnackBar(
+                                      content: Text(AppLocalizations.of(context)!.fillEmailPasswordError),
                                       backgroundColor: AppColors.primaryRed,
                                     ),
                                   );
@@ -198,8 +215,8 @@ class _LoginPageState extends State<LoginPage> {
                                 }
                                 if (!emailController.text.contains('@')) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Format email harus mengandung @'),
+                                    SnackBar(
+                                      content: Text(AppLocalizations.of(context)!.invalidEmailError),
                                       backgroundColor: AppColors.primaryRed,
                                     ),
                                   );
@@ -212,7 +229,7 @@ class _LoginPageState extends State<LoginPage> {
                               },
                         child: state is AuthLoading
                             ? const CircularProgressIndicator(color: Colors.white)
-                            : Text('MASUK', style: AppTextStyles.buttonPrimary),
+                            : Text(AppLocalizations.of(context)!.loginButton, style: AppTextStyles.buttonPrimary),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -224,7 +241,7 @@ class _LoginPageState extends State<LoginPage> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'ATAU',
+                            AppLocalizations.of(context)!.orText,
                             style: AppTextStyles.inputLabel.copyWith(color: AppColors.inputIconGrey),
                           ),
                         ),
@@ -254,7 +271,7 @@ class _LoginPageState extends State<LoginPage> {
                           children: [
                             Image.asset('assets/images/google_logo.png', height: 20, width: 20),
                             const SizedBox(width: 12),
-                            Text('Masuk dengan Google', style: AppTextStyles.buttonSecondary),
+                            Text(AppLocalizations.of(context)!.loginGoogle, style: AppTextStyles.buttonSecondary),
                           ],
                         ),
                       ),
@@ -266,7 +283,7 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Belum punya akun? ',
+                          AppLocalizations.of(context)!.noAccountText + ' ',
                           style: AppTextStyles.subHeading.copyWith(fontSize: 14, color: AppColors.textGrey),
                         ),
                         GestureDetector(
@@ -277,7 +294,7 @@ class _LoginPageState extends State<LoginPage> {
                             );
                           },
                           child: Text(
-                            'Daftar sekarang',
+                            AppLocalizations.of(context)!.registerNow,
                             style: AppTextStyles.subHeading.copyWith(
                               fontSize: 14,
                               color: const Color(0xFF193855),
@@ -340,8 +357,8 @@ class _LoginPageState extends State<LoginPage> {
     final email = emailController.text.trim();
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Isi email terlebih dahulu'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.enterEmailFirstError),
           backgroundColor: AppColors.primaryRed,
         ),
       );
@@ -361,7 +378,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     } on DioException catch (e) {
-      final message = e.response?.data?['error'] ?? 'Gagal mengirim ulang kode OTP.';
+      final message = e.response?.data?['error'] ?? AppLocalizations.of(context)!.failedResendOtpError;
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

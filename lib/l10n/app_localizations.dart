@@ -110,6 +110,66 @@ abstract class AppLocalizations {
   /// **'Access your tactical medical dashboard.'**
   String get loginSubTitle;
 
+  /// No description provided for @loginWelcome.
+  ///
+  /// In en, this message translates to:
+  /// **'Log In'**
+  String get loginWelcome;
+
+  /// No description provided for @loginWelcomeSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your registered email and password'**
+  String get loginWelcomeSub;
+
+  /// No description provided for @orText.
+  ///
+  /// In en, this message translates to:
+  /// **'OR'**
+  String get orText;
+
+  /// No description provided for @loginGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google'**
+  String get loginGoogle;
+
+  /// No description provided for @noAccountText.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account?'**
+  String get noAccountText;
+
+  /// No description provided for @registerNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Register now'**
+  String get registerNow;
+
+  /// No description provided for @fillEmailPasswordError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please fill in email and password'**
+  String get fillEmailPasswordError;
+
+  /// No description provided for @invalidEmailError.
+  ///
+  /// In en, this message translates to:
+  /// **'Email format must contain @'**
+  String get invalidEmailError;
+
+  /// No description provided for @enterEmailFirstError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email first'**
+  String get enterEmailFirstError;
+
+  /// No description provided for @failedResendOtpError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to resend OTP code.'**
+  String get failedResendOtpError;
+
   /// No description provided for @emailLabel.
   ///
   /// In en, this message translates to:
@@ -689,13 +749,13 @@ abstract class AppLocalizations {
   /// No description provided for @medicalHistoryLabel.
   ///
   /// In en, this message translates to:
-  /// **'MEDICAL HISTORY / ALLERGIES'**
+  /// **'MEDICAL HISTORY OR ALLERGIES'**
   String get medicalHistoryLabel;
 
   /// No description provided for @medicalHistoryHint.
   ///
   /// In en, this message translates to:
-  /// **'e.g. Asthma, Peanut Allergy'**
+  /// **'Search disease/allergy (e.g. Asthma)'**
   String get medicalHistoryHint;
 
   /// No description provided for @saveChanges.
@@ -1375,6 +1435,396 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'CANCEL'**
   String get cancelSos;
+
+  /// No description provided for @splashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Security at Your\nFingertips'**
+  String get splashTitle;
+
+  /// No description provided for @splashSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'One touch, One family, Always safe'**
+  String get splashSubtitle;
+
+  /// No description provided for @splashStartButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get splashStartButton;
+
+  /// No description provided for @splashHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account? '**
+  String get splashHaveAccount;
+
+  /// No description provided for @splashLoginLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get splashLoginLink;
+
+  /// No description provided for @registerTitleText.
+  ///
+  /// In en, this message translates to:
+  /// **'Register New Account'**
+  String get registerTitleText;
+
+  /// No description provided for @registerSubtitleText.
+  ///
+  /// In en, this message translates to:
+  /// **'Join SAFE for your safety and peace of mind.'**
+  String get registerSubtitleText;
+
+  /// No description provided for @stepBasicAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic Account'**
+  String get stepBasicAccount;
+
+  /// No description provided for @stepMedicalData.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Data'**
+  String get stepMedicalData;
+
+  /// No description provided for @fullNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your full name'**
+  String get fullNameHint;
+
+  /// No description provided for @emailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'name@email.com'**
+  String get emailHint;
+
+  /// No description provided for @requiredFieldError.
+  ///
+  /// In en, this message translates to:
+  /// **'Required field'**
+  String get requiredFieldError;
+
+  /// No description provided for @emailFormatError.
+  ///
+  /// In en, this message translates to:
+  /// **'Email must contain @'**
+  String get emailFormatError;
+
+  /// No description provided for @emailInvalidError.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid email format'**
+  String get emailInvalidError;
+
+  /// No description provided for @phoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'081234567890'**
+  String get phoneHint;
+
+  /// No description provided for @phonePrefixError.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number must start with 08'**
+  String get phonePrefixError;
+
+  /// No description provided for @phoneMinLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number must be at least 10 digits'**
+  String get phoneMinLengthError;
+
+  /// No description provided for @phoneMaxLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number is too long'**
+  String get phoneMaxLengthError;
+
+  /// No description provided for @passwordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 8 characters'**
+  String get passwordHint;
+
+  /// No description provided for @passwordMinLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters'**
+  String get passwordMinLengthError;
+
+  /// No description provided for @confirmPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'CONFIRM PASSWORD'**
+  String get confirmPasswordLabel;
+
+  /// No description provided for @confirmPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat your password'**
+  String get confirmPasswordHint;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @continueButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueButton;
+
+  /// No description provided for @registerGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up with Google'**
+  String get registerGoogle;
+
+  /// No description provided for @registerSuccessMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration successful. Check email for OTP code.'**
+  String get registerSuccessMsg;
+
+  /// No description provided for @skipAndRegister.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip & Register'**
+  String get skipAndRegister;
+
+  /// No description provided for @backTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get backTooltip;
+
+  /// No description provided for @medicalInfoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Medical Information'**
+  String get medicalInfoTitle;
+
+  /// No description provided for @medicalInfoSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood type and disease/allergy information will greatly assist rescue teams in emergencies.'**
+  String get medicalInfoSubtitle;
+
+  /// No description provided for @bloodTypeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Blood Type'**
+  String get bloodTypeHint;
+
+  /// No description provided for @registerNowButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Register Now'**
+  String get registerNowButton;
+
+  /// No description provided for @forgotPasswordTitleText.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot Password'**
+  String get forgotPasswordTitleText;
+
+  /// No description provided for @forgotPasswordSubtitleText.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your registered email to reset your password.'**
+  String get forgotPasswordSubtitleText;
+
+  /// No description provided for @fillEmailError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please fill in your email'**
+  String get fillEmailError;
+
+  /// No description provided for @sendOtpCodeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'SEND OTP CODE'**
+  String get sendOtpCodeButton;
+
+  /// No description provided for @verifyEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify Email'**
+  String get verifyEmailTitle;
+
+  /// No description provided for @enterOtpSentTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit OTP code sent to {email}'**
+  String enterOtpSentTo(String email);
+
+  /// No description provided for @otpLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP CODE'**
+  String get otpLabel;
+
+  /// No description provided for @codeExpiresIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Code expires in {timer}'**
+  String codeExpiresIn(String timer);
+
+  /// No description provided for @codeExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP code has expired'**
+  String get codeExpired;
+
+  /// No description provided for @enter6DigitOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the 6-digit OTP code'**
+  String get enter6DigitOtp;
+
+  /// No description provided for @verifyButton.
+  ///
+  /// In en, this message translates to:
+  /// **'VERIFY'**
+  String get verifyButton;
+
+  /// No description provided for @waitToResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Wait {timer} to resend'**
+  String waitToResend(String timer);
+
+  /// No description provided for @goBackAndResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Go Back & Resend OTP'**
+  String get goBackAndResend;
+
+  /// No description provided for @invalidOtpError.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid or expired OTP code.'**
+  String get invalidOtpError;
+
+  /// No description provided for @verificationSuccessMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Email successfully verified. Please login.'**
+  String get verificationSuccessMsg;
+
+  /// No description provided for @registrationCancelledError.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP expired. Registration cancelled, please register again.'**
+  String get registrationCancelledError;
+
+  /// No description provided for @registrationExpiredError.
+  ///
+  /// In en, this message translates to:
+  /// **'OTP expired. Please register again.'**
+  String get registrationExpiredError;
+
+  /// No description provided for @resendingText.
+  ///
+  /// In en, this message translates to:
+  /// **'Resending...'**
+  String get resendingText;
+
+  /// No description provided for @resendInText.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend in {timer}'**
+  String resendInText(String timer);
+
+  /// No description provided for @resendOtpCodeButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend OTP code'**
+  String get resendOtpCodeButton;
+
+  /// No description provided for @newPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get newPasswordTitle;
+
+  /// No description provided for @newPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Please create a new password for your account.'**
+  String get newPasswordSubtitle;
+
+  /// No description provided for @newPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'NEW PASSWORD'**
+  String get newPasswordLabel;
+
+  /// No description provided for @newPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 8 characters'**
+  String get newPasswordHint;
+
+  /// No description provided for @confirmNewPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'CONFIRM PASSWORD'**
+  String get confirmNewPasswordLabel;
+
+  /// No description provided for @confirmNewPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Repeat your new password'**
+  String get confirmNewPasswordHint;
+
+  /// No description provided for @fillBothPasswordFieldsError.
+  ///
+  /// In en, this message translates to:
+  /// **'Please fill in both password fields'**
+  String get fillBothPasswordFieldsError;
+
+  /// No description provided for @newPasswordMinLengthError.
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 8 characters'**
+  String get newPasswordMinLengthError;
+
+  /// No description provided for @confirmPasswordNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password does not match'**
+  String get confirmPasswordNotMatch;
+
+  /// No description provided for @savePasswordButton.
+  ///
+  /// In en, this message translates to:
+  /// **'SAVE PASSWORD'**
+  String get savePasswordButton;
+
+  /// No description provided for @selectCountryCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Country Code'**
+  String get selectCountryCodeTitle;
+
+  /// No description provided for @searchCountryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search country...'**
+  String get searchCountryHint;
+
+  /// No description provided for @invalidPhoneFormatError.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid phone format (numbers only)'**
+  String get invalidPhoneFormatError;
 }
 
 class _AppLocalizationsDelegate

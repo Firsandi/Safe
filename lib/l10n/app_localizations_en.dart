@@ -15,6 +15,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginSubTitle => 'Access your tactical medical dashboard.';
 
   @override
+  String get loginWelcome => 'Log In';
+
+  @override
+  String get loginWelcomeSub => 'Enter your registered email and password';
+
+  @override
+  String get orText => 'OR';
+
+  @override
+  String get loginGoogle => 'Sign in with Google';
+
+  @override
+  String get noAccountText => 'Don\'t have an account?';
+
+  @override
+  String get registerNow => 'Register now';
+
+  @override
+  String get fillEmailPasswordError => 'Please fill in email and password';
+
+  @override
+  String get invalidEmailError => 'Email format must contain @';
+
+  @override
+  String get enterEmailFirstError => 'Please enter your email first';
+
+  @override
+  String get failedResendOtpError => 'Failed to resend OTP code.';
+
+  @override
   String get emailLabel => 'EMAIL';
 
   @override
@@ -316,10 +346,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get choose => 'Choose';
 
   @override
-  String get medicalHistoryLabel => 'MEDICAL HISTORY / ALLERGIES';
+  String get medicalHistoryLabel => 'MEDICAL HISTORY OR ALLERGIES';
 
   @override
-  String get medicalHistoryHint => 'e.g. Asthma, Peanut Allergy';
+  String get medicalHistoryHint => 'Search disease/allergy (e.g. Asthma)';
 
   @override
   String get saveChanges => 'Save Changes';
@@ -695,4 +725,216 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancelSos => 'CANCEL';
+
+  @override
+  String get splashTitle => 'Security at Your\nFingertips';
+
+  @override
+  String get splashSubtitle => 'One touch, One family, Always safe';
+
+  @override
+  String get splashStartButton => 'Get Started';
+
+  @override
+  String get splashHaveAccount => 'Already have an account? ';
+
+  @override
+  String get splashLoginLink => 'Login';
+
+  @override
+  String get registerTitleText => 'Register New Account';
+
+  @override
+  String get registerSubtitleText =>
+      'Join SAFE for your safety and peace of mind.';
+
+  @override
+  String get stepBasicAccount => 'Basic Account';
+
+  @override
+  String get stepMedicalData => 'Medical Data';
+
+  @override
+  String get fullNameHint => 'Enter your full name';
+
+  @override
+  String get emailHint => 'name@email.com';
+
+  @override
+  String get requiredFieldError => 'Required field';
+
+  @override
+  String get emailFormatError => 'Email must contain @';
+
+  @override
+  String get emailInvalidError => 'Invalid email format';
+
+  @override
+  String get phoneHint => '081234567890';
+
+  @override
+  String get phonePrefixError => 'Phone number must start with 08';
+
+  @override
+  String get phoneMinLengthError => 'Phone number must be at least 10 digits';
+
+  @override
+  String get phoneMaxLengthError => 'Phone number is too long';
+
+  @override
+  String get passwordHint => 'At least 8 characters';
+
+  @override
+  String get passwordMinLengthError => 'Password must be at least 8 characters';
+
+  @override
+  String get confirmPasswordLabel => 'CONFIRM PASSWORD';
+
+  @override
+  String get confirmPasswordHint => 'Repeat your password';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get continueButton => 'Continue';
+
+  @override
+  String get registerGoogle => 'Sign up with Google';
+
+  @override
+  String get registerSuccessMsg =>
+      'Registration successful. Check email for OTP code.';
+
+  @override
+  String get skipAndRegister => 'Skip & Register';
+
+  @override
+  String get backTooltip => 'Back';
+
+  @override
+  String get medicalInfoTitle => 'Medical Information';
+
+  @override
+  String get medicalInfoSubtitle =>
+      'Blood type and disease/allergy information will greatly assist rescue teams in emergencies.';
+
+  @override
+  String get bloodTypeHint => 'Select Blood Type';
+
+  @override
+  String get registerNowButton => 'Register Now';
+
+  @override
+  String get forgotPasswordTitleText => 'Forgot Password';
+
+  @override
+  String get forgotPasswordSubtitleText =>
+      'Enter your registered email to reset your password.';
+
+  @override
+  String get fillEmailError => 'Please fill in your email';
+
+  @override
+  String get sendOtpCodeButton => 'SEND OTP CODE';
+
+  @override
+  String get verifyEmailTitle => 'Verify Email';
+
+  @override
+  String enterOtpSentTo(String email) {
+    return 'Enter the 6-digit OTP code sent to $email';
+  }
+
+  @override
+  String get otpLabel => 'OTP CODE';
+
+  @override
+  String codeExpiresIn(String timer) {
+    return 'Code expires in $timer';
+  }
+
+  @override
+  String get codeExpired => 'OTP code has expired';
+
+  @override
+  String get enter6DigitOtp => 'Enter the 6-digit OTP code';
+
+  @override
+  String get verifyButton => 'VERIFY';
+
+  @override
+  String waitToResend(String timer) {
+    return 'Wait $timer to resend';
+  }
+
+  @override
+  String get goBackAndResend => 'Go Back & Resend OTP';
+
+  @override
+  String get invalidOtpError => 'Invalid or expired OTP code.';
+
+  @override
+  String get verificationSuccessMsg =>
+      'Email successfully verified. Please login.';
+
+  @override
+  String get registrationCancelledError =>
+      'OTP expired. Registration cancelled, please register again.';
+
+  @override
+  String get registrationExpiredError => 'OTP expired. Please register again.';
+
+  @override
+  String get resendingText => 'Resending...';
+
+  @override
+  String resendInText(String timer) {
+    return 'Resend in $timer';
+  }
+
+  @override
+  String get resendOtpCodeButton => 'Resend OTP code';
+
+  @override
+  String get newPasswordTitle => 'New Password';
+
+  @override
+  String get newPasswordSubtitle =>
+      'Please create a new password for your account.';
+
+  @override
+  String get newPasswordLabel => 'NEW PASSWORD';
+
+  @override
+  String get newPasswordHint => 'At least 8 characters';
+
+  @override
+  String get confirmNewPasswordLabel => 'CONFIRM PASSWORD';
+
+  @override
+  String get confirmNewPasswordHint => 'Repeat your new password';
+
+  @override
+  String get fillBothPasswordFieldsError =>
+      'Please fill in both password fields';
+
+  @override
+  String get newPasswordMinLengthError =>
+      'Password must be at least 8 characters';
+
+  @override
+  String get confirmPasswordNotMatch => 'Confirm password does not match';
+
+  @override
+  String get savePasswordButton => 'SAVE PASSWORD';
+
+  @override
+  String get selectCountryCodeTitle => 'Select Country Code';
+
+  @override
+  String get searchCountryHint => 'Search country...';
+
+  @override
+  String get invalidPhoneFormatError => 'Invalid phone format (numbers only)';
 }
