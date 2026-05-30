@@ -19,7 +19,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await NotificationManager.saveLocalNotificationRecord(message);
   if (message.data['type'] == 'sos_alert') {
     // Initialize notification channels/plugin settings in background isolate
-    const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/launcher_icon');
     const InitializationSettings initSettings = InitializationSettings(android: androidInit);
     await NotificationManager._localNotifications.initialize(initSettings);
 
@@ -79,7 +79,7 @@ class NotificationManager {
       */
 
       // 4. Initialize Local Notifications for Android Channels
-      const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+      const AndroidInitializationSettings androidInit = AndroidInitializationSettings('@mipmap/launcher_icon');
 
       const InitializationSettings initSettings = InitializationSettings(
         android: androidInit,
