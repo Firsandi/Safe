@@ -55,7 +55,6 @@
   "navHome": "BERANDA",
   "navLocation": "LOKASI",
   "navProfile": "PROFIL",
-  
   "settingsLanguage": "Bahasa",
   "settingsLanguageSub": "Mengatur bahasa di aplikasi",
   "settingsHelp": "Pusat Bantuan",
@@ -68,10 +67,9 @@
   "historySosSub": "2 kejadian",
   "notAvailableYet": "Halaman ini belum tersedia",
   "locationTitle": "Lokasi",
-  
   "emergencyCancelled": "Darurat dibatalkan — Anda aman",
-  "alertSent": "ALERT TERKIRIM",
-  "alertSentDesc": "Kontak darurat dan layanan penyelamat telah diberitahu.",
+  "alertSent": "SOS Terkirim",
+  "alertSentDesc": "Sinyal darurat Anda telah dikirimkan ke kontak darurat.",
   "backToHome": "KEMBALI KE BERANDA",
   "searchPlaceholder": "Cari nama atau nomor telepon...",
   "contactsLoadFailed": "Tidak dapat memuat kontak",
@@ -105,11 +103,9 @@
   "delete": "Hapus",
   "connected": "Tersambung",
   "pending": "Menunggu",
-  
   "myContacts": "Kontak Saya",
   "incomingRequests": "Permintaan Masuk",
   "emergencyContactsDesc": "Kelola daftar orang yang dapat dipercaya saat situasi darurat.",
-  
   "editProfileTitle": "Ubah Profil & Medis",
   "editProfileSub": "Perbarui foto, data diri dan riwayat medis Anda.",
   "fullNameLabel": "NAMA LENGKAP",
@@ -125,7 +121,6 @@
   "none": "Tidak Ada",
   "settings": "PENGATURAN",
   "enterFullName": "Masukkan nama lengkap",
-  
   "languageTitle": "Pilih Bahasa",
   "languageSelect": "Pilih bahasa aplikasi Anda:",
   "helloUser": "Halo, {name}",
@@ -317,4 +312,3 @@
   "receiverSomeone": "Seseorang",
   "cancelSos": "BATALKAN"
 }
-

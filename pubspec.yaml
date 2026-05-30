@@ -120,8 +120,8 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 
 flutter_launcher_icons:
-  android: "launcher_icon"
+  android: true
   ios: true
-  image_path: "assets/images/logo_shield.png"
-  adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/images/logo_shield.png"
+  image_path: "assets/images/logo_launcher.png"
+  adaptive_icon_background: "#C21A1A"
+  adaptive_icon_foreground: "assets/images/logo_launcher_foreground.png"

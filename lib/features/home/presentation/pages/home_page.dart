@@ -47,6 +47,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   late UserEntity _currentUser;
   int _currentIndex = 0;
   bool _isInit = false;
+  static bool _hasPromptedProfile = false;
   final CrashDetectionService _crashDetection = CrashDetectionService();
   LatLng? _currentLocation;
   String _currentAddress = 'Mencari lokasi...';
@@ -54,14 +55,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   // Sensor Subscriptions and States
   StreamSubscription? _accelerometerSub;
   StreamSubscription? _gyroscopeSub;
-
+  double _lastRotationRate = 0.0;
   DateTime? _lastShakeTime;
-  final double _shakeThreshold = 15.0;
+  final double _shakeThreshold = 23.0; // Increased from 15.0 to reduce sensitivity
   int _shakeCount = 0;
 
   bool _freefallDetected = false;
   DateTime? _freefallTime;
-  double _lastRotationRate = 0.0;
   bool _isEmergencyTriggered = false;
 
   // Real-time Statistics
@@ -136,8 +136,81 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         setState(() {
           _currentUser = UserModel.fromJson(userData);
         });
+        _checkProfileCompletion();
       }
     } catch (_) {}
+  }
+
+  void _checkProfileCompletion() {
+    if (_hasPromptedProfile) return;
+
+    final phone = _currentUser.phoneNumber.trim();
+    final blood = _currentUser.bloodType;
+
+    if (phone.isEmpty || blood == null || blood.trim().isEmpty) {
+      _hasPromptedProfile = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: const Text(
+                'Lengkapi Profil',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
+              ),
+              content: const Text(
+                'Silakan lengkapi nomor telepon dan golongan darah Anda agar fitur penyelamatan darurat dapat berjalan optimal.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textGrey,
+                  height: 1.4,
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    'Nanti',
+                    style: TextStyle(
+                      color: AppColors.textGrey,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProfilePage(user: _currentUser),
+                      ),
+                    ).then((_) {
+                      _loadUserFromSession();
+                    });
+                  },
+                  child: const Text(
+                    'Lengkapi',
+                    style: TextStyle(
+                      color: AppColors.primaryRed,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      });
+    }
   }
 
   Future<void> _navigateToNotifications() async {
@@ -337,7 +410,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               ),
               const SizedBox(height: 4),
               Text(
-                'v1.0.0 (Tactical Build)',
+                'v1.0.0',
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey[600],
@@ -610,8 +683,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           }
         }
 
-        // 2. Tumbling/Crash: high rotation rate (gyroscope) combined with high impact force
-        if (_lastRotationRate > 7.0) {
+        // 2. Tumbling/Crash: high rotation rate (gyroscope) combined with high impact force (both thresholds raised for calibration)
+        if (magnitude > 38.0 && _lastRotationRate > 12.0) {
           if (!mounted) return;
           _triggerEmergencyFromSensor(
             reason: AppLocalizations.of(context)?.crashImpactDetected ?? "Crash & Impact Detected",
@@ -620,8 +693,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           return;
         }
 
-        // 3. Direct Severe Impact: extremely high acceleration force (>3.5 G)
-        if (magnitude > 35.0) {
+        // 3. Direct Severe Impact: extremely high acceleration force (>4.8 G, raised from 3.5 G)
+        if (magnitude > 48.0) {
           if (!mounted) return;
           _triggerEmergencyFromSensor(
             reason: AppLocalizations.of(context)?.severeImpactDetected ?? "Severe Impact Detected",
@@ -729,8 +802,15 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Image.asset('assets/images/logo.png', height: 50,
-                  errorBuilder: (c, e, s) => const Icon(Icons.shield, color: AppColors.primaryRed, size: 34)),
+                Text(
+                  'SAFE',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.primaryRed,
+                    letterSpacing: 1.2,
+                  ),
+                ),
                 Row(children: [
                   IconButton(
                     icon: Stack(

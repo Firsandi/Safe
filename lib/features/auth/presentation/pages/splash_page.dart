@@ -26,17 +26,7 @@ class SplashPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // Header Logo (Top Left)
-                        Image.asset(
-                          'assets/images/logo.png',
-                          height: 28,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(
-                                Icons.shield,
-                                color: AppColors.primaryRed,
-                                size: 28,
-                              ),
-                        ),
+
 
                         const Spacer(),
 
@@ -88,11 +78,17 @@ class SplashPage extends StatelessWidget {
                                       ),
                                     ],
                                   ),
-                                  child: const Center(
-                                    child: Icon(
-                                      Icons.shield_outlined,
+                                  child: Center(
+                                    child: Image.asset(
+                                      'assets/images/logo.png',
                                       color: Colors.white,
-                                      size: 60,
+                                      height: 70,
+                                      errorBuilder: (context, error, stackTrace) =>
+                                          const Icon(
+                                            Icons.shield_outlined,
+                                            color: Colors.white,
+                                            size: 60,
+                                          ),
                                     ),
                                   ),
                                 ),

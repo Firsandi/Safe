@@ -346,13 +346,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 tooltip: 'Kembali',
                               )
                             else
-                              // Logo Fallback Header in Step 1
-                              Image.asset(
-                                'assets/images/logo.png',
-                                height: 36,
-                                errorBuilder: (context, error, stackTrace) => 
-                                    const Icon(Icons.shield, color: AppColors.primaryRed, size: 36),
-                              ),
+                              const SizedBox(height: 36),
                             if (_currentStep == 2)
                               TextButton(
                                 onPressed: state is AuthLoading ? null : () => _submitRegistration(context, skipMedical: true),

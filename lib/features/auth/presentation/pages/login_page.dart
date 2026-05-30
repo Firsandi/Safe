@@ -111,14 +111,6 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                      // LOGO
-                      Image.asset(
-                        'assets/images/logo.png',
-                        height: 56,
-                        errorBuilder: (context, error, stackTrace) => 
-                            const Icon(Icons.shield, color: AppColors.primaryRed, size: 56),
-                      ),
-                    const SizedBox(height: 32),
 
                     // TITLES
                     Text('Masuk Akun', style: AppTextStyles.heading),

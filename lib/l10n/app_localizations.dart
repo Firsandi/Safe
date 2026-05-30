@@ -509,13 +509,13 @@ abstract class AppLocalizations {
   /// No description provided for @alertSent.
   ///
   /// In en, this message translates to:
-  /// **'ALERT SENT'**
+  /// **'SOS Sent'**
   String get alertSent;
 
   /// No description provided for @alertSentDesc.
   ///
   /// In en, this message translates to:
-  /// **'Emergency services and contacts have been notified.'**
+  /// **'Your emergency signal has been sent to emergency contacts.'**
   String get alertSentDesc;
 
   /// No description provided for @backToHome.
