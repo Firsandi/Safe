@@ -116,50 +116,69 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
             barrierDismissible: false,
             builder: (context) => Dialog(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(20),
               ),
-              elevation: 10,
+              elevation: 8,
               backgroundColor: Colors.white,
               child: Padding(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // A glowing red shield icon
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryRed.withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.shield,
-                        color: AppColors.primaryRed,
-                        size: 48,
-                      ),
+                    // Concentric circles with shield-check icon
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryRed.withOpacity(0.06),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryRed.withOpacity(0.12),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          color: AppColors.primaryRed,
+                          size: 40,
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 20),
+                    
+                    // Title Text
                     Text(
-                      AppLocalizations.of(context)!.alertSent.toUpperCase(),
+                      AppLocalizations.of(context)!.alertSent,
                       textAlign: TextAlign.center,
                       style: AppTextStyles.heading.copyWith(
                         color: AppColors.primaryRed,
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
+                    
+                    // Description Text
                     Text(
                       AppLocalizations.of(context)!.alertSentDesc,
                       textAlign: TextAlign.center,
                       style: AppTextStyles.subHeading.copyWith(
-                        color: Colors.black87,
+                        color: AppColors.textGrey,
                         fontSize: 14,
                         height: 1.4,
                       ),
                     ),
                     const SizedBox(height: 24),
+                    
+                    // OK Action Button
                     SizedBox(
                       width: double.infinity,
                       height: 48,
@@ -168,18 +187,16 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryRed,
                           foregroundColor: Colors.white,
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(24),
                           ),
-                          elevation: 0,
                         ),
-                        child: Text(
+                        child: const Text(
                           'OK',
-                          style: AppTextStyles.heading.copyWith(
+                          style: TextStyle(
                             fontSize: 14,
-                            color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            letterSpacing: 1.0,
                           ),
                         ),
                       ),

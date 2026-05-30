@@ -55,7 +55,6 @@
   "navHome": "HOME",
   "navLocation": "LOCATION",
   "navProfile": "PROFILE",
-  
   "settingsLanguage": "Language",
   "settingsLanguageSub": "Set app language preference",
   "settingsHelp": "Help Center",
@@ -68,10 +67,9 @@
   "historySosSub": "2 events",
   "notAvailableYet": "This page is not available yet",
   "locationTitle": "Location",
-  
   "emergencyCancelled": "Emergency cancelled — you are safe",
-  "alertSent": "ALERT SENT",
-  "alertSentDesc": "Emergency services and contacts have been notified.",
+  "alertSent": "SOS Sent",
+  "alertSentDesc": "Your emergency signal has been sent to emergency contacts.",
   "backToHome": "BACK TO HOME",
   "searchPlaceholder": "Search name or phone number...",
   "contactsLoadFailed": "Unable to load contacts",
@@ -105,11 +103,9 @@
   "delete": "Delete",
   "connected": "Connected",
   "pending": "Pending",
-  
   "myContacts": "My Contacts",
   "incomingRequests": "Incoming Requests",
   "emergencyContactsDesc": "Manage the list of trusted people during emergency situations.",
-  
   "editProfileTitle": "Edit Profile & Medical",
   "editProfileSub": "Update your photo, personal details and medical history.",
   "fullNameLabel": "FULL NAME",
@@ -125,7 +121,6 @@
   "none": "None",
   "settings": "SETTINGS",
   "enterFullName": "Enter full name",
-  
   "languageTitle": "Select Language",
   "languageSelect": "Select your app language:",
   "helloUser": "Hello, {name}",
@@ -317,4 +312,3 @@
   "receiverSomeone": "Someone",
   "cancelSos": "CANCEL"
 }
-

@@ -217,11 +217,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emergencyCancelled => 'Emergency cancelled — you are safe';
 
   @override
-  String get alertSent => 'ALERT SENT';
+  String get alertSent => 'SOS Sent';
 
   @override
   String get alertSentDesc =>
-      'Emergency services and contacts have been notified.';
+      'Your emergency signal has been sent to emergency contacts.';
 
   @override
   String get backToHome => 'BACK TO HOME';

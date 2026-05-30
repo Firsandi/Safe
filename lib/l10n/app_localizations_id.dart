@@ -216,11 +216,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get emergencyCancelled => 'Darurat dibatalkan — Anda aman';
 
   @override
-  String get alertSent => 'ALERT TERKIRIM';
+  String get alertSent => 'SOS Terkirim';
 
   @override
   String get alertSentDesc =>
-      'Kontak darurat dan layanan penyelamat telah diberitahu.';
+      'Sinyal darurat Anda telah dikirimkan ke kontak darurat.';
 
   @override
   String get backToHome => 'KEMBALI KE BERANDA';

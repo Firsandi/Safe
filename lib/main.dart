@@ -5,7 +5,7 @@ import 'package:safe/core/utils/injection.dart';
 import 'package:safe/core/utils/session_manager.dart';
 import 'package:safe/core/localization/language_cubit.dart';
 import 'package:safe/l10n/app_localizations.dart';
-import 'package:safe/features/auth/presentation/pages/splash_page.dart';
+import 'package:safe/features/auth/presentation/pages/initial_splash_page.dart';
 import 'package:safe/features/auth/data/models/user_model.dart';
 import 'package:safe/features/home/presentation/pages/home_page.dart';
 import 'package:safe/core/services/navigation_service.dart';
@@ -87,8 +87,8 @@ class _AppEntryState extends State<_AppEntry> {
     } catch (e) {
       debugPrint('Error checking session: $e');
     } finally {
-      // Jika belum login atau data tidak valid/error, tampilkan splash
-      _targetPage ??= const SplashPage();
+      // Jika belum login atau data tidak valid/error, tampilkan splash awal
+      _targetPage ??= const InitialSplashPage();
 
       if (mounted) {
         setState(() => _isChecking = false);
