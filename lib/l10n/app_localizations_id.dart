@@ -938,4 +938,14 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get invalidPhoneFormatError =>
       'Format nomor tidak valid (hanya angka)';
+
+  @override
+  String get logoutDialogTitle => 'Keluar dari Akun';
+
+  @override
+  String get logoutDialogContent =>
+      'Apakah Anda yakin ingin keluar dari aplikasi SAFE?';
+
+  @override
+  String get logoutConfirm => 'Keluar';
 }

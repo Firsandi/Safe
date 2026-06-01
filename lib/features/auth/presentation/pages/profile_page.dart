@@ -23,7 +23,8 @@ import 'package:safe/core/utils/country_codes.dart';
 
 class ProfilePage extends StatefulWidget {
   final UserEntity user;
-  const ProfilePage({super.key, required this.user});
+  final bool showEditForm;
+  const ProfilePage({super.key, required this.user, this.showEditForm = false});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();
@@ -33,6 +34,7 @@ class _ProfilePageState extends State<ProfilePage> {
   late String _currentName;
   late String _currentPhone;
   late String _currentProfileImage;
+  late bool _isEditMode;
   String? _tempBase64Image; // Stores newly selected base64 during edit
   String? _selectedBloodType;
   late TextEditingController _nameController;
@@ -292,6 +294,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
+    _isEditMode = widget.showEditForm;
     _currentName = widget.user.name;
     _currentPhone = widget.user.phoneNumber;
     _currentProfileImage = widget.user.profileImage ?? '';
@@ -608,11 +611,13 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Future<void> _saveProfile(BuildContext sheetContext, StateSetter setSheetState) async {
-    final navigator = Navigator.of(sheetContext);
+  Future<void> _saveProfile(BuildContext sheetOrPageContext, [StateSetter? setSheetState]) async {
+    final navigator = Navigator.of(sheetOrPageContext);
     final messenger = ScaffoldMessenger.of(context);
     setState(() => _isLoading = true);
-    setSheetState(() {}); // Trigger rebuild of the sheet to show loading indicator
+    if (setSheetState != null) {
+      setSheetState(() {}); // Trigger rebuild of the sheet to show loading indicator
+    }
     try {
       final dio = sl<Dio>();
 
@@ -649,7 +654,7 @@ class _ProfilePageState extends State<ProfilePage> {
           );
         }
 
-        navigator.pop(); // Close sheet
+        navigator.pop(); // Close sheet or page
         messenger.showSnackBar(
           const SnackBar(
             content: Text('Profil & Riwayat Medis berhasil diperbarui!'),
@@ -676,9 +681,11 @@ class _ProfilePageState extends State<ProfilePage> {
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
-      try {
-        setSheetState(() {}); // Reset loading indicator in sheet if still open
-      } catch (_) {}
+      if (setSheetState != null) {
+        try {
+          setSheetState(() {}); // Reset loading indicator in sheet if still open
+        } catch (_) {}
+      }
     }
   }
 
@@ -804,18 +811,27 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _logout() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Keluar dari Akun', style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text('Apakah Anda yakin ingin keluar dari aplikasi SAFE?'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          AppLocalizations.of(context)!.logoutDialogTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Text(AppLocalizations.of(context)!.logoutDialogContent),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(
+              AppLocalizations.of(context)!.cancel,
+              style: const TextStyle(color: Colors.grey),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryRed),
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Keluar', style: TextStyle(color: Colors.white)),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(
+              AppLocalizations.of(context)!.logoutConfirm,
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -1085,6 +1101,234 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isEditMode) {
+      return Scaffold(
+        backgroundColor: AppColors.backgroundLight,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.textDark),
+            onPressed: () {
+              if (widget.showEditForm) {
+                Navigator.pop(context);
+              } else {
+                setState(() {
+                  _isEditMode = false;
+                });
+              }
+            },
+          ),
+          title: Text(
+            AppLocalizations.of(context)!.editProfileTitle,
+            style: AppTextStyles.heading.copyWith(fontSize: 18),
+          ),
+          centerTitle: true,
+        ),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator(color: AppColors.primaryRed))
+            : SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // CAMERA EDIT AVATAR
+                    Center(
+                      child: GestureDetector(
+                        onTap: () => _showImageSourceDialog(setState),
+                        child: Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 46,
+                              backgroundImage: (_tempBase64Image ?? _currentProfileImage).isNotEmpty
+                                  ? MemoryImage(base64Decode(_tempBase64Image ?? _currentProfileImage))
+                                  : null,
+                              backgroundColor: const Color(0xFF193855),
+                              child: (_tempBase64Image ?? _currentProfileImage).isEmpty
+                                  ? Text(
+                                      _getInitials(_nameController.text),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF193855),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt,
+                                  color: Colors.white,
+                                  size: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // EDIT NAMA
+                    Text(AppLocalizations.of(context)!.fullNameLabel, style: AppTextStyles.inputLabel),
+                    const SizedBox(height: 8),
+                    _buildInputField(
+                      controller: _nameController,
+                      hint: AppLocalizations.of(context)!.enterFullName,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // EDIT HANDPHONE
+                    Text(AppLocalizations.of(context)!.phoneLabel, style: AppTextStyles.inputLabel),
+                    const SizedBox(height: 8),
+                    _buildInputField(
+                      controller: _phoneController,
+                      hint: '81234567890',
+                      keyboardType: TextInputType.phone,
+                      prefixWidget: GestureDetector(
+                        onTap: () => _showCountryCodePicker(setState),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _selectedCountry.flag,
+                                style: const TextStyle(fontSize: 18),
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _selectedCountry.dialCode,
+                                style: AppTextStyles.subHeading.copyWith(
+                                  color: AppColors.textDark,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Icon(Icons.arrow_drop_down, color: AppColors.inputIconGrey, size: 20),
+                              Container(
+                                height: 24,
+                                width: 1,
+                                color: AppColors.inputBorder,
+                                margin: const EdgeInsets.symmetric(horizontal: 8),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // EDIT GOLONGAN DARAH
+                    Text(AppLocalizations.of(context)!.bloodTypeLabel, style: AppTextStyles.inputLabel),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: AppColors.inputBackground,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.inputBorder),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _selectedBloodType,
+                          hint: Text(AppLocalizations.of(context)!.choose, style: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey)),
+                          icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.inputIconGrey),
+                          isExpanded: true,
+                          style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
+                          items: _bloodTypes.map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                          onChanged: (newValue) {
+                            setState(() {
+                              _selectedBloodType = newValue;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // EDIT ALERGI (Autocomplete)
+                    Text(AppLocalizations.of(context)!.medicalHistoryLabel, style: AppTextStyles.inputLabel),
+                    const SizedBox(height: 8),
+                    Autocomplete<String>(
+                      optionsBuilder: (TextEditingValue textEditingValue) {
+                        if (textEditingValue.text.isEmpty) {
+                          return const Iterable<String>.empty();
+                        }
+                        return _diseaseSuggestions.where((String option) {
+                          return option.toLowerCase().contains(
+                                textEditingValue.text.toLowerCase(),
+                              );
+                        });
+                      },
+                      onSelected: (String selection) {
+                        setState(() {
+                          _medicalNotesController.text = selection;
+                        });
+                      },
+                      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                        if (controller.text.isEmpty && _medicalNotesController.text.isNotEmpty) {
+                          controller.text = _medicalNotesController.text;
+                        }
+                        controller.addListener(() {
+                          _medicalNotesController.text = controller.text;
+                        });
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.inputBackground,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.inputBorder),
+                          ),
+                          child: TextFormField(
+                            controller: controller,
+                            focusNode: focusNode,
+                            style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
+                            decoration: InputDecoration(
+                              hintText: AppLocalizations.of(context)!.medicalHistoryHint,
+                              hintStyle: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 32),
+
+                    // SAVE BUTTON
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF193855),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: _isLoading ? null : () => _saveProfile(context),
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: Colors.white)
+                            : Text(AppLocalizations.of(context)!.saveChanges, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: _isLoading

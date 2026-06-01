@@ -114,20 +114,12 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                      // LOGO & LANGUAGE SELECTOR
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Image.asset(
-                            'assets/images/logo.png',
-                            height: 56,
-                            errorBuilder: (context, error, stackTrace) => 
-                                const Icon(Icons.shield, color: AppColors.primaryRed, size: 56),
-                          ),
-                          const LanguageSelector(),
-                        ],
+                      // LANGUAGE SELECTOR
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: const LanguageSelector(),
                       ),
-                    const SizedBox(height: 32),
+                      const SizedBox(height: 24),
 
                     // TITLES
                     Text(AppLocalizations.of(context)!.loginWelcome, style: AppTextStyles.heading),

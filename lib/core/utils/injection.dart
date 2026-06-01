@@ -79,9 +79,9 @@ Future<void> init() async {
   // EXTERNAL
   final dio = Dio(
     BaseOptions(
-      // baseUrl: 'https://safe-backend-production-abb2.up.railway.app/', 
+      baseUrl: 'https://safe-backend-production-abb2.up.railway.app/', 
       // baseUrl: 'http://192.168.1.5:8080/',
-      baseUrl: 'http://10.0.2.2:8080/',
+      // baseUrl: 'http://10.0.2.2:8080/',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {

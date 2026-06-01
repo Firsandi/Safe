@@ -13,6 +13,7 @@ import 'package:safe/features/emergency/presentation/pages/sos_route_page.dart';
 
 class SosIncomingAlertPage extends StatefulWidget {
   final Map<String, dynamic> sosData;
+  static bool isCurrentlyOpen = false;
 
   const SosIncomingAlertPage({super.key, required this.sosData});
 
@@ -33,6 +34,7 @@ class _SosIncomingAlertPageState extends State<SosIncomingAlertPage>
   @override
   void initState() {
     super.initState();
+    SosIncomingAlertPage.isCurrentlyOpen = true;
     // Inisialisasi koordinat korban
     _victimLat = double.tryParse(widget.sosData['latitude']?.toString() ?? '0') ?? 0.0;
     _victimLng = double.tryParse(widget.sosData['longitude']?.toString() ?? '0') ?? 0.0;
@@ -58,6 +60,7 @@ class _SosIncomingAlertPageState extends State<SosIncomingAlertPage>
 
   @override
   void dispose() {
+    SosIncomingAlertPage.isCurrentlyOpen = false;
     _pulseController.dispose();
     super.dispose();
   }

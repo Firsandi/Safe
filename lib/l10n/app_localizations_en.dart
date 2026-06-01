@@ -937,4 +937,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get invalidPhoneFormatError => 'Invalid phone format (numbers only)';
+
+  @override
+  String get logoutDialogTitle => 'Log Out of Account';
+
+  @override
+  String get logoutDialogContent =>
+      'Are you sure you want to log out of the SAFE application?';
+
+  @override
+  String get logoutConfirm => 'Log Out';
 }

@@ -416,5 +416,8 @@
   "savePasswordButton": "SIMPAN KATA SANDI",
   "selectCountryCodeTitle": "Pilih Kode Negara",
   "searchCountryHint": "Cari negara...",
-  "invalidPhoneFormatError": "Format nomor tidak valid (hanya angka)"
+  "invalidPhoneFormatError": "Format nomor tidak valid (hanya angka)",
+  "logoutDialogTitle": "Keluar dari Akun",
+  "logoutDialogContent": "Apakah Anda yakin ingin keluar dari aplikasi SAFE?",
+  "logoutConfirm": "Keluar"
 }

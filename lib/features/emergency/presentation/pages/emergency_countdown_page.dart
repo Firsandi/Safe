@@ -9,11 +9,15 @@ import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/core/utils/injection.dart';
 import 'package:safe/core/services/location_service.dart';
 import 'package:safe/core/services/offline_sync_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:safe/core/services/notification_local_service.dart';
 
 class EmergencyCountdownPage extends StatefulWidget {
   final String? triggerReason;
   final String? impactForce;
   final String triggerType;
+  static bool isCurrentlyOpen = false;
   const EmergencyCountdownPage({
     super.key,
     this.triggerReason,
@@ -39,6 +43,7 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
   @override
   void initState() {
     super.initState();
+    EmergencyCountdownPage.isCurrentlyOpen = true;
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -105,107 +110,31 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
 
         if (response.statusCode == 200 || response.statusCode == 201) {
           final eventData = response.data;
-          final sosId = eventData != null ? eventData['sos_id'] : null;
+          final sosId = eventData != null ? eventData['sos_id']?.toString() : null;
           if (sosId != null) {
-            LocationService.startTrackingSos(sosId.toString());
+            LocationService.startTrackingSos(sosId);
+            
+            // Save local notification for SOS Sent
+            await NotificationLocalService.saveNotification(LocalNotification(
+              id: 'sos_sent_$sosId',
+              title: 'SOS Berhasil Terkirim',
+              body: 'Sinyal darurat Anda telah berhasil dikirim ke kontak darurat.',
+              type: 'sos_sent',
+              timestamp: DateTime.now(),
+              isRead: false,
+              payload: {'sos_id': sosId},
+            ));
           }
 
           if (!mounted) return;
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              elevation: 8,
-              backgroundColor: Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Concentric circles with shield-check icon
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryRed.withOpacity(0.06),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: AppColors.primaryRed.withOpacity(0.12),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const Icon(
-                          Icons.check_circle_rounded,
-                          color: AppColors.primaryRed,
-                          size: 40,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    
-                    // Title Text
-                    Text(
-                      AppLocalizations.of(context)!.alertSent,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.heading.copyWith(
-                        color: AppColors.primaryRed,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    
-                    // Description Text
-                    Text(
-                      AppLocalizations.of(context)!.alertSentDesc,
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.subHeading.copyWith(
-                        color: AppColors.textGrey,
-                        fontSize: 14,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    
-                    // OK Action Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryRed,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                        child: const Text(
-                          'OK',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(AppLocalizations.of(context)!.alertSent),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
             ),
           );
+          Navigator.of(context).popUntil((route) => route.isFirst);
         }
       } catch (e) {
         // Close loading dialog if open
@@ -222,57 +151,38 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
         );
 
         if (!mounted) return;
-
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            title: Row(
-              children: [
-                const Icon(Icons.wifi_off, color: AppColors.primaryRed, size: 28),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    AppLocalizations.of(context)!.connectionIssuesTitle,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ],
-            ),
-            content: Text(
-              AppLocalizations.of(context)!.connectionIssuesDesc,
-              style: const TextStyle(fontSize: 14),
-            ),
-            actions: [
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryRed,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.of(context).pop(); // Close Dialog
-                  Navigator.of(context).popUntil((route) => route.isFirst); // Go back home
-                },
-                child: const Text('OK'),
-              ),
-            ],
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${AppLocalizations.of(context)!.connectionIssuesTitle}: ${AppLocalizations.of(context)!.connectionIssuesDesc}'),
+            backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 4),
           ),
         );
+        Navigator.of(context).popUntil((route) => route.isFirst);
       }
     }
   }
 
-  void _cancelEmergency() {
+  void _cancelEmergency() async {
     setState(() {
       _isCancelled = true;
       _timer?.cancel();
     });
+
+    // Clear notifications and stashed sensor triggers immediately on cancel
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('pending_sensor_countdown');
+      await prefs.remove('pending_sensor_reason');
+      await prefs.remove('pending_sensor_force');
+      await FlutterLocalNotificationsPlugin().cancel(999);
+      debugPrint('Successfully cleared notification 999 and SharedPreferences keys on cancel');
+    } catch (e) {
+      debugPrint('Failed to clear pending notification on cancel: $e');
+    }
+
+    if (!mounted) return;
     Navigator.pop(context, 'cancelled');
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -300,8 +210,15 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
 
   @override
   void dispose() {
+    EmergencyCountdownPage.isCurrentlyOpen = false;
     _timer?.cancel();
     _pulseController.dispose();
+    
+    // Safety cleanup: dismiss notification 999 if it is still showing
+    try {
+      FlutterLocalNotificationsPlugin().cancel(999);
+    } catch (_) {}
+    
     super.dispose();
   }
 

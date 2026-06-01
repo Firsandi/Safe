@@ -94,15 +94,22 @@ class _AppEntryState extends State<_AppEntry> {
         setState(() => _isChecking = false);
         
         // Check if there is a pending SOS alert to show
-        WidgetsBinding.instance.addPostFrameCallback((_) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
           if (NotificationManager.pendingSosData != null) {
             final data = NotificationManager.pendingSosData!;
             NotificationManager.pendingSosData = null;
-            NavigationService.navigatorKey.currentState?.push(
-              MaterialPageRoute(
-                builder: (context) => SosIncomingAlertPage(sosData: data),
-              ),
-            );
+            if (!SosIncomingAlertPage.isCurrentlyOpen) {
+              NavigationService.navigatorKey.currentState?.push(
+                MaterialPageRoute(
+                  builder: (context) => SosIncomingAlertPage(sosData: data),
+                ),
+              );
+            }
+          } else {
+            // Check if the app was launched by the local notification full-screen intent
+            await NotificationManager.checkLaunchNotification();
+            // Also check for pending actions in SharedPreferences
+            await NotificationManager.checkPendingActions();
           }
         });
       }

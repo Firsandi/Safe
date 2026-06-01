@@ -128,11 +128,13 @@ class _NotificationPageState extends State<NotificationPage> {
         dio.get('/api/contacts/requests'),
         dio.get('/api/sos/history/received'),
         dio.get('/api/contacts'),
+        dio.get('/api/sos/history/sent'),
       ]);
       
       final requestsData = results[0].data['requests'] as List?;
       final receivedSosData = results[1].data as List?;
       final contactsData = results[2].data['contacts'] as List?;
+      final sentSosData = results[3].data as List?;
       
       if (contactsData != null) {
         await NotificationLocalService.syncConnectionTimestamps(contactsData);
@@ -199,6 +201,28 @@ class _NotificationPageState extends State<NotificationPage> {
               title: title,
               body: '$name mengalami keadaan darurat ($triggerLabel)! Segera periksa lokasi.',
               type: 'sos_alert',
+              timestamp: DateTime.tryParse(item['created_at'] ?? '') ?? DateTime.now(),
+              isRead: false,
+              payload: Map<String, dynamic>.from(item),
+            ));
+          }
+        }
+      }
+
+      if (sentSosData != null && sentSosData.isNotEmpty) {
+        final notifications = await NotificationLocalService.loadNotifications();
+        for (final item in sentSosData) {
+          final sosId = item['sos_id']?.toString() ?? '';
+          if (sosId.isEmpty) continue;
+          
+          final notifId = 'sos_sent_$sosId';
+          final exists = notifications.any((n) => n.id == notifId || (n.payload != null && n.payload!['sos_id']?.toString() == sosId && n.type == 'sos_sent'));
+          if (!exists) {
+            newNotifs.add(LocalNotification(
+              id: notifId,
+              title: 'SOS Berhasil Terkirim',
+              body: 'Sinyal darurat Anda telah berhasil dikirim ke kontak darurat.',
+              type: 'sos_sent',
               timestamp: DateTime.tryParse(item['created_at'] ?? '') ?? DateTime.now(),
               isRead: false,
               payload: Map<String, dynamic>.from(item),
@@ -288,7 +312,11 @@ class _NotificationPageState extends State<NotificationPage> {
     switch (type) {
       case 'sos_alert':
         return Icons.warning_amber_rounded;
+      case 'sos_sent':
+        return Icons.send_rounded;
       case 'contact_request':
+        return Icons.person_add_outlined;
+      case 'contact_request_sent':
         return Icons.person_add_outlined;
       case 'contact_accepted':
         return Icons.check_circle_outline;
@@ -301,8 +329,12 @@ class _NotificationPageState extends State<NotificationPage> {
     switch (type) {
       case 'sos_alert':
         return AppColors.primaryRed;
+      case 'sos_sent':
+        return const Color(0xFF10B981); // Green
       case 'contact_request':
         return const Color(0xFF3B82F6); // Blue
+      case 'contact_request_sent':
+        return const Color(0xFF8B5CF6); // Purple
       case 'contact_accepted':
         return const Color(0xFF10B981); // Green
       default:
@@ -319,9 +351,15 @@ class _NotificationPageState extends State<NotificationPage> {
       if (notif.type == 'sos_alert') {
         // Redirect to SOS History -> Received tab (index 2 in Home, with initialTabIndex = 1)
         Navigator.pop(context, {'action': 'go_to_history', 'tab': 1});
+      } else if (notif.type == 'sos_sent') {
+        // Redirect to SOS History -> Sent tab (index 2 in Home, with initialTabIndex = 0)
+        Navigator.pop(context, {'action': 'go_to_history', 'tab': 0});
       } else if (notif.type == 'contact_request') {
         // Redirect to Contacts tab -> Permintaan Masuk tab (tab index 1)
         Navigator.pop(context, {'action': 'go_to_contacts', 'tab': 1});
+      } else if (notif.type == 'contact_request_sent') {
+        // Redirect to Contacts tab -> Kontak Saya tab (tab index 0)
+        Navigator.pop(context, {'action': 'go_to_contacts', 'tab': 0});
       } else if (notif.type == 'contact_accepted') {
         // Redirect to Contacts tab -> Kontak Saya tab (tab index 0)
         Navigator.pop(context, {'action': 'go_to_contacts', 'tab': 0});
@@ -331,6 +369,9 @@ class _NotificationPageState extends State<NotificationPage> {
       }
     }
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -632,7 +673,6 @@ class _NotificationPageState extends State<NotificationPage> {
       ),
     );
   }
-
   String _getLocalizedTitle(LocalNotification notif) {
     final lang = Localizations.localeOf(context).languageCode;
     final isEn = lang == 'en';
@@ -654,6 +694,12 @@ class _NotificationPageState extends State<NotificationPage> {
       if (title == 'Notifikasi Baru') {
         return 'New Notification';
       }
+      if (title == 'SOS Berhasil Terkirim') {
+        return 'SOS Successfully Sent';
+      }
+      if (title == 'Permintaan Kontak Dikirim') {
+        return 'Emergency Contact Request Sent';
+      }
     } else {
       if (title == 'EMERGENCY: IMPACT/ACCIDENT DETECTED!') {
         return 'EMERGENCY: BENTURAN/KECELAKAAN TERDETEKSI!';
@@ -670,6 +716,12 @@ class _NotificationPageState extends State<NotificationPage> {
       if (title == 'New Notification') {
         return 'Notifikasi Baru';
       }
+      if (title == 'SOS Successfully Sent') {
+        return 'SOS Berhasil Terkirim';
+      }
+      if (title == 'Emergency Contact Request Sent') {
+        return 'Permintaan Kontak Dikirim';
+      }
     }
     return title;
   }
@@ -680,7 +732,6 @@ class _NotificationPageState extends State<NotificationPage> {
     final body = notif.body;
 
     if (isEn) {
-      // 1. Translate SOS Alert Body (ID -> EN)
       if (body.contains('mengalami keadaan darurat')) {
         final regex = RegExp(r'^(.+) mengalami keadaan darurat \((.+)\)! Segera periksa lokasi\.$');
         final match = regex.firstMatch(body);
@@ -694,7 +745,6 @@ class _NotificationPageState extends State<NotificationPage> {
         }
       }
 
-      // 2. Translate Contact Request Body (ID -> EN)
       if (body.contains('ingin menambahkan Anda sebagai kontak darurat')) {
         final regex = RegExp(r'^(.+) ingin menambahkan Anda sebagai kontak darurat\.$');
         final match = regex.firstMatch(body);
@@ -704,7 +754,6 @@ class _NotificationPageState extends State<NotificationPage> {
         }
       }
 
-      // 3. Translate Contact Accepted Body (ID -> EN)
       if (body.contains('telah menyetujui permintaan kontak darurat Anda')) {
         final regex = RegExp(r'^(.+) telah menyetujui permintaan kontak darurat Anda\.$');
         final match = regex.firstMatch(body);
@@ -714,11 +763,23 @@ class _NotificationPageState extends State<NotificationPage> {
         }
       }
 
+      if (body == 'Sinyal darurat Anda telah berhasil dikirim ke kontak darurat.') {
+        return 'Your emergency signal has been successfully sent to emergency contacts.';
+      }
+
+      if (body.contains('Permintaan kontak darurat telah dikirim ke')) {
+        final regex = RegExp(r'^Permintaan kontak darurat telah dikirim ke (.+)\.$');
+        final match = regex.firstMatch(body);
+        if (match != null) {
+          final name = match.group(1);
+          return 'Emergency contact request has been sent to $name.';
+        }
+      }
+
       if (body == 'Anda menerima pesan darurat baru.') {
         return 'You received a new emergency message.';
       }
     } else {
-      // 1. Translate SOS Alert Body (EN -> ID)
       if (body.contains('is experiencing an emergency')) {
         final regex = RegExp(r'^(.+) is experiencing an emergency \((.+)\)! Check their location immediately\.$');
         final match = regex.firstMatch(body);
@@ -732,7 +793,6 @@ class _NotificationPageState extends State<NotificationPage> {
         }
       }
 
-      // 2. Translate Contact Request Body (EN -> ID)
       if (body.contains('wants to add you as an emergency contact')) {
         final regex = RegExp(r'^(.+) wants to add you as an emergency contact\.$');
         final match = regex.firstMatch(body);
@@ -742,13 +802,25 @@ class _NotificationPageState extends State<NotificationPage> {
         }
       }
 
-      // 3. Translate Contact Accepted Body (EN -> ID)
       if (body.contains('accepted your emergency contact request')) {
         final regex = RegExp(r'^(.+) accepted your emergency contact request\.$');
         final match = regex.firstMatch(body);
         if (match != null) {
           final name = match.group(1);
           return '$name telah menyetujui permintaan kontak darurat Anda.';
+        }
+      }
+
+      if (body == 'Your emergency signal has been successfully sent to emergency contacts.') {
+        return 'Sinyal darurat Anda telah berhasil dikirim ke kontak darurat.';
+      }
+
+      if (body.contains('Emergency contact request has been sent to')) {
+        final regex = RegExp(r'^Emergency contact request has been sent to (.+)\.$');
+        final match = regex.firstMatch(body);
+        if (match != null) {
+          final name = match.group(1);
+          return 'Permintaan kontak darurat telah dikirim ke $name.';
         }
       }
 

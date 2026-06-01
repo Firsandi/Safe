@@ -1825,6 +1825,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Invalid phone format (numbers only)'**
   String get invalidPhoneFormatError;
+
+  /// No description provided for @logoutDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Out of Account'**
+  String get logoutDialogTitle;
+
+  /// No description provided for @logoutDialogContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to log out of the SAFE application?'**
+  String get logoutDialogContent;
+
+  /// No description provided for @logoutConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Out'**
+  String get logoutConfirm;
 }
 
 class _AppLocalizationsDelegate

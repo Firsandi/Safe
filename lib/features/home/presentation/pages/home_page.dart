@@ -33,6 +33,8 @@ import 'package:latlong2/latlong.dart' hide Path;
 import 'package:geocoding/geocoding.dart';
 import 'package:safe/features/home/presentation/pages/full_map_page.dart';
 import 'package:safe/core/services/notification_manager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class HomePage extends StatefulWidget {
@@ -63,6 +65,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   bool _freefallDetected = false;
   DateTime? _freefallTime;
   bool _isEmergencyTriggered = false;
+  DateTime? _lastCancelledTime;
 
   // Real-time Statistics
   int _activeContactsCount = 0;
@@ -76,6 +79,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   bool _hasLocationPermission = true;
   bool _hasNotificationPermission = true;
   bool _hasOverlayPermission = true;
+  bool _hasDndPermission = true;
   bool _checkingPermissions = true;
 
   @override
@@ -85,7 +89,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     _loadUserFromSession();
     WidgetsBinding.instance.addObserver(this);
     _checkPermissionsState().then((_) {
-      if (mounted && (!_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission)) {
+      if (mounted && (!_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission || !_hasDndPermission)) {
         _requestPermissions();
       }
     });
@@ -144,6 +148,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   void _checkProfileCompletion() {
     if (_hasPromptedProfile) return;
 
+    // Only show if all permissions are granted (permission request screen is gone)
+    if (_checkingPermissions || !_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission || !_hasDndPermission) {
+      return;
+    }
+
     final phone = _currentUser.phoneNumber.trim();
     final blood = _currentUser.bloodType;
 
@@ -167,7 +176,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                 ),
               ),
               content: const Text(
-                'Silakan lengkapi nomor telepon dan golongan darah Anda agar fitur penyelamatan darurat dapat berjalan optimal.',
+                'Silakan lengkapi profil Anda agar fitur penyelamatan darurat dapat berjalan optimal.',
                 style: TextStyle(
                   fontSize: 14,
                   color: AppColors.textGrey,
@@ -190,8 +199,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                     Navigator.pop(context);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => ProfilePage(user: _currentUser),
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) => ProfilePage(
+                          user: _currentUser,
+                          showEditForm: true,
+                        ),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          const begin = Offset(0.0, 1.0);
+                          const end = Offset.zero;
+                          const curve = Curves.easeInOutCubic;
+                          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                          return SlideTransition(
+                            position: animation.drive(tween),
+                            child: child,
+                          );
+                        },
                       ),
                     ).then((_) {
                       _loadUserFromSession();
@@ -516,11 +538,13 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         dio.get('/api/contacts/requests'),
         dio.get('/api/sos/history/received'),
         dio.get('/api/contacts'),
+        dio.get('/api/sos/history/sent'),
       ]);
       
       final requestsData = results[0].data['requests'] as List?;
       final receivedSosData = results[1].data as List?;
       final contactsData = results[2].data['contacts'] as List?;
+      final sentSosData = results[3].data as List?;
       
       if (contactsData != null) {
         await NotificationLocalService.syncConnectionTimestamps(contactsData);
@@ -587,6 +611,28 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               title: title,
               body: '$name mengalami keadaan darurat ($triggerLabel)! Segera periksa lokasi.',
               type: 'sos_alert',
+              timestamp: DateTime.tryParse(item['created_at'] ?? '') ?? DateTime.now(),
+              isRead: false,
+              payload: Map<String, dynamic>.from(item),
+            ));
+          }
+        }
+      }
+
+      if (sentSosData != null && sentSosData.isNotEmpty) {
+        final notifications = await NotificationLocalService.loadNotifications();
+        for (final item in sentSosData) {
+          final sosId = item['sos_id']?.toString() ?? '';
+          if (sosId.isEmpty) continue;
+          
+          final notifId = 'sos_sent_$sosId';
+          final exists = notifications.any((n) => n.id == notifId || (n.payload != null && n.payload!['sos_id']?.toString() == sosId && n.type == 'sos_sent'));
+          if (!exists) {
+            newNotifs.add(LocalNotification(
+              id: notifId,
+              title: 'SOS Berhasil Terkirim',
+              body: 'Sinyal darurat Anda telah berhasil dikirim ke kontak darurat.',
+              type: 'sos_sent',
               timestamp: DateTime.tryParse(item['created_at'] ?? '') ?? DateTime.now(),
               isRead: false,
               payload: Map<String, dynamic>.from(item),
@@ -706,8 +752,61 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     });
   }
 
-  void _triggerEmergencyFromSensor({required String reason, required String force}) {
+  void _triggerEmergencyFromSensor({required String reason, required String force}) async {
+    if (EmergencyCountdownPage.isCurrentlyOpen) return;
     if (_isEmergencyTriggered) return;
+
+    // Check if we are in a cooldown period (30 seconds after cancellation)
+    if (_lastCancelledTime != null &&
+        DateTime.now().difference(_lastCancelledTime!) < const Duration(seconds: 30)) {
+      debugPrint('Sensor trigger ignored due to active cancellation cooldown');
+      return;
+    }
+
+    // Check if the app is in the background (inactive/paused/detached)
+    final isBackground = WidgetsBinding.instance.lifecycleState != AppLifecycleState.resumed;
+
+    if (isBackground) {
+      // Save to SharedPreferences for auto-launch on resume
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('pending_sensor_countdown', true);
+        await prefs.setString('pending_sensor_reason', reason);
+        await prefs.setString('pending_sensor_force', force);
+        debugPrint('Saved pending sensor countdown to SharedPreferences');
+      } catch (e) {
+        debugPrint('Failed to save pending sensor countdown: $e');
+      }
+      
+      setState(() => _isEmergencyTriggered = true);
+
+      if (!mounted) return;
+      // Push the route immediately so that it is active when the activity resumes
+      if (!EmergencyCountdownPage.isCurrentlyOpen) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EmergencyCountdownPage(
+              triggerReason: reason,
+              impactForce: force,
+              triggerType: 'auto',
+            ),
+          ),
+        ).then((result) {
+          // Reset trigger flag when returning from countdown page
+          setState(() => _isEmergencyTriggered = false);
+          if (result == 'cancelled') {
+            _lastCancelledTime = DateTime.now();
+          }
+          _loadStats(); // reload statistics
+        });
+      }
+
+      NotificationManager.showSensorCountdownNotification(reason: reason, force: force);
+      NotificationManager.bringAppToForeground();
+      return;
+    }
+
     setState(() => _isEmergencyTriggered = true);
 
     Navigator.push(
@@ -719,9 +818,12 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           triggerType: 'auto',
         ),
       ),
-    ).then((_) {
+    ).then((result) {
       // Reset trigger flag when returning from countdown page
       setState(() => _isEmergencyTriggered = false);
+      if (result == 'cancelled') {
+        _lastCancelledTime = DateTime.now();
+      }
       _loadStats(); // reload statistics
     });
   }
@@ -765,7 +867,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       );
     }
 
-    if (!_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission) {
+    if (!_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission || !_hasDndPermission) {
       return _buildPermissionRequestScreen();
     }
 
@@ -804,7 +906,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
               children: [
                 Text(
                   'SAFE',
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
                     color: AppColors.primaryRed,
@@ -1279,6 +1381,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     // If cancelled, start cooldown on crash detection service
     if (result == 'cancelled') {
       _crashDetection.startCooldown();
+      _lastCancelledTime = DateTime.now();
     }
   }
 
@@ -1286,6 +1389,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _checkPermissionsState();
+      NotificationManager.checkPendingActions();
     }
   }
 
@@ -1304,16 +1408,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       // 3. Cek izin overlay (draw over other apps)
       final overlayGranted = await Permission.systemAlertWindow.isGranted;
 
+      // 4. Cek izin akses jangan ganggu (DND)
+      final dndGranted = await Permission.accessNotificationPolicy.isGranted;
+
       if (mounted) {
         setState(() {
           _hasLocationPermission = locGranted;
           _hasNotificationPermission = notifGranted;
           _hasOverlayPermission = overlayGranted;
+          _hasDndPermission = dndGranted;
           _checkingPermissions = false;
         });
         if (locGranted) {
           _loadCurrentLocation();
         }
+        _checkProfileCompletion();
       }
     } catch (_) {
       if (mounted) {
@@ -1426,44 +1535,43 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         await Geolocator.openAppSettings();
         return;
       }
-    }
-    
-    // Add a delay to allow the activity to resume fully before requesting the next permission
-    await Future.delayed(const Duration(milliseconds: 800));
-
-    // 2. Minta izin notifikasi
-    final messaging = FirebaseMessaging.instance;
-    final settings = await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-      criticalAlert: true,
-    );
-    final notifGranted = settings.authorizationStatus == AuthorizationStatus.authorized ||
-        settings.authorizationStatus == AuthorizationStatus.provisional;
-
-    // Jika notifikasi diizinkan setelah login, langsung unggah token ke backend
-    if (notifGranted) {
-      await NotificationManager.uploadFcmToken();
-    } else {
-      final currentSettings = await FirebaseMessaging.instance.getNotificationSettings();
-      if (currentSettings.authorizationStatus == AuthorizationStatus.denied) {
-        await Geolocator.openAppSettings();
+      if (locPermissionStatus == LocationPermission.denied) {
+        // User denied location, stop execution and refresh UI
+        await _checkPermissionsState();
         return;
       }
     }
+    
+    // Add a delay to allow the activity to resume fully before requesting the next permission
+    await Future.delayed(const Duration(milliseconds: 1000));
+
+    // 2. Minta izin notifikasi menggunakan permission_handler
+    var notifStatus = await Permission.notification.status;
+    if (!notifStatus.isGranted) {
+      notifStatus = await Permission.notification.request();
+    }
+
+    // Jika notifikasi diizinkan, langsung unggah token ke backend
+    if (notifStatus.isGranted) {
+      await NotificationManager.uploadFcmToken();
+    }
 
     // Add a delay to allow the activity to resume fully before requesting overlay permission
-    await Future.delayed(const Duration(milliseconds: 800));
+    await Future.delayed(const Duration(milliseconds: 1000));
 
     // 3. Minta izin overlay (draw over other apps)
     var overlayStatus = await Permission.systemAlertWindow.status;
     if (!overlayStatus.isGranted) {
       overlayStatus = await Permission.systemAlertWindow.request();
-      if (overlayStatus.isPermanentlyDenied) {
-        await openAppSettings();
-        return;
-      }
+    }
+
+    // Add a delay to allow the activity to resume fully before requesting DND permission
+    await Future.delayed(const Duration(milliseconds: 1000));
+
+    // 4. Minta izin akses jangan ganggu (DND)
+    var dndStatus = await Permission.accessNotificationPolicy.status;
+    if (!dndStatus.isGranted) {
+      dndStatus = await Permission.accessNotificationPolicy.request();
     }
 
     await _checkPermissionsState();
@@ -1598,6 +1706,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                     ? 'Display Over Other Apps'
                                     : 'Tampilkan di Atas Aplikasi Lain',
                                 isGranted: _hasOverlayPermission,
+                              ),
+                              Divider(height: 28, color: AppColors.inputBorder.withOpacity(0.6)),
+                              _buildPermissionStatusRow(
+                                icon: Icons.do_not_disturb_on_outlined,
+                                title: Localizations.localeOf(context).languageCode == 'en'
+                                    ? 'Access Do Not Disturb (DND)'
+                                    : 'Akses Jangan Ganggu (DND)',
+                                isGranted: _hasDndPermission,
                               ),
                             ],
                           ),

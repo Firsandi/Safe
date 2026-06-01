@@ -11,6 +11,7 @@ import '../bloc/emergency_cubit.dart';
 import 'package:safe/l10n/app_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'qr_scanner_page.dart';
+import 'package:safe/core/services/notification_local_service.dart';
 
 class AddContactPage extends StatefulWidget {
   const AddContactPage({super.key});
@@ -439,6 +440,18 @@ class _AddContactPageState extends State<AddContactPage> {
       if (mounted) Navigator.pop(context);
 
       if (response.statusCode == 200) {
+        // Save local notification for contact request sent
+        final reqId = DateTime.now().millisecondsSinceEpoch.toString();
+        await NotificationLocalService.saveNotification(LocalNotification(
+          id: 'contact_req_sent_$reqId',
+          title: 'Permintaan Kontak Dikirim',
+          body: 'Permintaan kontak darurat telah dikirim ke ${user.name}.',
+          type: 'contact_request_sent',
+          timestamp: DateTime.now(),
+          isRead: false,
+          payload: {'contact_id': user.id, 'name': user.name},
+        ));
+
         // Reload BLoC contacts
         if (mounted) {
           context.read<EmergencyCubit>().loadContacts();

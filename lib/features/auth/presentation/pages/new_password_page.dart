@@ -75,13 +75,7 @@ class _NewPasswordPageState extends State<NewPasswordPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Image.asset(
-                      'assets/images/logo.png',
-                      height: 56,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.shield, color: AppColors.primaryRed, size: 56),
-                    ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 8),
                     Text(AppLocalizations.of(context)!.newPasswordTitle, style: AppTextStyles.heading),
                     const SizedBox(height: 8),
                     Text(

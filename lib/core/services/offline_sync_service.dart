@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dio/dio.dart';
 import '../utils/injection.dart';
 import 'location_service.dart';
+import 'notification_local_service.dart';
 
 class OfflineSyncService {
   static const String _outboxKey = 'offline_sos_outbox';
@@ -85,9 +86,20 @@ class OfflineSyncService {
             
             // Extract SOS ID and start tracking
             final eventData = response.data;
-            final sosId = eventData != null ? eventData['sos_id'] : null;
+            final sosId = eventData != null ? eventData['sos_id']?.toString() : null;
             if (sosId != null) {
-              LocationService.startTrackingSos(sosId.toString());
+              LocationService.startTrackingSos(sosId);
+              
+              // Save local notification for SOS Sent
+              await NotificationLocalService.saveNotification(LocalNotification(
+                id: 'sos_sent_$sosId',
+                title: 'SOS Berhasil Terkirim',
+                body: 'Sinyal darurat Anda telah berhasil dikirim ke kontak darurat.',
+                type: 'sos_sent',
+                timestamp: DateTime.now(),
+                isRead: false,
+                payload: {'sos_id': sosId},
+              ));
             }
 
             if (onSyncSuccess != null) {

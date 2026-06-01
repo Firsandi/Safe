@@ -416,5 +416,8 @@
   "savePasswordButton": "SAVE PASSWORD",
   "selectCountryCodeTitle": "Select Country Code",
   "searchCountryHint": "Search country...",
-  "invalidPhoneFormatError": "Invalid phone format (numbers only)"
+  "invalidPhoneFormatError": "Invalid phone format (numbers only)",
+  "logoutDialogTitle": "Log Out of Account",
+  "logoutDialogContent": "Are you sure you want to log out of the SAFE application?",
+  "logoutConfirm": "Log Out"
 }
