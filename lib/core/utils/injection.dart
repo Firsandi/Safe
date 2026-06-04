@@ -22,26 +22,30 @@ final sl = GetIt.instance;
 
 Future<void> init() async {
   // BLOC / CUBIT
-  sl.registerFactory(() => AuthCubit(
-        loginUseCase: sl(),
-        registerUseCase: sl(),
-        forgotPasswordUseCase: sl(),
-        verifyResetOtpUseCase: sl(),
-        resetPasswordUseCase: sl(),
-        verifyLoginOtpUseCase: sl(),
-      ));
+  sl.registerFactory(
+    () => AuthCubit(
+      loginUseCase: sl(),
+      registerUseCase: sl(),
+      forgotPasswordUseCase: sl(),
+      verifyResetOtpUseCase: sl(),
+      resetPasswordUseCase: sl(),
+      verifyLoginOtpUseCase: sl(),
+    ),
+  );
 
   sl.registerFactory(() => LanguageCubit());
 
-  sl.registerFactory(() => EmergencyCubit(
-        getContactsUseCase: sl(),
-        getPendingRequestsUseCase: sl(),
-        searchUserUseCase: sl(),
-        addContactUseCase: sl(),
-        acceptRequestUseCase: sl(),
-        rejectRequestUseCase: sl(),
-        deleteContactUseCase: sl(),
-      ));
+  sl.registerFactory(
+    () => EmergencyCubit(
+      getContactsUseCase: sl(),
+      getPendingRequestsUseCase: sl(),
+      searchUserUseCase: sl(),
+      addContactUseCase: sl(),
+      acceptRequestUseCase: sl(),
+      rejectRequestUseCase: sl(),
+      deleteContactUseCase: sl(),
+    ),
+  );
 
   // USE CASES
   sl.registerLazySingleton(() => LoginUseCase(sl()));
@@ -79,9 +83,9 @@ Future<void> init() async {
   // EXTERNAL
   final dio = Dio(
     BaseOptions(
-      baseUrl: 'https://safe-backend-production-abb2.up.railway.app/', 
-      // baseUrl: 'http://192.168.1.5:8080/',
-      // baseUrl: 'http://10.0.2.2:8080/',
+      // baseUrl: 'https://safe-backend-production-abb2.up.railway.app/',
+      // Gunakan 10.0.2.2 hanya untuk Android Emulator.
+      baseUrl: 'http://192.168.1.10:8080/',
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       headers: {
