@@ -80,6 +80,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   bool _hasNotificationPermission = true;
   bool _hasOverlayPermission = true;
   bool _hasDndPermission = true;
+  bool _hasBatteryBypassPermission = true;
   bool _checkingPermissions = true;
 
   @override
@@ -89,7 +90,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     _loadUserFromSession();
     WidgetsBinding.instance.addObserver(this);
     _checkPermissionsState().then((_) {
-      if (mounted && (!_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission || !_hasDndPermission)) {
+      if (mounted && (!_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission || !_hasDndPermission || !_hasBatteryBypassPermission)) {
         _requestPermissions();
       }
     });
@@ -961,7 +962,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       );
     }
 
-    if (!_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission || !_hasDndPermission) {
+    if (!_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission || !_hasDndPermission || !_hasBatteryBypassPermission) {
       return _buildPermissionRequestScreen();
     }
 
@@ -1505,12 +1506,16 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       // 4. Cek izin akses jangan ganggu (DND)
       final dndGranted = await Permission.accessNotificationPolicy.isGranted;
 
+      // 5. Cek izin battery optimization bypass
+      final batteryBypassGranted = await Permission.ignoreBatteryOptimizations.isGranted;
+
       if (mounted) {
         setState(() {
           _hasLocationPermission = locGranted;
           _hasNotificationPermission = notifGranted;
           _hasOverlayPermission = overlayGranted;
           _hasDndPermission = dndGranted;
+          _hasBatteryBypassPermission = batteryBypassGranted;
           _checkingPermissions = false;
         });
         if (locGranted) {
@@ -1668,6 +1673,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       dndStatus = await Permission.accessNotificationPolicy.request();
     }
 
+    // Add a delay to allow the activity to resume fully before requesting battery bypass permission
+    await Future.delayed(const Duration(milliseconds: 1000));
+
+    // 5. Minta izin ignoreBatteryOptimizations
+    var batteryBypassStatus = await Permission.ignoreBatteryOptimizations.status;
+    if (!batteryBypassStatus.isGranted) {
+      batteryBypassStatus = await Permission.ignoreBatteryOptimizations.request();
+      if (!batteryBypassStatus.isGranted) {
+        // Fallback: open app settings
+        await openAppSettings();
+      }
+    }
+
     await _checkPermissionsState();
   }
 
@@ -1808,6 +1826,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                     ? 'Access Do Not Disturb (DND)'
                                     : 'Akses Jangan Ganggu (DND)',
                                 isGranted: _hasDndPermission,
+                              ),
+                              Divider(height: 28, color: AppColors.inputBorder.withOpacity(0.6)),
+                              _buildPermissionStatusRow(
+                                icon: Icons.battery_saver,
+                                title: Localizations.localeOf(context).languageCode == 'en'
+                                    ? 'Background Tracking (Bypass Battery)'
+                                    : 'Pelacakan Latar Belakang (Bypass Baterai)',
+                                isGranted: _hasBatteryBypassPermission,
                               ),
                             ],
                           ),
