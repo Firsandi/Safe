@@ -11,11 +11,13 @@ import 'package:safe/features/home/presentation/pages/home_page.dart';
 import 'package:safe/core/services/navigation_service.dart';
 import 'package:safe/core/services/notification_manager.dart';
 import 'package:safe/features/emergency/presentation/pages/sos_incoming_alert_page.dart';
+import 'package:safe/core/services/location_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await di.init();
   await NotificationManager.initialize();
+  await LocationService.initializeBackgroundService();
   runApp(const SafeApp());
 }
 

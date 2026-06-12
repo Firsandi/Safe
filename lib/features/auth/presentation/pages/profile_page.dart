@@ -621,7 +621,13 @@ class _ProfilePageState extends State<ProfilePage> {
     try {
       final dio = sl<Dio>();
 
-      // 1. Save Basic Profile Details & Profile Image
+      // 1. Save Medical Profile Details first so that the user returned by basic profile update includes the new medical data
+      await dio.post('/api/profile/medical', data: {
+        'blood_type': _selectedBloodType ?? '',
+        'medical_notes': _medicalNotesController.text,
+      });
+
+      // 2. Save Basic Profile Details & Profile Image
       final newImage = _tempBase64Image ?? _currentProfileImage;
       final rawPhone = _phoneController.text.trim();
       final cleanPhone = rawPhone.startsWith('0') ? rawPhone.substring(1) : rawPhone;
@@ -630,12 +636,6 @@ class _ProfilePageState extends State<ProfilePage> {
         'name': _nameController.text,
         'phone_number': fullPhone,
         'profile_image': newImage,
-      });
-
-      // 2. Save Medical Profile Details
-      await dio.post('/api/profile/medical', data: {
-        'blood_type': _selectedBloodType ?? '',
-        'medical_notes': _medicalNotesController.text,
       });
 
       if (profileResponse.statusCode == 200) {
@@ -838,6 +838,14 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (confirm == true) {
+      // Clear FCM Token on backend so that they stop receiving push notifications after logging out
+      try {
+        final dio = sl<Dio>();
+        await dio.put('/api/profile/fcm', data: {'fcm_token': ''});
+      } catch (e) {
+        debugPrint('Failed to clear FCM token on logout: $e');
+      }
+
       LocationService.stopTrackingSos();
       await GoogleAuthHelper.signOut();
       await SessionManager.clearSession();
@@ -848,255 +856,6 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       }
     }
-  }
-
-  void _showEditProfileBottomSheet() {
-    // Reset temp base64 image when sheet opens
-    _tempBase64Image = null;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setSheetState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom +
-                    MediaQuery.of(this.context).padding.bottom +
-                    56,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // DRAG HANDLE
-                    Center(
-                      child: Container(
-                        width: 48,
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      AppLocalizations.of(context)!.editProfileTitle,
-                      style: AppTextStyles.heading.copyWith(fontSize: 20),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      AppLocalizations.of(context)!.editProfileSub,
-                      style: AppTextStyles.subHeading.copyWith(fontSize: 13),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // CAMERA EDIT AVATAR
-                    Center(
-                      child: GestureDetector(
-                        onTap: () => _showImageSourceDialog(setSheetState),
-                        child: Stack(
-                          children: [
-                            CircleAvatar(
-                              radius: 46,
-                              backgroundImage: (_tempBase64Image ?? _currentProfileImage).isNotEmpty
-                                  ? MemoryImage(base64Decode(_tempBase64Image ?? _currentProfileImage))
-                                  : null,
-                              backgroundColor: const Color(0xFF193855),
-                              child: (_tempBase64Image ?? _currentProfileImage).isEmpty
-                                  ? Text(
-                                      _getInitials(_nameController.text),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    )
-                                  : null,
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF193855),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.camera_alt,
-                                  color: Colors.white,
-                                  size: 16,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // EDIT NAMA
-                    Text(AppLocalizations.of(context)!.fullNameLabel, style: AppTextStyles.inputLabel),
-                    const SizedBox(height: 8),
-                    _buildInputField(
-                      controller: _nameController,
-                      hint: AppLocalizations.of(context)!.enterFullName,
-                    ),
-                    const SizedBox(height: 16),
-
-                    // EDIT HANDPHONE
-                    Text(AppLocalizations.of(context)!.phoneLabel, style: AppTextStyles.inputLabel),
-                    const SizedBox(height: 8),
-                    _buildInputField(
-                      controller: _phoneController,
-                      hint: '81234567890',
-                      keyboardType: TextInputType.phone,
-                      prefixWidget: GestureDetector(
-                        onTap: () => _showCountryCodePicker(setSheetState),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                _selectedCountry.flag,
-                                style: const TextStyle(fontSize: 18),
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                _selectedCountry.dialCode,
-                                style: AppTextStyles.subHeading.copyWith(
-                                  color: AppColors.textDark,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const Icon(Icons.arrow_drop_down, color: AppColors.inputIconGrey, size: 20),
-                              Container(
-                                height: 24,
-                                width: 1,
-                                color: AppColors.inputBorder,
-                                margin: const EdgeInsets.symmetric(horizontal: 8),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // EDIT GOLONGAN DARAH
-                    Text(AppLocalizations.of(context)!.bloodTypeLabel, style: AppTextStyles.inputLabel),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: AppColors.inputBackground,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: AppColors.inputBorder),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _selectedBloodType,
-                          hint: Text(AppLocalizations.of(context)!.choose, style: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey)),
-                          icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.inputIconGrey),
-                          isExpanded: true,
-                          style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
-                          items: _bloodTypes.map((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
-                          onChanged: (newValue) {
-                            setSheetState(() {
-                              _selectedBloodType = newValue;
-                            });
-                          },
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // EDIT ALERGI (Autocomplete)
-                    Text(AppLocalizations.of(context)!.medicalHistoryLabel, style: AppTextStyles.inputLabel),
-                    const SizedBox(height: 8),
-                    Autocomplete<String>(
-                      optionsBuilder: (TextEditingValue textEditingValue) {
-                        if (textEditingValue.text.isEmpty) {
-                          return const Iterable<String>.empty();
-                        }
-                        return _diseaseSuggestions.where((String option) {
-                          return option.toLowerCase().contains(
-                                textEditingValue.text.toLowerCase(),
-                              );
-                        });
-                      },
-                      onSelected: (String selection) {
-                        _medicalNotesController.text = selection;
-                      },
-                      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
-                        if (controller.text.isEmpty && _medicalNotesController.text.isNotEmpty) {
-                          controller.text = _medicalNotesController.text;
-                        }
-                        controller.addListener(() {
-                          _medicalNotesController.text = controller.text;
-                        });
-                        return Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.inputBackground,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: AppColors.inputBorder),
-                          ),
-                          child: TextFormField(
-                            controller: controller,
-                            focusNode: focusNode,
-                            style: AppTextStyles.subHeading.copyWith(color: AppColors.textDark),
-                            decoration: InputDecoration(
-                              hintText: AppLocalizations.of(context)!.medicalHistoryHint,
-                              hintStyle: AppTextStyles.subHeading.copyWith(color: AppColors.inputIconGrey),
-                              border: InputBorder.none,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 32),
-
-                    // SAVE BUTTON
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF193855),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: _isLoading ? null : () => _saveProfile(sheetContext, setSheetState),
-                        child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : Text(AppLocalizations.of(context)!.saveChanges, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
   }
 
   @override
@@ -1364,7 +1123,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       const SizedBox(width: 16),
                       // Outlined or beautiful compact elevated edit button
                       ElevatedButton.icon(
-                        onPressed: _showEditProfileBottomSheet,
+                        onPressed: () {
+                          setState(() {
+                            _isEditMode = true;
+                          });
+                        },
                         icon: const Icon(Icons.edit, size: 14, color: Colors.white),
                         label: Text(
                           AppLocalizations.of(context)!.editButtonLabel,

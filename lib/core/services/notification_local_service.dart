@@ -79,6 +79,45 @@ class NotificationLocalService {
     _unreadCountController.add(count);
   }
 
+  static Future<String> _getDeletedKeysStorageKey() async {
+    final userData = await SessionManager.getUserData();
+    final userId = userData != null ? userData['user_id'] : 'guest';
+    return 'deleted_notifications_$userId';
+  }
+
+  static Future<Set<String>> getDeletedNotificationIds() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = await _getDeletedKeysStorageKey();
+      final list = prefs.getStringList(key);
+      if (list == null) return {};
+      return list.toSet();
+    } catch (_) {
+      return {};
+    }
+  }
+
+  static Future<void> trackDeletedNotificationId(String id) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = await _getDeletedKeysStorageKey();
+      final current = await getDeletedNotificationIds();
+      current.add(id);
+      await prefs.setStringList(key, current.toList());
+    } catch (_) {}
+  }
+
+  static Future<void> trackDeletedNotificationIds(List<String> ids) async {
+    if (ids.isEmpty) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = await _getDeletedKeysStorageKey();
+      final current = await getDeletedNotificationIds();
+      current.addAll(ids);
+      await prefs.setStringList(key, current.toList());
+    } catch (_) {}
+  }
+
   /// Returns the connection timestamp mapping: user_id -> ISO string timestamp
   static Future<Map<String, String>> getConnectionTimestamps() async {
     try {
@@ -145,6 +184,10 @@ class NotificationLocalService {
   /// Saves a notification to SharedPreferences
   static Future<void> saveNotification(LocalNotification notification) async {
     try {
+      final deletedIds = await getDeletedNotificationIds();
+      if (deletedIds.contains(notification.id)) {
+        return;
+      }
       final prefs = await SharedPreferences.getInstance();
       final key = await _getStorageKey();
       final notifications = await loadNotifications();
@@ -167,9 +210,10 @@ class NotificationLocalService {
       final key = await _getStorageKey();
       final notifications = await loadNotifications();
       
+      final deletedIds = await getDeletedNotificationIds();
       final Set<String> existingIds = notifications.map((n) => n.id).toSet();
       final List<LocalNotification> uniqueNew = newNotifications
-          .where((n) => !existingIds.contains(n.id))
+          .where((n) => !existingIds.contains(n.id) && !deletedIds.contains(n.id))
           .toList();
           
       if (uniqueNew.isEmpty) return;
@@ -233,6 +277,9 @@ class NotificationLocalService {
       final dataStr = jsonEncode(notifications.map((n) => n.toJson()).toList());
       await prefs.setString(key, dataStr);
       await _updateUnreadCount();
+      
+      // Track this deletion to prevent syncing it back
+      await trackDeletedNotificationId(id);
     } catch (_) {}
   }
 
@@ -248,6 +295,9 @@ class NotificationLocalService {
       final dataStr = jsonEncode(notifications.map((n) => n.toJson()).toList());
       await prefs.setString(key, dataStr);
       await _updateUnreadCount();
+      
+      // Track these deletions to prevent syncing them back
+      await trackDeletedNotificationIds(ids);
     } catch (_) {}
   }
 
@@ -256,6 +306,12 @@ class NotificationLocalService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final key = await _getStorageKey();
+      
+      // Track all current notifications as deleted before clearing
+      final notifications = await loadNotifications();
+      final ids = notifications.map((n) => n.id).toList();
+      await trackDeletedNotificationIds(ids);
+      
       await prefs.remove(key);
       await _updateUnreadCount();
     } catch (_) {}

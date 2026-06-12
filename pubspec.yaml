@@ -61,6 +61,7 @@ dependencies:
   geocoding: ^4.0.0
   qr_flutter: ^4.1.0
   mobile_scanner: ^6.0.0
+  flutter_background_service: ^5.1.0
 
 dev_dependencies:
   flutter_test:
