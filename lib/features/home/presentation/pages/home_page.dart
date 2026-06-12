@@ -90,7 +90,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     _loadUserFromSession();
     WidgetsBinding.instance.addObserver(this);
     _checkPermissionsState().then((_) {
-      if (mounted && (!_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission || !_hasDndPermission || !_hasBatteryBypassPermission)) {
+      if (mounted && (!_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission || !_hasDndPermission)) {
         _requestPermissions();
       }
     });
@@ -962,7 +962,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       );
     }
 
-    if (!_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission || !_hasDndPermission || !_hasBatteryBypassPermission) {
+    if (!_hasLocationPermission || !_hasNotificationPermission || !_hasOverlayPermission || !_hasDndPermission) {
       return _buildPermissionRequestScreen();
     }
 
