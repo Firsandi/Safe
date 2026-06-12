@@ -83,7 +83,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     const SizedBox(height: 8),
                     _buildInputField(
                       controller: emailController,
-                      hint: 'nama@email.com',
+                      hint: AppLocalizations.of(context)!.emailHint,
                       prefixIcon: Icons.mail_outline,
                     ),
                     const SizedBox(height: 32),

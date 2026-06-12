@@ -135,7 +135,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 8),
                     _buildInputField(
                       controller: emailController,
-                      hint: 'nama@email.com',
+                      hint: AppLocalizations.of(context)!.emailHint,
                       prefixIcon: Icons.mail_outline,
                     ),
                     const SizedBox(height: 20),
@@ -145,7 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 8),
                     _buildInputField(
                       controller: passwordController,
-                      hint: 'Kata sandi',
+                      hint: AppLocalizations.of(context)!.enterPasswordHint,
                       prefixIcon: Icons.lock_outline,
                       isPassword: true,
                       obscureText: !_isPasswordVisible,

@@ -758,7 +758,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get fullNameHint => 'Masukkan nama lengkap Anda';
 
   @override
-  String get emailHint => 'nama@email.com';
+  String get emailHint => 'Masukkan email Anda';
 
   @override
   String get requiredFieldError => 'Wajib diisi';
@@ -770,7 +770,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get emailInvalidError => 'Format email tidak valid';
 
   @override
-  String get phoneHint => '081234567890';
+  String get phoneHint => '81234567890';
 
   @override
   String get phonePrefixError => 'Nomor harus diawali 08';
@@ -783,6 +783,9 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get passwordHint => 'Minimal 8 karakter';
+
+  @override
+  String get enterPasswordHint => 'Masukkan kata sandi Anda';
 
   @override
   String get passwordMinLengthError => 'Kata sandi minimal 8 karakter';
