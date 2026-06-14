@@ -663,7 +663,14 @@ class _ProfilePageState extends State<ProfilePage> {
           );
         }
 
-        navigator.pop(); // Close sheet or page
+        if (widget.showEditForm) {
+          navigator.pop(); // Close page if pushed as a separate route
+        } else {
+          setState(() {
+            _isEditMode = false;
+          });
+        }
+
         messenger.showSnackBar(
           const SnackBar(
             content: Text('Profil & Riwayat Medis berhasil diperbarui!'),
