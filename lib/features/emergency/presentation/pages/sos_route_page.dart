@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
+import 'package:safe/core/utils/injection.dart';
 
 class SosRoutePage extends StatefulWidget {
   final Map<String, dynamic> sosEvent;
@@ -41,6 +42,11 @@ class _SosRoutePageState extends State<SosRoutePage> {
 
     _initLocationAndRoute();
     _fetchAddressFromCoords(_targetLat, _targetLng);
+
+    final sosId = widget.sosEvent['sos_id']?.toString() ?? widget.sosEvent['id']?.toString() ?? '';
+    if (sosId.isNotEmpty) {
+      _acknowledgeSos(sosId);
+    }
   }
 
   Future<void> _fetchAddressFromCoords(double lat, double lng) async {
@@ -620,5 +626,15 @@ class _SosRoutePageState extends State<SosRoutePage> {
         child: Icon(icon, color: const Color(0xFF193855), size: 22),
       ),
     );
+  }
+
+  Future<void> _acknowledgeSos(String sosId) async {
+    try {
+      final dio = sl<Dio>();
+      await dio.post('/api/sos/$sosId/acknowledge');
+      debugPrint('Successfully acknowledged SOS: $sosId');
+    } catch (e) {
+      debugPrint('Failed to acknowledge SOS: $e');
+    }
   }
 }

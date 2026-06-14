@@ -4,7 +4,6 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:safe/core/utils/session_manager.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
-import 'package:flutter_background_service_android/flutter_background_service_android.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'dart:convert';

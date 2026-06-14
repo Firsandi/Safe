@@ -1,6 +1,13 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:safe/core/error/dio_error_handler.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -14,6 +21,7 @@ import 'package:safe/features/auth/data/models/user_model.dart';
 import 'package:safe/features/auth/presentation/pages/login_page.dart';
 import 'package:safe/features/home/presentation/pages/language_page.dart';
 import 'package:safe/features/home/presentation/pages/help_center_page.dart';
+import 'package:safe/features/home/presentation/pages/sound_notification_page.dart';
 import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/core/services/location_service.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -31,6 +39,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final GlobalKey _qrKey = GlobalKey();
   late String _currentName;
   late String _currentPhone;
   late String _currentProfileImage;
@@ -689,6 +698,54 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _shareQrCode() async {
+    try {
+      final boundary = _qrKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) {
+        _shareQrCodeAsText();
+        return;
+      }
+
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      
+      if (byteData != null) {
+        final Uint8List pngBytes = byteData.buffer.asUint8List();
+        
+        final tempDir = await getTemporaryDirectory();
+        final file = await File('${tempDir.path}/safe_qr_code.png').create();
+        await file.writeAsBytes(pngBytes);
+        
+        final isEn = Localizations.localeOf(context).languageCode == 'en';
+        final text = isEn 
+            ? 'Add me as an emergency contact on Safe! User ID: ${widget.user.userId}' 
+            : 'Tambahkan saya sebagai kontak darurat di Safe! ID Pengguna: ${widget.user.userId}';
+        
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          text: text,
+        );
+      } else {
+        _shareQrCodeAsText();
+      }
+    } catch (e) {
+      debugPrint('Error sharing QR code image, falling back to text: $e');
+      _shareQrCodeAsText();
+    }
+  }
+
+  void _shareQrCodeAsText() {
+    try {
+      final isEn = Localizations.localeOf(context).languageCode == 'en';
+      final text = isEn 
+          ? 'Add me as an emergency contact on Safe! User ID: ${widget.user.userId}' 
+          : 'Tambahkan saya sebagai kontak darurat di Safe! ID Pengguna: ${widget.user.userId}';
+      Share.share(text);
+    } catch (e) {
+      debugPrint('Error sharing QR code text: $e');
+    }
+  }
+
   void _showQrCodeDialog() {
     final isEn = Localizations.localeOf(context).languageCode == 'en';
     showDialog(
@@ -771,22 +828,51 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 28),
                 
                 // QR Code Container
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: QrImageView(
-                    data: widget.user.userId,
-                    version: QrVersions.auto,
-                    size: 200.0,
-                    gapless: false,
-                    foregroundColor: const Color(0xFF193855),
+                RepaintBoundary(
+                  key: _qrKey,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: QrImageView(
+                      data: widget.user.userId,
+                      version: QrVersions.auto,
+                      size: 200.0,
+                      gapless: false,
+                      foregroundColor: const Color(0xFF193855),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
+                
+                // Share Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryRed,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onPressed: _shareQrCode,
+                    icon: const Icon(Icons.share, size: 18),
+                    label: Text(
+                      isEn ? 'Share QR Code' : 'Bagikan Kode QR',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
                 
                 // Instructions Info Text
                 Text(
@@ -842,6 +928,7 @@ class _ProfilePageState extends State<ProfilePage> {
       try {
         final dio = sl<Dio>();
         await dio.put('/api/profile/fcm', data: {'fcm_token': ''});
+        await FirebaseMessaging.instance.deleteToken();
       } catch (e) {
         debugPrint('Failed to clear FCM token on logout: $e');
       }
@@ -1437,6 +1524,36 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
                           onTap: _showQrCodeDialog,
+                        ),
+                        Divider(height: 1, indent: 64, endIndent: 16, color: Colors.grey[200]),
+                        ListTile(
+                          leading: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.notifications_active_outlined, color: Colors.black87, size: 20),
+                          ),
+                          title: Text(
+                            Localizations.localeOf(context).languageCode == 'en'
+                                ? 'Sound & Notifications'
+                                : 'Suara & Notifikasi',
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                          ),
+                          subtitle: Text(
+                            Localizations.localeOf(context).languageCode == 'en'
+                                ? 'Configure alert sounds and notifications'
+                                : 'Atur suara alarm peringatan dan notifikasi',
+                            style: const TextStyle(fontSize: 11, color: Colors.grey),
+                          ),
+                          trailing: const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => const SoundNotificationPage()),
+                            );
+                          },
                         ),
                       ],
                     ),

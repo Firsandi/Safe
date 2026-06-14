@@ -19,6 +19,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
+  final isLoggedIn = await SessionManager.isLoggedIn();
+  if (!isLoggedIn) {
+    debugPrint('Ignoring background message: User is logged out.');
+    return;
+  }
   debugPrint('Handling a background message: ${message.messageId}');
   await NotificationManager.saveLocalNotificationRecord(message);
   if (message.data['type'] == 'sos_alert') {
@@ -215,8 +220,47 @@ class NotificationManager {
           .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
           ?.createNotificationChannel(locationChannel);
 
+      // Create Android Notification Channel for Emergency Calls (Silent fallback for custom sounds)
+      final AndroidNotificationChannel silentChannel = AndroidNotificationChannel(
+        'emergency_call_channel_silent',
+        'Panggilan Darurat (SOS) - Nada Kustom',
+        description: 'Digunakan untuk menerima panggilan darurat SOS secara senyap (nada diputar oleh aplikasi).',
+        importance: Importance.max,
+        playSound: false,
+        enableVibration: true,
+        vibrationPattern: Int64List.fromList([0, 1000, 500, 1000, 500, 1000]),
+        enableLights: true,
+        showBadge: true,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+      );
+
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(silentChannel);
+
+      // Create Android Notification Channel for General Notifications
+      final AndroidNotificationChannel generalChannel = AndroidNotificationChannel(
+        'general_notification_channel_v2',
+        'Notifikasi Umum',
+        description: 'Digunakan untuk notifikasi biasa seperti permintaan kontak darurat.',
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+        showBadge: true,
+      );
+
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(generalChannel);
+
       // 5. Handle Foreground Messages
       FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+        final isLoggedIn = await SessionManager.isLoggedIn();
+        if (!isLoggedIn) {
+          debugPrint('Ignoring foreground message: User is logged out.');
+          return;
+        }
+
         debugPrint('Got a message in the foreground: ${message.messageId}');
 
         final isOwn = message.data['type'] == 'sos_alert' && await isOwnSos(message.data);
@@ -235,6 +279,12 @@ class NotificationManager {
 
       // 6. Handle App Opened via Notification
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
+        final isLoggedIn = await SessionManager.isLoggedIn();
+        if (!isLoggedIn) {
+          debugPrint('Ignoring app opened via notification: User is logged out.');
+          return;
+        }
+
         debugPrint('App opened via notification: ${message.messageId}');
         await saveLocalNotificationRecord(message);
         stopAlarm();
@@ -253,12 +303,17 @@ class NotificationManager {
       try {
         final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
         if (initialMessage != null) {
-          debugPrint('App launched via initial message: ${initialMessage.messageId}');
-          await saveLocalNotificationRecord(initialMessage);
-          stopAlarm();
-          final isOwn = initialMessage.data['type'] == 'sos_alert' && await isOwnSos(initialMessage.data);
-          if (initialMessage.data['type'] == 'sos_alert' && !isOwn) {
-            navigateToSosAlert(initialMessage.data);
+          final isLoggedIn = await SessionManager.isLoggedIn();
+          if (isLoggedIn) {
+            debugPrint('App launched via initial message: ${initialMessage.messageId}');
+            await saveLocalNotificationRecord(initialMessage);
+            stopAlarm();
+            final isOwn = initialMessage.data['type'] == 'sos_alert' && await isOwnSos(initialMessage.data);
+            if (initialMessage.data['type'] == 'sos_alert' && !isOwn) {
+              navigateToSosAlert(initialMessage.data);
+            }
+          } else {
+            debugPrint('Ignoring initial message: User is logged out.');
           }
         }
       } catch (e) {
@@ -299,17 +354,20 @@ class NotificationManager {
     final isOwn = type == 'sos_alert' && await isOwnSos(message.data);
 
     if (isOwn) {
-      // Quietly show "SOS sent" notification instead of alarm sound
-      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      // Quietly show "SOS sent" notification instead of alarm sound (Vibrate only, no sound)
+      final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
         'safe_location_channel',
         'SAFE Pelacakan Aktif',
         channelDescription: 'Digunakan untuk menampilkan pembaruan lokasi penting.',
         importance: Importance.high,
         priority: Priority.high,
-        color: Color(0xFFC21A1A),
+        playSound: false,
+        enableVibration: true,
+        vibrationPattern: Int64List.fromList([0, 500]),
+        color: const Color(0xFFC21A1A),
       );
 
-      const NotificationDetails details = NotificationDetails(
+      final NotificationDetails details = NotificationDetails(
         android: androidDetails,
       );
 
@@ -323,24 +381,45 @@ class NotificationManager {
       return;
     }
 
-    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'emergency_call_channel_v5',
-      'Panggilan Darurat (SOS)',
-      channelDescription: 'Digunakan untuk menerima panggilan darurat SOS dengan prioritas tertinggi.',
-      importance: Importance.max,
-      priority: Priority.max,
-      fullScreenIntent: true,
-      category: AndroidNotificationCategory.call,
-      ongoing: true,
-      autoCancel: false,
-      additionalFlags: Int32List.fromList([4]),
-      visibility: NotificationVisibility.public,
-      playSound: true,
-      sound: const RawResourceAndroidNotificationSound('alarm_sound'),
-      audioAttributesUsage: AudioAttributesUsage.alarm,
-      vibrationPattern: Int64List.fromList([0, 1000, 500, 1000, 500, 1000]),
-      color: const Color(0xFFC21A1A),
-    );
+    final prefs = await SharedPreferences.getInstance();
+    final soundType = prefs.getString('alarm_sound_type') ?? 'default';
+
+    final AndroidNotificationDetails androidDetails;
+
+    if (type == 'sos_alert') {
+      final isDefaultSound = soundType == 'default';
+      androidDetails = AndroidNotificationDetails(
+        isDefaultSound ? 'emergency_call_channel_v5' : 'emergency_call_channel_silent',
+        isDefaultSound ? 'Panggilan Darurat (SOS)' : 'Panggilan Darurat (SOS) - Nada Kustom',
+        channelDescription: isDefaultSound
+            ? 'Digunakan untuk menerima panggilan darurat SOS dengan prioritas tertinggi.'
+            : 'Digunakan untuk menerima panggilan darurat SOS secara senyap (nada diputar oleh aplikasi).',
+        importance: Importance.max,
+        priority: Priority.max,
+        fullScreenIntent: true,
+        category: AndroidNotificationCategory.call,
+        ongoing: true,
+        autoCancel: false,
+        additionalFlags: Int32List.fromList([4]),
+        visibility: NotificationVisibility.public,
+        playSound: isDefaultSound,
+        sound: isDefaultSound ? const RawResourceAndroidNotificationSound('alarm_sound') : null,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+        vibrationPattern: Int64List.fromList([0, 1000, 500, 1000, 500, 1000]),
+        color: const Color(0xFFC21A1A),
+      );
+    } else {
+      androidDetails = const AndroidNotificationDetails(
+        'general_notification_channel_v2',
+        'Notifikasi Umum',
+        channelDescription: 'Digunakan untuk notifikasi biasa seperti permintaan kontak darurat.',
+        importance: Importance.high,
+        priority: Priority.high,
+        autoCancel: true,
+        playSound: true,
+        color: Color(0xFF193855),
+      );
+    }
 
     final NotificationDetails details = NotificationDetails(
       android: androidDetails,
@@ -533,14 +612,34 @@ class NotificationManager {
       await _audioPlayer.setVolume(1.0);
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
 
-      // Attempt to play local asset, fallback to a remote URL source if local file not found
-      try {
-        await _audioPlayer.play(AssetSource('sounds/alarm_sound.mp3'));
-      } catch (_) {
-        // Fallback to high-quality remote watch alarm sound for reliable out-of-the-box testing
-        await _audioPlayer.play(UrlSource('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg'));
+      // Read dynamic preferences for alarm sound
+      final prefs = await SharedPreferences.getInstance();
+      final soundType = prefs.getString('alarm_sound_type') ?? 'default';
+      final soundPath = prefs.getString('alarm_sound_path') ?? 'sounds/alarm_sound.mp3';
+
+      if (soundType == 'custom' && soundPath.isNotEmpty) {
+        await _audioPlayer.play(DeviceFileSource(soundPath));
+      } else if (soundType == 'beep') {
+        try {
+          await _audioPlayer.play(AssetSource('sounds/high_pitch_beep.mp3'));
+        } catch (_) {
+          await _audioPlayer.play(UrlSource('https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg'));
+        }
+      } else if (soundType == 'retro') {
+        try {
+          await _audioPlayer.play(AssetSource('sounds/retro_alarm.mp3'));
+        } catch (_) {
+          await _audioPlayer.play(UrlSource('https://actions.google.com/sounds/v1/alarms/mechanical_clock_ring.ogg'));
+        }
+      } else {
+        // default
+        try {
+          await _audioPlayer.play(AssetSource('sounds/alarm_sound.mp3'));
+        } catch (_) {
+          await _audioPlayer.play(UrlSource('https://actions.google.com/sounds/v1/alarms/emergency_siren.ogg'));
+        }
       }
-      debugPrint('Alarm started playing successfully');
+      debugPrint('Alarm started playing successfully (type: $soundType)');
     } catch (e) {
       _isAlarmPlaying = false;
       debugPrint('Failed to play alarm: $e');
