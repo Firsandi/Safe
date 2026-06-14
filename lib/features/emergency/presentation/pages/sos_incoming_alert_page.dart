@@ -56,6 +56,11 @@ class _SosIncomingAlertPageState extends State<SosIncomingAlertPage>
     if (_profileImage.isEmpty) {
       _fetchVictimProfileImage();
     }
+
+    final sosId = widget.sosData['sos_id']?.toString() ?? '';
+    if (sosId.isNotEmpty) {
+      _acknowledgeSos(sosId);
+    }
   }
 
   @override
@@ -507,5 +512,15 @@ class _SosIncomingAlertPageState extends State<SosIncomingAlertPage>
         }
       }
     } catch (_) {}
+  }
+
+  Future<void> _acknowledgeSos(String sosId) async {
+    try {
+      final dio = sl<Dio>();
+      await dio.post('/api/sos/$sosId/acknowledge');
+      debugPrint('Successfully acknowledged SOS: $sosId');
+    } catch (e) {
+      debugPrint('Failed to acknowledge SOS: $e');
+    }
   }
 }

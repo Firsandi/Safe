@@ -758,7 +758,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fullNameHint => 'Enter your full name';
 
   @override
-  String get emailHint => 'name@email.com';
+  String get emailHint => 'Enter your email';
 
   @override
   String get requiredFieldError => 'Required field';
@@ -770,7 +770,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emailInvalidError => 'Invalid email format';
 
   @override
-  String get phoneHint => '081234567890';
+  String get phoneHint => '81234567890';
 
   @override
   String get phonePrefixError => 'Phone number must start with 08';
@@ -783,6 +783,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get passwordHint => 'At least 8 characters';
+
+  @override
+  String get enterPasswordHint => 'Enter your password';
 
   @override
   String get passwordMinLengthError => 'Password must be at least 8 characters';

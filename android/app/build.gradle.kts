@@ -48,6 +48,18 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+    applicationVariants.configureEach {
+        val variant = this
+        val buildType = variant.buildType.name
+        
+        outputs.configureEach {
+            val output = this as? com.android.build.gradle.internal.api.ApkVariantOutputImpl
+            if (buildType == "release") {
+                output?.outputFileName = "Safe.apk"
+            }
+        }
+    }
 }
 
 flutter {

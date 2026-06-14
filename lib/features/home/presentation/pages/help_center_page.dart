@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HelpCenterPage extends StatefulWidget {
   const HelpCenterPage({super.key});
@@ -81,122 +82,89 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
     }
   }
 
-  void _showHelpTicketDialog(BuildContext context, String channelName) {
+  Future<void> _contactWhatsApp() async {
     final isIndonesian = Localizations.localeOf(context).languageCode == 'id';
-    final messageController = TextEditingController();
-    
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        backgroundColor: Colors.white,
-        title: Row(
-          children: [
-            const Icon(Icons.support_agent, color: AppColors.primaryRed),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                isIndonesian ? 'Kirim Pesan ke Tim' : 'Send Message to Team',
-                style: AppTextStyles.heading.copyWith(fontSize: 16),
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
+    final Uri whatsappUrl = Uri.parse("https://wa.me/6281358485648?text=Halo%20SAFE%20Support,%20saya%20butuh%20bantuan...");
+    try {
+      if (!await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication)) {
+        throw 'Could not launch $whatsappUrl';
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
               isIndonesian 
-                  ? 'Saluran: $channelName' 
-                  : 'Channel: $channelName',
-              style: AppTextStyles.inputLabel.copyWith(color: AppColors.textGrey, fontWeight: FontWeight.bold),
+                  ? 'Tidak dapat membuka WhatsApp. Pastikan aplikasi WhatsApp sudah terinstal.'
+                  : 'Could not open WhatsApp. Please make sure the app is installed.',
             ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: AppColors.backgroundLight,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.inputBorder),
-              ),
-              child: TextField(
-                controller: messageController,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintText: isIndonesian 
-                      ? 'Tulis pesan atau pertanyaan Anda di sini...' 
-                      : 'Write your message or question here...',
-                  hintStyle: AppTextStyles.subHeading.copyWith(color: AppColors.textGrey, fontSize: 13),
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              isIndonesian ? 'Batal' : 'Cancel',
-              style: TextStyle(color: AppColors.textGrey),
-            ),
+            backgroundColor: AppColors.primaryRed,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF193855),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        );
+      }
+    }
+  }
+
+  Future<void> _contactEmail() async {
+    final isIndonesian = Localizations.localeOf(context).languageCode == 'id';
+    final Uri emailUrl = Uri(
+      scheme: 'mailto',
+      path: 'safe.app.otp@gmail.com',
+      queryParameters: {
+        'subject': 'SAFE App Support Request',
+        'body': 'Halo Tim Support SAFE,\n\nSaya memerlukan bantuan terkait...',
+      },
+    );
+    try {
+      if (!await launchUrl(emailUrl)) {
+        throw 'Could not launch $emailUrl';
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isIndonesian
+                  ? 'Tidak dapat membuka aplikasi Email.'
+                  : 'Could not open email application.',
             ),
-            onPressed: () {
-              Navigator.pop(ctx);
-              _showSuccessSnackbar(context, isIndonesian);
-            },
-            child: Text(
-              isIndonesian ? 'Kirim' : 'Send',
-              style: const TextStyle(color: Colors.white),
-            ),
+            backgroundColor: AppColors.primaryRed,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
-        ],
-      ),
-    );
+        );
+      }
+    }
   }
 
-  void _showSuccessSnackbar(BuildContext context, bool isIndonesian) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_outline, color: Colors.white, size: 20),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                isIndonesian 
-                    ? 'Pesan Anda berhasil terkirim. Tim kami akan segera menanggapi!'
-                    : 'Your message has been sent successfully. Our team will respond shortly!',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+  Future<void> _contactPhone() async {
+    final isIndonesian = Localizations.localeOf(context).languageCode == 'id';
+    final Uri phoneUrl = Uri(
+      scheme: 'tel',
+      path: '+6281358485648',
+    );
+    try {
+      if (!await launchUrl(phoneUrl)) {
+        throw 'Could not launch $phoneUrl';
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isIndonesian
+                  ? 'Tidak dapat melakukan panggilan. Pastikan perangkat mendukung panggilan telepon.'
+                  : 'Could not launch phone dialer. Please make sure your device supports calls.',
             ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF22C55E),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        duration: const Duration(seconds: 3),
-      ),
-    );
-  }
-
-  void _contactWhatsApp() {
-    _showHelpTicketDialog(context, 'WhatsApp Chat');
-  }
-
-  void _contactEmail() {
-    _showHelpTicketDialog(context, 'Email Support');
-  }
-
-  void _contactPhone() {
-    _showHelpTicketDialog(context, 'Hotline Support');
+            backgroundColor: AppColors.primaryRed,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -478,7 +446,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                       iconBg: const Color(0xFFEDF4FE),
                       iconColor: const Color(0xFF193855),
                       title: 'Email Support',
-                      subtitle: 'support@safeapp.com',
+                      subtitle: 'safe.app.otp@gmail.com',
                       onTap: _contactEmail,
                     ),
                     const Divider(height: 20),
@@ -488,7 +456,7 @@ class _HelpCenterPageState extends State<HelpCenterPage> {
                       iconBg: const Color(0xFFFFF7ED),
                       iconColor: const Color(0xFFEA580C),
                       title: isIndonesian ? 'Panggilan Telepon' : 'Phone Call',
-                      subtitle: 'Hotline: +62 812-3456-7890',
+                      subtitle: 'Hotline: +62 813-5848-5648',
                       onTap: _contactPhone,
                     ),
                   ],

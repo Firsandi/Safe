@@ -239,10 +239,6 @@ class _OtpVerificationPageState extends State<OtpVerificationPage> {
       _showMessage(message);
 
       if (widget.isLoginOtp) {
-        // Harus navigate ke HomePage
-        // Kita butuh UserModel, bisa parsing dari user map. Tapi untuk simplicity, HomePage butuh UserModel
-        // Mending kita gunakan Bloc untuk verifyLoginOtp atau emit success. Tapi karena ini direct, kita harus panggil AuthCubit.
-        // Sebenarnya lebih baik redirect ke "/" (splash) agar otomatis terdetect sudah login.
         Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
       } else {
         Navigator.popUntil(context, (route) => route.isFirst);

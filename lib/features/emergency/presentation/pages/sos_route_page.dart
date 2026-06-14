@@ -3,11 +3,13 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:dio/dio.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:safe/l10n/app_localizations.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/theme/app_text_styles.dart';
+import 'package:safe/core/utils/injection.dart';
 
 class SosRoutePage extends StatefulWidget {
   final Map<String, dynamic> sosEvent;
@@ -40,10 +42,39 @@ class _SosRoutePageState extends State<SosRoutePage> {
 
     _initLocationAndRoute();
     _fetchAddressFromCoords(_targetLat, _targetLng);
+
+    final sosId = widget.sosEvent['sos_id']?.toString() ?? widget.sosEvent['id']?.toString() ?? '';
+    if (sosId.isNotEmpty) {
+      _acknowledgeSos(sosId);
+    }
   }
 
-  /// Reverse geocoding menggunakan Nominatim OSM
   Future<void> _fetchAddressFromCoords(double lat, double lng) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        final List<String> parts = [];
+        final street = place.street ?? '';
+        if (street.isNotEmpty) parts.add(street);
+        final subLocality = place.subLocality ?? '';
+        if (subLocality.isNotEmpty && subLocality != street) parts.add(subLocality);
+        final locality = place.locality ?? '';
+        if (locality.isNotEmpty) parts.add(locality);
+        final subAdmin = place.subAdministrativeArea ?? '';
+        if (subAdmin.isNotEmpty) parts.add(subAdmin);
+        final admin = place.administrativeArea ?? '';
+        if (admin.isNotEmpty && admin != subAdmin) parts.add(admin);
+        
+        if (mounted) {
+          setState(() {
+            _destinationAddress = parts.isNotEmpty ? parts.join(', ') : 'Lokasi ditemukan';
+          });
+        }
+        return;
+      }
+    } catch (_) {}
+
     try {
       final dio = Dio();
       final response = await dio.get(
@@ -58,27 +89,23 @@ class _SosRoutePageState extends State<SosRoutePage> {
       );
       if (response.statusCode == 200 && response.data != null) {
         final addr = response.data['address'];
-        final road = addr?['road'] ??
-            addr?['neighbourhood'] ??
-            addr?['suburb'] ??
-            addr?['village'] ??
-            addr?['city_district'] ??
-            addr?['county'];
-        final city = addr?['city'] ??
-            addr?['town'] ??
-            addr?['regency'] ??
-            addr?['state'];
-        if (mounted) {
-          setState(() {
-            if (road != null && city != null) {
-              _destinationAddress = '$road, $city';
-            } else if (road != null) {
-              _destinationAddress = road;
-            } else {
-              _destinationAddress = response.data['display_name'] ??
-                  '${lat.toStringAsFixed(5)}, ${lng.toStringAsFixed(5)}';
-            }
-          });
+        if (addr != null) {
+          final road = addr['road'] ?? addr['pedestrian'] ?? '';
+          final suburb = addr['suburb'] ?? addr['neighbourhood'] ?? addr['village'] ?? '';
+          final city = addr['city'] ?? addr['town'] ?? addr['county'] ?? '';
+          final state = addr['state'] ?? '';
+          
+          final parts = <String>[];
+          if (road.isNotEmpty) parts.add(road.toString());
+          if (suburb.isNotEmpty) parts.add(suburb.toString());
+          if (city.isNotEmpty) parts.add(city.toString());
+          if (state.isNotEmpty) parts.add(state.toString());
+          
+          if (mounted) {
+            setState(() {
+              _destinationAddress = parts.isNotEmpty ? parts.join(', ') : (response.data['display_name'] ?? 'Lokasi ditemukan');
+            });
+          }
         }
       }
     } catch (_) {
@@ -599,5 +626,15 @@ class _SosRoutePageState extends State<SosRoutePage> {
         child: Icon(icon, color: const Color(0xFF193855), size: 22),
       ),
     );
+  }
+
+  Future<void> _acknowledgeSos(String sosId) async {
+    try {
+      final dio = sl<Dio>();
+      await dio.post('/api/sos/$sosId/acknowledge');
+      debugPrint('Successfully acknowledged SOS: $sosId');
+    } catch (e) {
+      debugPrint('Failed to acknowledge SOS: $e');
+    }
   }
 }

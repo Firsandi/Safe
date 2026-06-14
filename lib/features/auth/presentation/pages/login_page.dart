@@ -13,7 +13,6 @@ import 'otp_verification_page.dart';
 import 'register_page.dart';
 import 'forgot_password_page.dart';
 import 'package:safe/core/services/notification_manager.dart';
-import 'package:safe/core/localization/language_cubit.dart';
 import 'package:safe/core/localization/language_selector.dart';
 import 'package:safe/l10n/app_localizations.dart';
 
@@ -135,7 +134,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 8),
                     _buildInputField(
                       controller: emailController,
-                      hint: 'nama@email.com',
+                      hint: AppLocalizations.of(context)!.emailHint,
                       prefixIcon: Icons.mail_outline,
                     ),
                     const SizedBox(height: 20),
@@ -145,7 +144,7 @@ class _LoginPageState extends State<LoginPage> {
                     const SizedBox(height: 8),
                     _buildInputField(
                       controller: passwordController,
-                      hint: 'Kata sandi',
+                      hint: AppLocalizations.of(context)!.enterPasswordHint,
                       prefixIcon: Icons.lock_outline,
                       isPassword: true,
                       obscureText: !_isPasswordVisible,
@@ -343,41 +342,5 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
-  }
-
-  Future<void> _resendVerificationEmail(BuildContext context) async {
-    final email = emailController.text.trim();
-    if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalizations.of(context)!.enterEmailFirstError),
-          backgroundColor: AppColors.primaryRed,
-        ),
-      );
-      return;
-    }
-
-    try {
-      final response = await sl<Dio>().post('/api/resend-verification', data: {
-        'email': email,
-      });
-      final message = response.data['message'] ?? 'Kode OTP baru sudah dikirim.';
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } on DioException catch (e) {
-      final message = e.response?.data?['error'] ?? AppLocalizations.of(context)!.failedResendOtpError;
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.primaryRed,
-        ),
-      );
-    }
   }
 }

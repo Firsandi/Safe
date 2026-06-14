@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:dio/dio.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/core/services/notification_manager.dart';
@@ -117,6 +118,31 @@ class _SosAlertReceiverPageState extends State<SosAlertReceiverPage> with Single
 
   Future<void> _fetchAddress() async {
     try {
+      final placemarks = await placemarkFromCoordinates(_victimLat, _victimLng);
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        final List<String> parts = [];
+        final street = place.street ?? '';
+        if (street.isNotEmpty) parts.add(street);
+        final subLocality = place.subLocality ?? '';
+        if (subLocality.isNotEmpty && subLocality != street) parts.add(subLocality);
+        final locality = place.locality ?? '';
+        if (locality.isNotEmpty) parts.add(locality);
+        final subAdmin = place.subAdministrativeArea ?? '';
+        if (subAdmin.isNotEmpty) parts.add(subAdmin);
+        final admin = place.administrativeArea ?? '';
+        if (admin.isNotEmpty && admin != subAdmin) parts.add(admin);
+        
+        if (mounted) {
+          setState(() {
+            _address = parts.isNotEmpty ? parts.join(', ') : 'Lokasi ditemukan';
+          });
+        }
+        return;
+      }
+    } catch (_) {}
+
+    try {
       final dio = Dio();
       final response = await dio.get(
         'https://nominatim.openstreetmap.org/reverse',
@@ -130,18 +156,23 @@ class _SosAlertReceiverPageState extends State<SosAlertReceiverPage> with Single
       );
       if (response.statusCode == 200 && response.data != null) {
         final addr = response.data['address'];
-        final road = addr?['road'] ?? addr?['neighbourhood'] ?? addr?['suburb'] ?? addr?['village'];
-        final city = addr?['city'] ?? addr?['town'] ?? addr?['regency'] ?? addr?['state'];
-        if (mounted) {
-          setState(() {
-            if (road != null && city != null) {
-              _address = '$road, $city';
-            } else if (road != null) {
-              _address = road;
-            } else {
-              _address = response.data['display_name'] ?? '${_victimLat.toStringAsFixed(5)}, ${_victimLng.toStringAsFixed(5)}';
-            }
-          });
+        if (addr != null) {
+          final road = addr['road'] ?? addr['pedestrian'] ?? '';
+          final suburb = addr['suburb'] ?? addr['neighbourhood'] ?? addr['village'] ?? '';
+          final city = addr['city'] ?? addr['town'] ?? addr['county'] ?? '';
+          final state = addr['state'] ?? '';
+          
+          final parts = <String>[];
+          if (road.isNotEmpty) parts.add(road.toString());
+          if (suburb.isNotEmpty) parts.add(suburb.toString());
+          if (city.isNotEmpty) parts.add(city.toString());
+          if (state.isNotEmpty) parts.add(state.toString());
+          
+          if (mounted) {
+            setState(() {
+              _address = parts.isNotEmpty ? parts.join(', ') : (response.data['display_name'] ?? 'Lokasi ditemukan');
+            });
+          }
         }
       }
     } catch (_) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:safe/l10n/app_localizations.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -649,18 +650,25 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
                   ),
                   const SizedBox(height: 8),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.location_on_outlined,
-                        size: 14,
-                        color: AppColors.textGrey,
+                      const Padding(
+                        padding: EdgeInsets.only(top: 2.0),
+                        child: Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: AppColors.textGrey,
+                        ),
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        '${event['initial_latitude'] ?? 0.0}, ${event['initial_longitude'] ?? 0.0}',
-                        style: AppTextStyles.subHeading.copyWith(
-                          color: AppColors.textGrey,
-                          fontSize: 13,
+                      Expanded(
+                        child: _AddressText(
+                          latitude: double.tryParse(event['initial_latitude']?.toString() ?? '') ?? 0.0,
+                          longitude: double.tryParse(event['initial_longitude']?.toString() ?? '') ?? 0.0,
+                          style: AppTextStyles.subHeading.copyWith(
+                            color: AppColors.textGrey,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -805,18 +813,25 @@ class _EmergencyHistoryPageState extends State<EmergencyHistoryPage> {
                   ),
                   const SizedBox(height: 8),
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.location_on_outlined,
-                        size: 14,
-                        color: AppColors.textGrey,
+                      const Padding(
+                        padding: EdgeInsets.only(top: 2.0),
+                        child: Icon(
+                          Icons.location_on_outlined,
+                          size: 14,
+                          color: AppColors.textGrey,
+                        ),
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        '${event['initial_latitude'] ?? 0.0}, ${event['initial_longitude'] ?? 0.0}',
-                        style: AppTextStyles.subHeading.copyWith(
-                          color: AppColors.textGrey,
-                          fontSize: 13,
+                      Expanded(
+                        child: _AddressText(
+                          latitude: double.tryParse(event['initial_latitude']?.toString() ?? '') ?? 0.0,
+                          longitude: double.tryParse(event['initial_longitude']?.toString() ?? '') ?? 0.0,
+                          style: AppTextStyles.subHeading.copyWith(
+                            color: AppColors.textGrey,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ],
@@ -1038,6 +1053,126 @@ class _BreathingSkeletonCardState extends State<BreathingSkeletonCard>
           ],
         ),
       ),
+    );
+  }
+}
+
+class _AddressText extends StatefulWidget {
+  final double latitude;
+  final double longitude;
+  final TextStyle style;
+
+  const _AddressText({
+    required this.latitude,
+    required this.longitude,
+    required this.style,
+  });
+
+  @override
+  State<_AddressText> createState() => _AddressTextState();
+}
+
+class _AddressTextState extends State<_AddressText> {
+  static final Map<String, String> _cache = {};
+  String? _resolvedAddress;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAddress();
+  }
+
+  @override
+  void didUpdateWidget(_AddressText oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.latitude != widget.latitude || oldWidget.longitude != widget.longitude) {
+      _loadAddress();
+    }
+  }
+
+  Future<void> _loadAddress() async {
+    final key = '${widget.latitude},${widget.longitude}';
+    if (_cache.containsKey(key)) {
+      if (mounted) {
+        setState(() {
+          _resolvedAddress = _cache[key];
+        });
+      }
+      return;
+    }
+
+    String displayAddress = '${widget.latitude.toStringAsFixed(6)}, ${widget.longitude.toStringAsFixed(6)}';
+
+    try {
+      // 1. Try local/native geocoding package
+      final placemarks = await placemarkFromCoordinates(widget.latitude, widget.longitude);
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        final List<String> parts = [];
+        final street = place.street ?? '';
+        if (street.isNotEmpty) parts.add(street);
+        final subLocality = place.subLocality ?? '';
+        if (subLocality.isNotEmpty && subLocality != street) parts.add(subLocality);
+        final locality = place.locality ?? '';
+        if (locality.isNotEmpty) parts.add(locality);
+        final subAdmin = place.subAdministrativeArea ?? '';
+        if (subAdmin.isNotEmpty) parts.add(subAdmin);
+        final admin = place.administrativeArea ?? '';
+        if (admin.isNotEmpty && admin != subAdmin) parts.add(admin);
+        
+        displayAddress = parts.isNotEmpty ? parts.join(', ') : 'Lokasi ditemukan';
+      }
+    } catch (_) {
+      // 2. Fallback to OpenStreetMap Nominatim reverse geocoding API
+      try {
+        final dio = Dio();
+        final response = await dio.get(
+          'https://nominatim.openstreetmap.org/reverse',
+          queryParameters: {
+            'format': 'json',
+            'lat': widget.latitude,
+            'lon': widget.longitude,
+            'zoom': 14,
+            'addressdetails': 1,
+            'accept-language': 'id',
+          },
+          options: Options(headers: {'User-Agent': 'SafeApp/1.0'}),
+        );
+        if (response.statusCode == 200 && response.data != null) {
+          final addressData = response.data['address'];
+          if (addressData != null) {
+            final road = addressData['road'] ?? addressData['pedestrian'] ?? '';
+            final suburb = addressData['suburb'] ?? addressData['neighbourhood'] ?? addressData['village'] ?? '';
+            final city = addressData['city'] ?? addressData['town'] ?? addressData['county'] ?? '';
+            final state = addressData['state'] ?? '';
+            
+            final parts = <String>[];
+            if (road.isNotEmpty) parts.add(road.toString());
+            if (suburb.isNotEmpty) parts.add(suburb.toString());
+            if (city.isNotEmpty) parts.add(city.toString());
+            if (state.isNotEmpty) parts.add(state.toString());
+            
+            displayAddress = parts.isNotEmpty ? parts.join(', ') : (response.data['display_name'] ?? 'Lokasi ditemukan');
+          }
+        }
+      } catch (_) {}
+    }
+
+    _cache[key] = displayAddress;
+    if (mounted) {
+      setState(() {
+        _resolvedAddress = displayAddress;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      _resolvedAddress ?? '${widget.latitude.toStringAsFixed(6)}, ${widget.longitude.toStringAsFixed(6)}',
+      style: widget.style,
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }

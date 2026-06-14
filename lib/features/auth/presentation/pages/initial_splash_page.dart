@@ -2,6 +2,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:safe/core/theme/app_colors.dart';
 import 'package:safe/features/auth/presentation/pages/splash_page.dart';
+import 'package:safe/core/utils/session_manager.dart';
+import 'package:safe/features/auth/data/models/user_model.dart';
+import 'package:safe/features/home/presentation/pages/home_page.dart';
+import 'package:safe/core/services/notification_manager.dart';
+import 'package:safe/core/services/navigation_service.dart';
+import 'package:safe/features/emergency/presentation/pages/sos_incoming_alert_page.dart';
 
 class InitialSplashPage extends StatefulWidget {
   const InitialSplashPage({super.key});
@@ -15,6 +21,11 @@ class _InitialSplashPageState extends State<InitialSplashPage>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _opacityAnimation;
+
+  bool _isSessionChecked = false;
+  bool _isTimerFinished = false;
+  bool _hasNavigated = false;
+  Widget? _targetPage;
 
   @override
   void initState() {
@@ -45,16 +56,60 @@ class _InitialSplashPageState extends State<InitialSplashPage>
     // Start the animation
     _controller.forward();
 
-    // Start timer to navigate to welcome screen after 2.5 seconds
-    Timer(const Duration(milliseconds: 2500), _navigateToWelcome);
+    // Start session check
+    _checkSession();
+
+    // Start timer to navigate after 2.5 seconds
+    Timer(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        setState(() {
+          _isTimerFinished = true;
+        });
+        _tryNavigation();
+      }
+    });
   }
 
-  void _navigateToWelcome() {
-    if (!mounted) return;
+  Future<void> _checkSession() async {
+    try {
+      final isLoggedIn = await SessionManager.isLoggedIn();
+      if (isLoggedIn) {
+        final userData = await SessionManager.getUserData();
+        if (userData != null) {
+          final user = UserModel.fromJson(userData);
+          _targetPage = HomePage(user: user);
+          NotificationManager.uploadFcmToken(); // Refresh FCM token in background
+        }
+      }
+    } catch (e) {
+      debugPrint('Error checking session in splash: $e');
+    } finally {
+      // If not logged in or invalid data, fallback to SplashPage
+      _targetPage ??= const SplashPage();
+      if (mounted) {
+        setState(() {
+          _isSessionChecked = true;
+        });
+        _tryNavigation();
+      }
+    }
+  }
+
+  void _tryNavigation() {
+    if (_isSessionChecked && _isTimerFinished) {
+      _navigate();
+    }
+  }
+
+  void _navigate() {
+    if (_hasNavigated || !mounted) return;
+    setState(() {
+      _hasNavigated = true;
+    });
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const SplashPage(),
+        pageBuilder: (context, animation, secondaryAnimation) => _targetPage!,
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           // Custom fade transition between splash pages for premium feel
           return FadeTransition(
@@ -65,6 +120,26 @@ class _InitialSplashPageState extends State<InitialSplashPage>
         transitionDuration: const Duration(milliseconds: 650),
       ),
     );
+
+    // Trigger the notification/action checks after routing
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (NotificationManager.pendingSosData != null) {
+        final data = NotificationManager.pendingSosData!;
+        NotificationManager.pendingSosData = null;
+        if (!SosIncomingAlertPage.isCurrentlyOpen) {
+          NavigationService.navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (context) => SosIncomingAlertPage(sosData: data),
+            ),
+          );
+        }
+      } else {
+        // Check if the app was launched by the local notification full-screen intent
+        await NotificationManager.checkLaunchNotification();
+        // Also check for pending actions in SharedPreferences
+        await NotificationManager.checkPendingActions();
+      }
+    });
   }
 
   @override
