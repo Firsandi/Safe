@@ -80,6 +80,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   bool _hasNotificationPermission = true;
   bool _hasOverlayPermission = true;
   bool _hasDndPermission = true;
+  bool _hasBatteryBypassPermission = true;
   bool _checkingPermissions = true;
 
   @override
@@ -357,6 +358,39 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                       );
                     },
                   ),
+                   const Divider(height: 20),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F5FA),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.battery_saver, color: Color(0xFF193855)),
+                    ),
+                    title: Text(
+                      Localizations.localeOf(context).languageCode == 'en'
+                          ? 'Background Tracking'
+                          : 'Pelacakan Latar Belakang',
+                      style: AppTextStyles.subHeading.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark,
+                        fontSize: 14,
+                      ),
+                    ),
+                    subtitle: Text(
+                      Localizations.localeOf(context).languageCode == 'en'
+                          ? 'Optimize battery bypass for 24/7 safety'
+                          : 'Bypass penghemat baterai untuk keselamatan 24/7',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _requestBatteryOptimizationBypass(context);
+                    },
+                  ),
                   const Divider(height: 20),
                   ListTile(
                     contentPadding: EdgeInsets.zero,
@@ -397,6 +431,64 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           ),
         );
       },
+    );
+  }
+
+  Future<void> _requestBatteryOptimizationBypass(BuildContext context) async {
+    final isEn = Localizations.localeOf(context).languageCode == 'en';
+    final isIgnoring = await Permission.ignoreBatteryOptimizations.isGranted;
+
+    if (isIgnoring) {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(isEn ? 'Already Configured' : 'Sudah Aktif'),
+          content: Text(isEn 
+              ? 'SAFE is already configured to bypass battery optimization. 24/7 background tracking is active.'
+              : 'Aplikasi SAFE sudah diatur untuk mengabaikan penghemat baterai. Pelacakan latar belakang berjalan normal.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK', style: TextStyle(color: AppColors.primaryRed)),
+            )
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(isEn ? 'Background Optimization' : 'Optimasi Latar Belakang'),
+        content: Text(isEn
+            ? 'To monitor emergency location 24/7 when the app is closed, you need to disable battery optimization for SAFE.\n\nAfter clicking "Grant", please select "Allow" or "Unrestricted" in the system dialog.'
+            : 'Untuk dapat memantau lokasi darurat 24 jam saat aplikasi ditutup, Anda perlu mematikan penghemat baterai untuk SAFE.\n\nSetelah menekan "Izinkan", pilih "Izinkan" atau "Tidak Dibatasi" pada dialog sistem HP Anda.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(isEn ? 'Cancel' : 'Batal', style: const TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final status = await Permission.ignoreBatteryOptimizations.request();
+              if (!status.isGranted) {
+                // Open app settings as fallback if request is denied or unsupported directly
+                await openAppSettings();
+              }
+            },
+            child: Text(isEn ? 'Grant' : 'Izinkan', style: const TextStyle(color: AppColors.primaryRed, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -582,8 +674,11 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           final sosId = item['sos_id']?.toString() ?? '';
           if (sosId.isEmpty) continue;
           
-          // Check if event occurred after becoming friends
+          // Skip if it's our own SOS
           final contactUserId = item['user_id']?.toString() ?? '';
+          if (contactUserId == _currentUser.userId) continue;
+
+          // Check if event occurred after becoming friends
           final connectionTimeStr = connectionTimestamps[contactUserId];
           if (connectionTimeStr != null) {
             final connectionTime = DateTime.parse(connectionTimeStr);
@@ -1411,16 +1506,21 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       // 4. Cek izin akses jangan ganggu (DND)
       final dndGranted = await Permission.accessNotificationPolicy.isGranted;
 
+      // 5. Cek izin battery optimization bypass
+      final batteryBypassGranted = await Permission.ignoreBatteryOptimizations.isGranted;
+
       if (mounted) {
         setState(() {
           _hasLocationPermission = locGranted;
           _hasNotificationPermission = notifGranted;
           _hasOverlayPermission = overlayGranted;
           _hasDndPermission = dndGranted;
+          _hasBatteryBypassPermission = batteryBypassGranted;
           _checkingPermissions = false;
         });
         if (locGranted) {
           _loadCurrentLocation();
+          LocationService.startBackgroundService();
         }
         _checkProfileCompletion();
       }
@@ -1452,19 +1552,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       final placemarks = await placemarkFromCoordinates(lat, lng);
       if (placemarks.isNotEmpty) {
         final place = placemarks.first;
-        final locality = place.locality ?? place.subLocality ?? '';
-        final subAdministrativeArea = place.subAdministrativeArea ?? place.administrativeArea ?? '';
+        final List<String> parts = [];
+        final street = place.street ?? '';
+        if (street.isNotEmpty) parts.add(street);
+        final subLocality = place.subLocality ?? '';
+        if (subLocality.isNotEmpty && subLocality != street) parts.add(subLocality);
+        final locality = place.locality ?? '';
+        if (locality.isNotEmpty) parts.add(locality);
+        final subAdmin = place.subAdministrativeArea ?? '';
+        if (subAdmin.isNotEmpty) parts.add(subAdmin);
+        final admin = place.administrativeArea ?? '';
+        if (admin.isNotEmpty && admin != subAdmin) parts.add(admin);
         
-        String address = '';
-        if (locality.isNotEmpty && subAdministrativeArea.isNotEmpty) {
-          address = '$locality, $subAdministrativeArea';
-        } else if (locality.isNotEmpty) {
-          address = locality;
-        } else if (subAdministrativeArea.isNotEmpty) {
-          address = subAdministrativeArea;
-        } else {
-          address = 'Lokasi ditemukan';
-        }
+        final address = parts.isNotEmpty ? parts.join(', ') : 'Lokasi ditemukan';
 
         if (mounted) {
           setState(() {
@@ -1490,19 +1590,18 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
         if (response.statusCode == 200 && response.data != null) {
           final addressData = response.data['address'];
           if (addressData != null) {
-            final city = addressData['city'] ?? addressData['town'] ?? addressData['village'] ?? addressData['county'] ?? addressData['suburb'] ?? '';
+            final road = addressData['road'] ?? addressData['pedestrian'] ?? '';
+            final suburb = addressData['suburb'] ?? addressData['neighbourhood'] ?? addressData['village'] ?? '';
+            final city = addressData['city'] ?? addressData['town'] ?? addressData['county'] ?? '';
             final state = addressData['state'] ?? '';
             
-            String address = '';
-            if (city.isNotEmpty && state.isNotEmpty) {
-              address = '$city, $state';
-            } else if (city.isNotEmpty) {
-              address = city.toString();
-            } else if (state.isNotEmpty) {
-              address = state.toString();
-            } else {
-              address = 'Lokasi ditemukan';
-            }
+            final parts = <String>[];
+            if (road.isNotEmpty) parts.add(road.toString());
+            if (suburb.isNotEmpty) parts.add(suburb.toString());
+            if (city.isNotEmpty) parts.add(city.toString());
+            if (state.isNotEmpty) parts.add(state.toString());
+            
+            final address = parts.isNotEmpty ? parts.join(', ') : (response.data['display_name'] ?? 'Lokasi ditemukan');
 
             if (mounted) {
               setState(() {
@@ -1572,6 +1671,19 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
     var dndStatus = await Permission.accessNotificationPolicy.status;
     if (!dndStatus.isGranted) {
       dndStatus = await Permission.accessNotificationPolicy.request();
+    }
+
+    // Add a delay to allow the activity to resume fully before requesting battery bypass permission
+    await Future.delayed(const Duration(milliseconds: 1000));
+
+    // 5. Minta izin ignoreBatteryOptimizations
+    var batteryBypassStatus = await Permission.ignoreBatteryOptimizations.status;
+    if (!batteryBypassStatus.isGranted) {
+      batteryBypassStatus = await Permission.ignoreBatteryOptimizations.request();
+      if (!batteryBypassStatus.isGranted) {
+        // Fallback: open app settings
+        await openAppSettings();
+      }
     }
 
     await _checkPermissionsState();
@@ -1714,6 +1826,14 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
                                     ? 'Access Do Not Disturb (DND)'
                                     : 'Akses Jangan Ganggu (DND)',
                                 isGranted: _hasDndPermission,
+                              ),
+                              Divider(height: 28, color: AppColors.inputBorder.withOpacity(0.6)),
+                              _buildPermissionStatusRow(
+                                icon: Icons.battery_saver,
+                                title: Localizations.localeOf(context).languageCode == 'en'
+                                    ? 'Background Tracking (Bypass Battery)'
+                                    : 'Pelacakan Latar Belakang (Bypass Baterai)',
+                                isGranted: _hasBatteryBypassPermission,
                               ),
                             ],
                           ),

@@ -1,6 +1,6 @@
 {
-    "name": "safe",
-    "short_name": "safe",
+    "name": "Safe",
+    "short_name": "Safe",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

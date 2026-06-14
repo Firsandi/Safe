@@ -51,6 +51,10 @@ class AuthCubit extends Cubit<AuthState> {
               'user_id': user.userId,
               'email': user.email,
               'name': user.name,
+              'phone_number': user.phoneNumber,
+              'blood_type': user.bloodType,
+              'medical_notes': user.medicalNotes,
+              'profile_image': user.profileImage,
             },
           );
         }
@@ -74,6 +78,10 @@ class AuthCubit extends Cubit<AuthState> {
               'user_id': user.userId,
               'email': user.email,
               'name': user.name,
+              'phone_number': user.phoneNumber,
+              'blood_type': user.bloodType,
+              'medical_notes': user.medicalNotes,
+              'profile_image': user.profileImage,
             },
           );
         }

@@ -382,8 +382,32 @@ class _LocationPageState extends State<LocationPage> {
       final diff = DateTime.now().difference(lastUpdate);
       if (diff.inMinutes < 1) {
         timeStr = l10n.justNow;
-      } else {
+      } else if (diff.inMinutes < 60) {
         timeStr = l10n.minutesAgo(diff.inMinutes);
+      } else {
+        final days = diff.inDays;
+        final hours = diff.inHours % 24;
+        final minutes = diff.inMinutes % 60;
+        final isIndonesian = Localizations.localeOf(context).languageCode == 'id';
+        if (isIndonesian) {
+          final parts = <String>[];
+          if (days > 0) parts.add('$days hari');
+          if (hours > 0) parts.add('$hours jam');
+          if (minutes > 0) parts.add('$minutes menit');
+          timeStr = '${parts.join(' ')} lalu';
+        } else {
+          final parts = <String>[];
+          if (days > 0) {
+            parts.add('$days day${days == 1 ? '' : 's'}');
+          }
+          if (hours > 0) {
+            parts.add('$hours hour${hours == 1 ? '' : 's'}');
+          }
+          if (minutes > 0) {
+            parts.add('$minutes minute${minutes == 1 ? '' : 's'}');
+          }
+          timeStr = '${parts.join(' ')} ago';
+        }
       }
     }
 

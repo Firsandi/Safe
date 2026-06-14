@@ -1499,7 +1499,7 @@ abstract class AppLocalizations {
   /// No description provided for @emailHint.
   ///
   /// In en, this message translates to:
-  /// **'name@email.com'**
+  /// **'Enter your email'**
   String get emailHint;
 
   /// No description provided for @requiredFieldError.
@@ -1523,7 +1523,7 @@ abstract class AppLocalizations {
   /// No description provided for @phoneHint.
   ///
   /// In en, this message translates to:
-  /// **'081234567890'**
+  /// **'81234567890'**
   String get phoneHint;
 
   /// No description provided for @phonePrefixError.
@@ -1549,6 +1549,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'At least 8 characters'**
   String get passwordHint;
+
+  /// No description provided for @enterPasswordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password'**
+  String get enterPasswordHint;
 
   /// No description provided for @passwordMinLengthError.
   ///

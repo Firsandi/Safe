@@ -103,19 +103,33 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   Future<void> _loadNotifications() async {
-    setState(() => _isLoading = true);
-    
-    // First, sync with the server to get any new notifications instantly
-    await _syncNotificationsFromServer();
-
+    // 1. Load cached notifications instantly for zero perceived delay
     var list = await NotificationLocalService.loadNotifications();
     _sortNotifications(list);
 
     if (mounted) {
       setState(() {
         _notifications = list;
-        _isLoading = false;
+        // Show loading indicator only if we have no cached data yet
+        _isLoading = _notifications.isEmpty;
       });
+    }
+
+    // 2. Perform background sync from server
+    try {
+      await _syncNotificationsFromServer();
+      // 3. Reload and display the fresh synced notifications
+      list = await NotificationLocalService.loadNotifications();
+      _sortNotifications(list);
+    } catch (e) {
+      debugPrint('Background sync failed: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _notifications = list;
+          _isLoading = false;
+        });
+      }
     }
   }
 
