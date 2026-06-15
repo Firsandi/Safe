@@ -167,11 +167,11 @@ class NotificationManager {
         },
       );
 
-      // Create Android Notification Channel for Emergency Calls
-      final AndroidNotificationChannel channel = AndroidNotificationChannel(
-        'emergency_call_channel_v5',
-        'Panggilan Darurat (SOS)',
-        description: 'Digunakan untuk menerima panggilan darurat SOS dengan prioritas tertinggi.',
+      // Create Android Notification Channels for Emergency Calls
+      final AndroidNotificationChannel channelDefault = AndroidNotificationChannel(
+        'emergency_call_channel_default',
+        'Panggilan Darurat (SOS) - Siren',
+        description: 'Digunakan untuk menerima panggilan darurat SOS dengan suara Siren.',
         importance: Importance.max,
         playSound: true,
         sound: const RawResourceAndroidNotificationSound('alarm_sound'),
@@ -182,9 +182,45 @@ class NotificationManager {
         audioAttributesUsage: AudioAttributesUsage.alarm,
       );
 
+      final AndroidNotificationChannel channelBeep = AndroidNotificationChannel(
+        'emergency_call_channel_beep',
+        'Panggilan Darurat (SOS) - Beep',
+        description: 'Digunakan untuk menerima panggilan darurat SOS dengan suara Beep.',
+        importance: Importance.max,
+        playSound: true,
+        sound: const RawResourceAndroidNotificationSound('high_pitch_beep'),
+        enableVibration: true,
+        vibrationPattern: Int64List.fromList([0, 1000, 500, 1000, 500, 1000]),
+        enableLights: true,
+        showBadge: true,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+      );
+
+      final AndroidNotificationChannel channelRetro = AndroidNotificationChannel(
+        'emergency_call_channel_retro',
+        'Panggilan Darurat (SOS) - Retro',
+        description: 'Digunakan untuk menerima panggilan darurat SOS dengan suara Retro.',
+        importance: Importance.max,
+        playSound: true,
+        sound: const RawResourceAndroidNotificationSound('retro_alarm'),
+        enableVibration: true,
+        vibrationPattern: Int64List.fromList([0, 1000, 500, 1000, 500, 1000]),
+        enableLights: true,
+        showBadge: true,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+      );
+
       await _localNotifications
           .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-          ?.createNotificationChannel(channel);
+          ?.createNotificationChannel(channelDefault);
+
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channelBeep);
+
+      await _localNotifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channelRetro);
 
       // Create Android Notification Channel for Sensor Countdown
       final AndroidNotificationChannel sensorChannel = AndroidNotificationChannel(
@@ -387,13 +423,30 @@ class NotificationManager {
     final AndroidNotificationDetails androidDetails;
 
     if (type == 'sos_alert') {
-      final isDefaultSound = soundType == 'default';
+      String channelId = 'emergency_call_channel_default';
+      String channelName = 'Panggilan Darurat (SOS) - Siren';
+      String? rawSoundName = 'alarm_sound';
+      bool playChannelSound = true;
+
+      if (soundType == 'beep') {
+        channelId = 'emergency_call_channel_beep';
+        channelName = 'Panggilan Darurat (SOS) - Beep';
+        rawSoundName = 'high_pitch_beep';
+      } else if (soundType == 'retro') {
+        channelId = 'emergency_call_channel_retro';
+        channelName = 'Panggilan Darurat (SOS) - Retro';
+        rawSoundName = 'retro_alarm';
+      } else if (soundType == 'custom') {
+        channelId = 'emergency_call_channel_silent';
+        channelName = 'Panggilan Darurat (SOS) - Nada Kustom';
+        rawSoundName = null;
+        playChannelSound = false;
+      }
+
       androidDetails = AndroidNotificationDetails(
-        isDefaultSound ? 'emergency_call_channel_v5' : 'emergency_call_channel_silent',
-        isDefaultSound ? 'Panggilan Darurat (SOS)' : 'Panggilan Darurat (SOS) - Nada Kustom',
-        channelDescription: isDefaultSound
-            ? 'Digunakan untuk menerima panggilan darurat SOS dengan prioritas tertinggi.'
-            : 'Digunakan untuk menerima panggilan darurat SOS secara senyap (nada diputar oleh aplikasi).',
+        channelId,
+        channelName,
+        channelDescription: 'Digunakan untuk menerima panggilan darurat SOS.',
         importance: Importance.max,
         priority: Priority.max,
         fullScreenIntent: true,
@@ -402,8 +455,8 @@ class NotificationManager {
         autoCancel: false,
         additionalFlags: Int32List.fromList([4]),
         visibility: NotificationVisibility.public,
-        playSound: isDefaultSound,
-        sound: isDefaultSound ? const RawResourceAndroidNotificationSound('alarm_sound') : null,
+        playSound: playChannelSound,
+        sound: rawSoundName != null ? RawResourceAndroidNotificationSound(rawSoundName) : null,
         audioAttributesUsage: AudioAttributesUsage.alarm,
         vibrationPattern: Int64List.fromList([0, 1000, 500, 1000, 500, 1000]),
         color: const Color(0xFFC21A1A),
@@ -423,6 +476,11 @@ class NotificationManager {
 
     final NotificationDetails details = NotificationDetails(
       android: androidDetails,
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
     );
 
     await _localNotifications.show(
@@ -482,10 +540,33 @@ class NotificationManager {
     required String reason,
     required String force,
   }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final soundType = prefs.getString('alarm_sound_type') ?? 'default';
+
+    String channelId = 'emergency_call_channel_default';
+    String channelName = 'Panggilan Darurat (SOS) - Siren';
+    String? rawSoundName = 'alarm_sound';
+    bool playChannelSound = true;
+
+    if (soundType == 'beep') {
+      channelId = 'emergency_call_channel_beep';
+      channelName = 'Panggilan Darurat (SOS) - Beep';
+      rawSoundName = 'high_pitch_beep';
+    } else if (soundType == 'retro') {
+      channelId = 'emergency_call_channel_retro';
+      channelName = 'Panggilan Darurat (SOS) - Retro';
+      rawSoundName = 'retro_alarm';
+    } else if (soundType == 'custom') {
+      channelId = 'emergency_call_channel_silent';
+      channelName = 'Panggilan Darurat (SOS) - Nada Kustom';
+      rawSoundName = null;
+      playChannelSound = false;
+    }
+
     final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'emergency_call_channel_v5',
-      'Panggilan Darurat (SOS)',
-      channelDescription: 'Digunakan untuk menerima panggilan darurat SOS dengan prioritas tertinggi.',
+      channelId,
+      channelName,
+      channelDescription: 'Digunakan untuk menerima panggilan darurat SOS.',
       importance: Importance.max,
       priority: Priority.max,
       fullScreenIntent: true,
@@ -494,8 +575,8 @@ class NotificationManager {
       autoCancel: false,
       additionalFlags: Int32List.fromList([4]),
       visibility: NotificationVisibility.public,
-      playSound: true,
-      sound: const RawResourceAndroidNotificationSound('alarm_sound'),
+      playSound: playChannelSound,
+      sound: rawSoundName != null ? RawResourceAndroidNotificationSound(rawSoundName) : null,
       audioAttributesUsage: AudioAttributesUsage.alarm,
       vibrationPattern: Int64List.fromList([0, 1000, 500, 1000, 500, 1000]),
       color: const Color(0xFFC21A1A),
@@ -503,6 +584,11 @@ class NotificationManager {
 
     final NotificationDetails details = NotificationDetails(
       android: androidDetails,
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
     );
 
     await _localNotifications.show(
