@@ -59,7 +59,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
   StreamSubscription? _gyroscopeSub;
   double _lastRotationRate = 0.0;
   DateTime? _lastShakeTime;
-  final double _shakeThreshold = 23.0; // Increased from 15.0 to reduce sensitivity
+  final double _shakeThreshold = 32.0; // Increased to 32.0 to significantly reduce sensitivity
   int _shakeCount = 0;
 
   bool _freefallDetected = false;
@@ -808,24 +808,26 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
       }
 
       // Step B: Detect Impact (magnitude spikes high)
-      if (magnitude > 28.0) {
+      if (magnitude > 35.0) { // Raised from 28.0 to avoid small drops triggering it
         final now = DateTime.now();
         
         // 1. Classic Fall: free fall followed shortly by a high impact
         if (_freefallDetected && _freefallTime != null) {
           if (now.difference(_freefallTime!) < const Duration(milliseconds: 1000)) {
-            _freefallDetected = false;
-            if (!mounted) return;
-            _triggerEmergencyFromSensor(
-              reason: AppLocalizations.of(context)?.fallDetected ?? "Fall Detected",
-              force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
-            );
-            return;
+            if (magnitude > 55.0) { // Raised threshold for fall impact validation to 5.6 G
+              _freefallDetected = false;
+              if (!mounted) return;
+              _triggerEmergencyFromSensor(
+                reason: AppLocalizations.of(context)?.fallDetected ?? "Fall Detected",
+                force: "${(magnitude / 9.8).toStringAsFixed(1)} G",
+              );
+              return;
+            }
           }
         }
 
-        // 2. Tumbling/Crash: high rotation rate (gyroscope) combined with high impact force (both thresholds raised for calibration)
-        if (magnitude > 38.0 && _lastRotationRate > 12.0) {
+        // 2. Tumbling/Crash: high rotation rate (gyroscope) combined with high impact force (raised thresholds for calibration)
+        if (magnitude > 58.0 && _lastRotationRate > 15.0) { // Raised from 38.0 and 12.0
           if (!mounted) return;
           _triggerEmergencyFromSensor(
             reason: AppLocalizations.of(context)?.crashImpactDetected ?? "Crash & Impact Detected",
@@ -834,8 +836,8 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin, Widg
           return;
         }
 
-        // 3. Direct Severe Impact: extremely high acceleration force (>4.8 G, raised from 3.5 G)
-        if (magnitude > 48.0) {
+        // 3. Direct Severe Impact: extremely high acceleration force (>8.0 G, raised from 4.8 G)
+        if (magnitude > 78.0) {
           if (!mounted) return;
           _triggerEmergencyFromSensor(
             reason: AppLocalizations.of(context)?.severeImpactDetected ?? "Severe Impact Detected",
