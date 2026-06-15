@@ -13,11 +13,11 @@ import 'package:sensors_plus/sensors_plus.dart';
 /// 5. Pattern filtering: abaikan guncangan vertikal saja (HP jatuh)
 class CrashDetectionService {
   // === THRESHOLD CONFIGURATION ===
-  static const double _impactThresholdG = 8.0; // Kalibrasi: Dinaikkan ke 8.0G agar tidak mudah terpicu oleh guncangan kecil / jatuh biasa
+  static const double _impactThresholdG = 12.0; // Kalibrasi: Dinaikkan ke 12.0G agar hanya terpicu oleh kecelakaan kendaraan berkecepatan tinggi atau benturan ekstrem
   static const double _gravityMs2 = 9.81; // 1G dalam m/s²
-  static const double _impactThresholdMs2 = _impactThresholdG * _gravityMs2; // ~78.48 m/s²
+  static const double _impactThresholdMs2 = _impactThresholdG * _gravityMs2; // ~117.72 m/s²
   static const int _sustainedImpactCount = 3; // Jumlah pembacaan berturut yang harus melebihi threshold
-  static const double _stillnessThresholdMs2 = 1.5; // Kalibrasi: Diperketat menjadi 1.5 m/s² agar deteksi berhenti total pasca benturan lebih presisi
+  static const double _stillnessThresholdMs2 = 1.2; // Kalibrasi: Diperketat menjadi 1.2 m/s² agar kondisi berhenti total setelah kecelakaan terdeteksi lebih akurat
   static const Duration _stillnessCheckDelay = Duration(seconds: 2); // Delay sebelum cek stillness
   static const Duration _stillnessCheckWindow = Duration(milliseconds: 500); // Window untuk cek stillness
   static const Duration _cooldownDuration = Duration(seconds: 30); // Cooldown setelah trigger
