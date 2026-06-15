@@ -67,6 +67,7 @@ class _SosIncomingAlertPageState extends State<SosIncomingAlertPage>
   void dispose() {
     SosIncomingAlertPage.isCurrentlyOpen = false;
     _pulseController.dispose();
+    NotificationManager.stopAlarm();
     super.dispose();
   }
 
