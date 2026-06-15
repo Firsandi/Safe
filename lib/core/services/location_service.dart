@@ -500,7 +500,7 @@ Future<void> _showBackgroundCountdownNotification(String reason, String force) a
   final FlutterLocalNotificationsPlugin notifications = FlutterLocalNotificationsPlugin();
   
   final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-    'sensor_countdown_channel_v1',
+    'sensor_countdown_channel_v2',
     'Sensor Countdown Alert',
     channelDescription: 'Digunakan untuk menampilkan hitung mundur SOS dari sensor saat di latar belakang.',
     importance: Importance.max,
@@ -512,8 +512,7 @@ Future<void> _showBackgroundCountdownNotification(String reason, String force) a
     additionalFlags: Int32List.fromList([4]),
     visibility: NotificationVisibility.public,
     playSound: true,
-    sound: const RawResourceAndroidNotificationSound('alarm_sound'),
-    audioAttributesUsage: AudioAttributesUsage.alarm,
+    audioAttributesUsage: AudioAttributesUsage.notification,
     vibrationPattern: Int64List.fromList([0, 1000, 500, 1000, 500, 1000]),
     color: const Color(0xFFC21A1A),
   );

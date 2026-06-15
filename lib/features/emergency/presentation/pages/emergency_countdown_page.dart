@@ -12,6 +12,7 @@ import 'package:safe/core/services/offline_sync_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:safe/core/services/notification_local_service.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class EmergencyCountdownPage extends StatefulWidget {
   final String? triggerReason;
@@ -39,6 +40,7 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
   bool _alertSent = false;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  final AudioPlayer _tickPlayer = AudioPlayer();
 
   @override
   void initState() {
@@ -53,9 +55,41 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
-
+    _initAudioContext();
     _startTimer();
     _fetchInitialLocation();
+  }
+
+  Future<void> _initAudioContext() async {
+    try {
+      await _tickPlayer.setAudioContext(
+        AudioContext(
+          android: const AudioContextAndroid(
+            usageType: AndroidUsageType.assistanceSonification,
+            contentType: AndroidContentType.sonification,
+          ),
+          iOS: AudioContextIOS(
+            category: AVAudioSessionCategory.playback,
+            options: const {
+              AVAudioSessionOptions.duckOthers,
+              AVAudioSessionOptions.defaultToSpeaker,
+            },
+          ),
+        ),
+      );
+      await _tickPlayer.setVolume(1.0);
+    } catch (e) {
+      debugPrint('Failed to initialize audio context for tick player: $e');
+    }
+  }
+
+  Future<void> _playTickSound() async {
+    try {
+      await _tickPlayer.stop();
+      await _tickPlayer.play(AssetSource('sounds/high_pitch_beep.mp3'));
+    } catch (e) {
+      debugPrint('Failed to play tick sound: $e');
+    }
   }
 
   Future<void> _fetchInitialLocation() async {
@@ -68,12 +102,16 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
   }
 
   void _startTimer() {
+    _playTickSound();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) return;
       setState(() {
         if (_secondsRemaining > 0) {
           _secondsRemaining--;
           HapticFeedback.lightImpact();
+          if (_secondsRemaining > 0) {
+            _playTickSound();
+          }
         } else {
           _timer?.cancel();
           _onTimeout();
@@ -213,6 +251,7 @@ class _EmergencyCountdownPageState extends State<EmergencyCountdownPage>
     EmergencyCountdownPage.isCurrentlyOpen = false;
     _timer?.cancel();
     _pulseController.dispose();
+    _tickPlayer.dispose();
     
     // Safety cleanup: dismiss notification 999 if it is still showing
     try {
