@@ -18,6 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 // Top-level background handler for FCM
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
   final isLoggedIn = await SessionManager.isLoggedIn();
   if (!isLoggedIn) {
@@ -33,14 +34,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       await NotificationManager._showLocalNotification(message);
       return;
     }
-
-    // Initialize notification channels/plugin settings in background isolate
-    const AndroidInitializationSettings androidInit = AndroidInitializationSettings('ic_notification');
-    const InitializationSettings initSettings = InitializationSettings(android: androidInit);
-    await NotificationManager._localNotifications.initialize(initSettings);
-
-    NotificationManager.startAlarm();
-    await NotificationManager._showLocalNotification(message);
 
     // Save to SharedPreferences for auto-launch on resume
     try {
@@ -423,43 +416,16 @@ class NotificationManager {
     final AndroidNotificationDetails androidDetails;
 
     if (type == 'sos_alert') {
-      String channelId = 'emergency_call_channel_default';
-      String channelName = 'Panggilan Darurat (SOS) - Siren';
-      String? rawSoundName = 'alarm_sound';
-      bool playChannelSound = true;
-
-      if (soundType == 'beep') {
-        channelId = 'emergency_call_channel_beep';
-        channelName = 'Panggilan Darurat (SOS) - Beep';
-        rawSoundName = 'high_pitch_beep';
-      } else if (soundType == 'retro') {
-        channelId = 'emergency_call_channel_retro';
-        channelName = 'Panggilan Darurat (SOS) - Retro';
-        rawSoundName = 'retro_alarm';
-      } else if (soundType == 'custom') {
-        channelId = 'emergency_call_channel_silent';
-        channelName = 'Panggilan Darurat (SOS) - Nada Kustom';
-        rawSoundName = null;
-        playChannelSound = false;
-      }
-
-      androidDetails = AndroidNotificationDetails(
-        channelId,
-        channelName,
-        channelDescription: 'Digunakan untuk menerima panggilan darurat SOS.',
-        importance: Importance.max,
-        priority: Priority.max,
-        fullScreenIntent: true,
-        category: AndroidNotificationCategory.call,
-        ongoing: true,
-        autoCancel: false,
-        additionalFlags: Int32List.fromList([4]),
-        visibility: NotificationVisibility.public,
-        playSound: playChannelSound,
-        sound: rawSoundName != null ? RawResourceAndroidNotificationSound(rawSoundName) : null,
-        audioAttributesUsage: AudioAttributesUsage.alarm,
-        vibrationPattern: Int64List.fromList([0, 1000, 500, 1000, 500, 1000]),
-        color: const Color(0xFFC21A1A),
+      // Gunakan channel notifikasi umum agar suaranya mengikuti default HP di laci notifikasi
+      androidDetails = const AndroidNotificationDetails(
+        'general_notification_channel_v2',
+        'Notifikasi Umum',
+        channelDescription: 'Digunakan untuk notifikasi biasa seperti permintaan kontak darurat.',
+        importance: Importance.high,
+        priority: Priority.high,
+        autoCancel: true,
+        playSound: true,
+        color: Color(0xFFC21A1A),
       );
     } else {
       androidDetails = const AndroidNotificationDetails(
