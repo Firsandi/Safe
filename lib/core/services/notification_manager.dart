@@ -217,17 +217,16 @@ class NotificationManager {
 
       // Create Android Notification Channel for Sensor Countdown
       final AndroidNotificationChannel sensorChannel = AndroidNotificationChannel(
-        'sensor_countdown_channel_v1',
+        'sensor_countdown_channel_v2',
         'Sensor Countdown Alert',
         description: 'Digunakan untuk menampilkan hitung mundur SOS dari sensor saat di latar belakang.',
         importance: Importance.max,
         playSound: true,
-        sound: const RawResourceAndroidNotificationSound('alarm_sound'),
         enableVibration: true,
         vibrationPattern: Int64List.fromList([0, 1000, 500, 1000, 500, 1000]),
         enableLights: true,
         showBadge: true,
-        audioAttributesUsage: AudioAttributesUsage.alarm,
+        audioAttributesUsage: AudioAttributesUsage.notification,
       );
 
       await _localNotifications
@@ -410,9 +409,6 @@ class NotificationManager {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final soundType = prefs.getString('alarm_sound_type') ?? 'default';
-
     final AndroidNotificationDetails androidDetails;
 
     if (type == 'sos_alert') {
@@ -506,33 +502,10 @@ class NotificationManager {
     required String reason,
     required String force,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final soundType = prefs.getString('alarm_sound_type') ?? 'default';
-
-    String channelId = 'emergency_call_channel_default';
-    String channelName = 'Panggilan Darurat (SOS) - Siren';
-    String? rawSoundName = 'alarm_sound';
-    bool playChannelSound = true;
-
-    if (soundType == 'beep') {
-      channelId = 'emergency_call_channel_beep';
-      channelName = 'Panggilan Darurat (SOS) - Beep';
-      rawSoundName = 'high_pitch_beep';
-    } else if (soundType == 'retro') {
-      channelId = 'emergency_call_channel_retro';
-      channelName = 'Panggilan Darurat (SOS) - Retro';
-      rawSoundName = 'retro_alarm';
-    } else if (soundType == 'custom') {
-      channelId = 'emergency_call_channel_silent';
-      channelName = 'Panggilan Darurat (SOS) - Nada Kustom';
-      rawSoundName = null;
-      playChannelSound = false;
-    }
-
     final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      channelId,
-      channelName,
-      channelDescription: 'Digunakan untuk menerima panggilan darurat SOS.',
+      'sensor_countdown_channel_v2',
+      'Sensor Countdown Alert',
+      channelDescription: 'Digunakan untuk menampilkan hitung mundur SOS dari sensor saat di latar belakang.',
       importance: Importance.max,
       priority: Priority.max,
       fullScreenIntent: true,
@@ -541,9 +514,8 @@ class NotificationManager {
       autoCancel: false,
       additionalFlags: Int32List.fromList([4]),
       visibility: NotificationVisibility.public,
-      playSound: playChannelSound,
-      sound: rawSoundName != null ? RawResourceAndroidNotificationSound(rawSoundName) : null,
-      audioAttributesUsage: AudioAttributesUsage.alarm,
+      playSound: true,
+      audioAttributesUsage: AudioAttributesUsage.notification,
       vibrationPattern: Int64List.fromList([0, 1000, 500, 1000, 500, 1000]),
       color: const Color(0xFFC21A1A),
     );
