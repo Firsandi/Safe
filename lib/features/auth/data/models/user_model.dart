@@ -1,0 +1,43 @@
+import '../../domain/entities/user_entity.dart';
+
+class UserModel extends UserEntity {
+  const UserModel({
+    required super.userId,
+    required super.email,
+    required super.name,
+    required super.phoneNumber,
+    super.bloodType,
+    super.medicalNotes,
+    super.token,
+    super.profileImage,
+    super.deviceToken,
+  });
+
+  factory UserModel.fromJson(Map<String, dynamic> json, {String? token}) {
+    return UserModel(
+      userId: json['user_id'] ?? '',      
+      email: json['email'] ?? '',    
+      name: json['name'] ?? '',      
+      phoneNumber: json['phone_number'] ?? '',
+      bloodType: json['blood_type'],
+      medicalNotes: json['medical_notes'],
+      token: token ?? json['token'],
+      profileImage: json['profile_image'] ?? '',
+      deviceToken: json['device_token'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'user_id': userId,
+      'email': email,
+      'name': name,
+      'phone_number': phoneNumber,
+      'blood_type': bloodType,
+      'medical_notes': medicalNotes,
+      'token': token,
+      'profile_image': profileImage,
+      'device_token': deviceToken,
+    };
+  }
+}

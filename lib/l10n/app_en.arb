@@ -1,0 +1,425 @@
+{
+  "@@locale": "en",
+  "loginTitle": "Welcome back",
+  "loginSubTitle": "Access your tactical medical dashboard.",
+  "loginWelcome": "Log In",
+  "loginWelcomeSub": "Enter your registered email and password",
+  "orText": "OR",
+  "loginGoogle": "Sign in with Google",
+  "noAccountText": "Don't have an account?",
+  "registerNow": "Register now",
+  "fillEmailPasswordError": "Please fill in email and password",
+  "invalidEmailError": "Email format must contain @",
+  "enterEmailFirstError": "Please enter your email first",
+  "failedResendOtpError": "Failed to resend OTP code.",
+  "emailLabel": "EMAIL",
+  "passwordLabel": "ACCESS PASSWORD",
+  "forgotPassword": "Forgot password?",
+  "loginButton": "LOG IN",
+  "registerLink": "Register for a new account",
+  "copyright": "© 2026 SAFE - Emergency Archive",
+  "security": "Security",
+  "privacy": "Privacy",
+  "registerTitle": "Account Setup",
+  "stepIndicator": "STEP 01 OF 02",
+  "profileStatus": "PROFILE STATUS",
+  "initialEntry": "Initial Entry",
+  "basicCredentials": "BASIC CREDENTIALS",
+  "fullName": "FULL NAME",
+  "emailAddress": "EMAIL ADDRESS",
+  "mobileId": "MOBILE ID",
+  "medicalProfile": "INITIAL MEDICAL PROFILE",
+  "bloodType": "BLOOD TYPE",
+  "criticalAllergies": "CRITICAL ALLERGIES",
+  "createAccount": "CREATE ACCOUNT",
+  "alreadyHaveAccount": "Already have an account?",
+  "loginLink": "Login",
+  "legalFooter": "BY CREATING AN ACCOUNT, YOU AGREE TO OUR TERMS OF SERVICE AND PRIVACY PROTOCOLS. YOUR DATA IS ENCRYPTED AND STORED WITHIN THE SECURE ARCHIVE.",
+  "homeTitle": "COMMAND CENTER",
+  "sosLabel": "SOS",
+  "sosTap": "HOLD TO ACTIVATE SOS",
+  "emergencyContacts": "EMERGENCY CONTACTS",
+  "activeGuardian": "GUARDIAN STATUS: READY",
+  "recentAlerts": "RECENT ALERTS",
+  "noAlerts": "NO RECENT THREATS DETECTED",
+  "commandInterface": "COMMAND INTERFACE",
+  "appTitle": "SAFE APP",
+  "monitoringActive": "Monitoring: Active",
+  "systemOperational": "System fully operational. We are standing by.",
+  "pressHold": "PRESS & HOLD",
+  "medicalProfileTitle": "Medical Profile",
+  "vitalsAllergies": "Vitals & Allergies",
+  "emergencyContactsTitle": "Emergency Contacts",
+  "trustedCircle": "Trusted Circle",
+  "currentLocation": "CURRENT LOCATION",
+  "guardianLinkActive": "GUARDIAN LINK ACTIVE",
+  "accidentDetected": "ACCIDENT DETECTED!",
+  "notifyingServices": "Notifying contacts and emergency services in...",
+  "seconds": "SECONDS",
+  "swipeUpCancel": "SWIPE UP TO CANCEL",
+  "falseAlarm": "I AM SAFE / FALSE ALARM",
+  "navStatus": "STATUS",
+  "navContacts": "CONTACTS",
+  "navMedical": "MEDICAL",
+  "navHistory": "HISTORY",
+  "navHome": "HOME",
+  "navLocation": "LOCATION",
+  "navProfile": "PROFILE",
+  "settingsLanguage": "Language",
+  "settingsLanguageSub": "Set app language preference",
+  "settingsHelp": "Help Center",
+  "settingsHelpSub": "FAQ & Support Contact",
+  "logout": "LOG OUT OF SYSTEM",
+  "sensorActive": "Sensor Active — monitoring",
+  "helpSentToLocation": "Help will be dispatched to\nyour current location immediately",
+  "historySos": "SOS History",
+  "emergencyContactsSub": "3 active",
+  "historySosSub": "2 events",
+  "notAvailableYet": "This page is not available yet",
+  "locationTitle": "Location",
+  "emergencyCancelled": "Emergency cancelled — you are safe",
+  "alertSent": "SOS Sent",
+  "alertSentDesc": "Your emergency signal has been sent to emergency contacts.",
+  "backToHome": "BACK TO HOME",
+  "searchPlaceholder": "Search name or phone number...",
+  "contactsLoadFailed": "Unable to load contacts",
+  "retry": "Retry",
+  "noResultsFound": "No results found",
+  "noContactsMatching": "No contacts match \"{query}\"",
+  "@noContactsMatching": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "noEmergencyContacts": "No emergency contacts yet",
+  "addContactsInstruction": "Add emergency contacts to be contacted in emergency situations.",
+  "noIncomingRequests": "No incoming requests",
+  "incomingRequestsInstruction": "Incoming requests from other users who want to add you will appear here.",
+  "callContact": "Call",
+  "sendWhatsApp": "Send WhatsApp message",
+  "viewProfile": "View Profile",
+  "deleteContactTitle": "Delete Contact",
+  "deleteContactConfirm": "Are you sure you want to remove {name} from emergency contacts?",
+  "@deleteContactConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "connected": "Connected",
+  "pending": "Pending",
+  "myContacts": "My Contacts",
+  "incomingRequests": "Incoming Requests",
+  "emergencyContactsDesc": "Manage the list of trusted people during emergency situations.",
+  "editProfileTitle": "Edit Profile & Medical",
+  "editProfileSub": "Update your photo, personal details and medical history.",
+  "fullNameLabel": "FULL NAME",
+  "phoneLabel": "PHONE NUMBER",
+  "bloodTypeLabel": "BLOOD TYPE",
+  "choose": "Choose",
+  "medicalHistoryLabel": "MEDICAL HISTORY / ALLERGIES",
+  "medicalHistoryHint": "e.g. Asthma, Peanut Allergy",
+  "saveChanges": "Save Changes",
+  "medicalDataCenter": "MEDICAL DATA CENTER",
+  "bloodTypeCard": "BLOOD TYPE",
+  "allergiesCard": "ALLERGIES / DISEASE",
+  "none": "None",
+  "settings": "SETTINGS",
+  "enterFullName": "Enter full name",
+  "languageTitle": "Select Language",
+  "languageSelect": "Select your app language:",
+  "helloUser": "Hello, {name}",
+  "@helloUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "activeContactsCount": "{count} active",
+  "@activeContactsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sosHistoryCount": "{count} events",
+  "@sosHistoryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sosActiveBanner": "SOS ACTIVE",
+  "sendingRealtimeLocation": "Sending your real-time location...",
+  "turnOff": "Turn Off",
+  "sosDisabledSuccess": "SOS successfully disabled",
+  "sosDisableFailed": "Failed to disable SOS: {error}",
+  "@sosDisableFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "permissionRequiredTitle": "Permissions Required",
+  "permissionRequiredDesc": "SAFE requires Location and Notification permissions to monitor your safety and send help in emergencies. Without these, the app cannot protect you.",
+  "allowPermissionsButton": "Grant Permissions",
+  "openSettingsInstruction": "If permissions are not granted, please enable them manually in the App Settings.",
+  "severeShakeDetected": "Severe Shake Detected",
+  "fallDetected": "Fall Detected",
+  "crashImpactDetected": "Crash & Impact Detected",
+  "severeImpactDetected": "Severe Impact Detected",
+  "impactForceLabel": "IMPACT FORCE",
+  "locationLabel": "LOCATION",
+  "connectionIssuesTitle": "Connection Issues",
+  "connectionIssuesDesc": "Failed to send SOS due to connection issues. Your SOS is saved in the offline queue and will sync automatically when your connection is restored.\n\nPlease contact emergency services or your contacts manually if possible.",
+  "profileDesc": "Manage your personal details and medical history.",
+  "editButtonLabel": "Edit",
+  "historySosDesc": "Archive of sent and received SOS signals.",
+  "historyTabSent": "My SOS",
+  "historyTabReceived": "SOS Received",
+  "historyNoSent": "You have never sent an SOS signal.",
+  "historyNoReceived": "No incoming SOS signals from your contacts yet.",
+  "triggerAuto": "Auto Detection",
+  "triggerManual": "Manual Trigger",
+  "phoneLabelAbbr": "Phone:",
+  "historyLoadFailed": "Failed to load history",
+  "addContactTitle": "Add Emergency Contact",
+  "addContactDesc": "Search by phone number or email. Only registered users can be added.",
+  "addContactInputLabel": "PHONE NUMBER / EMAIL",
+  "addContactInputHint": "e.g. 08123456789 or email@safe.com",
+  "addContactSearchResults": "SEARCH RESULTS",
+  "addContactInitialHint": "Enter phone number or email to search",
+  "addContactNotFound": "User not found",
+  "addContactNotFoundDesc": "This contact is not registered on SAFE yet. Only registered users can be added.",
+  "addContactButton": "Add",
+  "addContactConfirmTitle": "Add Contact",
+  "addContactConfirmDesc": "Add {name} as an emergency contact?",
+  "@addContactConfirmDesc": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addContactSuccess": "Contact request successfully sent to {name}!",
+  "@addContactSuccess": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addContactFailed": "Failed to add contact. Please try again.",
+  "statusActive": "ACTIVE",
+  "statusResolved": "RESOLVED",
+  "statusFalseAlarm": "FALSE ALARM",
+  "noHistory": "No history",
+  "notificationsTitle": "Notifications",
+  "notificationsSelected": "{count} Selected",
+  "@notificationsSelected": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deselectAll": "Deselect all",
+  "selectAll": "Select all",
+  "deleteSelectedTooltip": "Delete selected",
+  "selectNotificationsTooltip": "Select notifications",
+  "markAllAsReadTooltip": "Mark all as read",
+  "deleteAllTooltip": "Delete all",
+  "deleteNotificationTitle": "Delete Notification",
+  "deleteSelectedConfirm": "Are you sure you want to delete {count} selected notifications?",
+  "@deleteSelectedConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "selectedDeletedSuccess": "Selected notifications successfully deleted",
+  "allMarkedReadSuccess": "All notifications marked as read",
+  "deleteAllNotificationsTitle": "Delete All Notifications",
+  "deleteAllNotificationsConfirm": "Are you sure you want to delete all notification history?",
+  "allNotificationsDeletedSuccess": "All notifications successfully deleted",
+  "notificationDeletedSuccess": "Notification successfully deleted",
+  "timeJustNow": "Just now",
+  "timeMinutesAgo": "{count} minutes ago",
+  "@timeMinutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeHoursAgo": "{count} hours ago",
+  "@timeHoursAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeYesterday": "Yesterday",
+  "timeDaysAgo": "{count} days ago",
+  "@timeDaysAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noNotifications": "No Notifications",
+  "noNotificationsDesc": "All incoming notifications related to SOS and emergency contacts will be shown here.",
+  "notificationListHeader": "Notification List",
+  "sortOldest": "Oldest",
+  "sortNewest": "Newest",
+  "locationPageTitle": "Live Location",
+  "locationPageSubtitle": "Track your emergency contacts",
+  "searchContactHint": "Search contacts...",
+  "distanceCalculating": "Calculating distance",
+  "locationNotAvailable": "Location not available",
+  "unknownUpdateTime": "Unknown update time",
+  "justNow": "Just now",
+  "minutesAgo": "{count} minutes ago",
+  "@minutesAgo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "positionLabel": "Position:",
+  "updatedLabel": "Updated:",
+  "gpsFailed": "Failed to get GPS location",
+  "routeDownloadFailed": "Failed to download route",
+  "emergencyHistoryTitle": "SOS History",
+  "sosHistoryReceivedSubtitle": "Incoming emergency signal",
+  "sosHistorySentSubtitle": "Sent emergency signal",
+  "contactPlaceholder": "Emergency contact",
+  "openGoogleMaps": "Open Google Maps",
+  "phoneNumberPrefix": "Phone:",
+  "searchingLocation": "Searching location...",
+  "yourLocation": "Your location",
+  "receiverEmergencyTitle": "EMERGENCY",
+  "receiverEmergencySub": "Immediate assistance required",
+  "receiverViewLocation": "View Location",
+  "receiverCallNow": "Call Now",
+  "receiverCalculatingDistance": "Calculating distance...",
+  "receiverDistanceText": "± {distance} km from you",
+  "receiverLocationUnreachable": "Location unreachable",
+  "receiverSearchingLocation": "Searching location...",
+  "receiverSomeone": "Someone",
+
+  "cancelSos": "CANCEL",
+  "splashTitle": "Security at Your\nFingertips",
+  "splashSubtitle": "One touch, One family, Always safe",
+  "splashStartButton": "Get Started",
+  "splashHaveAccount": "Already have an account? ",
+  "splashLoginLink": "Login",
+  "registerTitleText": "Register New Account",
+  "registerSubtitleText": "Join SAFE for your safety and peace of mind.",
+  "stepBasicAccount": "Basic Account",
+  "stepMedicalData": "Medical Data",
+  "fullNameHint": "Enter your full name",
+  "emailHint": "Enter your email",
+  "requiredFieldError": "Required field",
+  "emailFormatError": "Email must contain @",
+  "emailInvalidError": "Invalid email format",
+  "phoneHint": "81234567890",
+  "phonePrefixError": "Phone number must start with 08",
+  "phoneMinLengthError": "Phone number must be at least 10 digits",
+  "phoneMaxLengthError": "Phone number is too long",
+  "passwordHint": "At least 8 characters",
+  "enterPasswordHint": "Enter your password",
+  "passwordMinLengthError": "Password must be at least 8 characters",
+  "confirmPasswordLabel": "CONFIRM PASSWORD",
+  "confirmPasswordHint": "Repeat your password",
+  "passwordsDoNotMatch": "Passwords do not match",
+  "continueButton": "Continue",
+  "registerGoogle": "Sign up with Google",
+  "registerSuccessMsg": "Registration successful. Check email for OTP code.",
+  "skipAndRegister": "Skip & Register",
+  "backTooltip": "Back",
+  "medicalInfoTitle": "Medical Information",
+  "medicalInfoSubtitle": "Blood type and disease/allergy information will greatly assist rescue teams in emergencies.",
+  "bloodTypeHint": "Select Blood Type",
+  "medicalHistoryLabel": "MEDICAL HISTORY OR ALLERGIES",
+  "medicalHistoryHint": "Search disease/allergy (e.g. Asthma)",
+  "registerNowButton": "Register Now",
+  "forgotPasswordTitleText": "Forgot Password",
+  "forgotPasswordSubtitleText": "Enter your registered email to reset your password.",
+  "fillEmailError": "Please fill in your email",
+  "sendOtpCodeButton": "SEND OTP CODE",
+  "verifyEmailTitle": "Verify Email",
+  "enterOtpSentTo": "Enter the 6-digit OTP code sent to {email}",
+  "@enterOtpSentTo": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "otpLabel": "OTP CODE",
+  "codeExpiresIn": "Code expires in {timer}",
+  "@codeExpiresIn": {
+    "placeholders": {
+      "timer": {
+        "type": "String"
+      }
+    }
+  },
+  "codeExpired": "OTP code has expired",
+  "enter6DigitOtp": "Enter the 6-digit OTP code",
+  "verifyButton": "VERIFY",
+  "waitToResend": "Wait {timer} to resend",
+  "@waitToResend": {
+    "placeholders": {
+      "timer": {
+        "type": "String"
+      }
+    }
+  },
+  "goBackAndResend": "Go Back & Resend OTP",
+  "invalidOtpError": "Invalid or expired OTP code.",
+  "verificationSuccessMsg": "Email successfully verified. Please login.",
+  "registrationCancelledError": "OTP expired. Registration cancelled, please register again.",
+  "registrationExpiredError": "OTP expired. Please register again.",
+  "resendingText": "Resending...",
+  "resendInText": "Resend in {timer}",
+  "@resendInText": {
+    "placeholders": {
+      "timer": {
+        "type": "String"
+      }
+    }
+  },
+  "resendOtpCodeButton": "Resend OTP code",
+  "newPasswordTitle": "New Password",
+  "newPasswordSubtitle": "Please create a new password for your account.",
+  "newPasswordLabel": "NEW PASSWORD",
+  "newPasswordHint": "At least 8 characters",
+  "confirmNewPasswordLabel": "CONFIRM PASSWORD",
+  "confirmNewPasswordHint": "Repeat your new password",
+  "fillBothPasswordFieldsError": "Please fill in both password fields",
+  "newPasswordMinLengthError": "Password must be at least 8 characters",
+  "confirmPasswordNotMatch": "Confirm password does not match",
+  "savePasswordButton": "SAVE PASSWORD",
+  "selectCountryCodeTitle": "Select Country Code",
+  "searchCountryHint": "Search country...",
+  "invalidPhoneFormatError": "Invalid phone format (numbers only)",
+  "logoutDialogTitle": "Log Out of Account",
+  "logoutDialogContent": "Are you sure you want to log out of the SAFE application?",
+  "logoutConfirm": "Log Out",
+  "noContactsAvailable": "No contacts available to track"
+}
